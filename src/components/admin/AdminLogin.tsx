@@ -1,10 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
 export default function AdminLogin() {
-  const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -17,6 +15,7 @@ export default function AdminLogin() {
     try {
       const res = await fetch("/api/admin/login", {
         method: "POST",
+        credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
       });
@@ -24,7 +23,9 @@ export default function AdminLogin() {
         setError("Invalid username or password. Try again.");
         return;
       }
-      router.refresh();
+      window.location.href = "/admin";
+    } catch {
+      setError("Network error. Please try again.");
     } finally {
       setLoading(false);
     }
