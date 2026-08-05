@@ -46,5 +46,33 @@
     "url": "https://www.accops.com/",
     "blurb": "Virtual desktops and secure remote access for healthcare teams.",
     "order": 6
+  },
+  {
+    "id": "synology",
+    "name": "Synology",
+    "url": "https://www.synology.com/",
+    "blurb": "Network-attached storage and backup for businesses and clinics.",
+    "order": 7
+  },
+  {
+    "id": "hp",
+    "name": "HP",
+    "url": "https://www.hp.com/",
+    "blurb": "Workstations, thin clients and enterprise computing devices.",
+    "order": 8
+  },
+  {
+    "id": "apc",
+    "name": "APC by Schneider Electric",
+    "url": "https://www.apc.com/",
+    "blurb": "UPS and power protection for critical IT infrastructure.",
+    "order": 9
+  },
+  {
+    "id": "logitech",
+    "name": "Logitech",
+    "url": "https://www.logitech.com/",
+    "blurb": "Peripherals and collaboration hardware for productive teams.",
+    "order": 10
   }
 ]

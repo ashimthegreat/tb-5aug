@@ -11,6 +11,7 @@ const tabs = [
   { id: "content", label: "Content" },
   { id: "services", label: "Services" },
   { id: "products", label: "Products" },
+  { id: "product-categories", label: "Product Categories" },
   { id: "brands", label: "Brands" },
   { id: "partners", label: "Partners" },
   { id: "careers", label: "Careers" },
@@ -76,6 +77,9 @@ export default function AdminShell() {
           {tab === "content" && <SiteEditor />}
           {tab === "services" && <ServicesEditor />}
           {tab === "products" && <CollectionEditor resource="products" />}
+          {tab === "product-categories" && (
+            <CollectionEditor resource="product-categories" />
+          )}
           {tab === "brands" && <CollectionEditor resource="brands" />}
           {tab === "partners" && <CollectionEditor resource="partners" />}
           {tab === "careers" && <CareersEditor />}

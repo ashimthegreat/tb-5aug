@@ -1,0 +1,8 @@
+[
+  { "id": "servers", "name": "Servers", "icon": "server", "description": "Rack and tower servers for hospitals, enterprises and data centres.", "order": 1 },
+  { "id": "networking", "name": "Networking", "icon": "network", "description": "Switches, access points and structured cabling for reliable connectivity.", "order": 2 },
+  { "id": "storage", "name": "Storage", "icon": "database", "description": "SAN, NAS and backup appliances to keep your data safe and available.", "order": 3 },
+  { "id": "virtualization", "name": "Virtualization & VDI", "icon": "cpu", "description": "Virtual desktops, thin clients and secure remote access solutions.", "order": 4 },
+  { "id": "ups-power", "name": "UPS & Power", "icon": "spark", "description": "Uninterruptible power supplies and power protection for critical IT.", "order": 5 },
+  { "id": "peripherals", "name": "Peripherals & Accessories", "icon": "layers", "description": "Monitors, keyboards, mice and the accessories your team needs.", "order": 6 }
+]

@@ -3,6 +3,8 @@ import SectionHeading from "@/components/SectionHeading";
 import ServiceCard from "@/components/ServiceCard";
 import ContactForm from "@/components/ContactForm";
 import { Icon } from "@/components/icons";
+import { formatNPR } from "@/lib/format";
+import Image from "next/image";
 import Link from "next/link";
 
 export const metadata = {
@@ -237,32 +239,70 @@ function Services({
   );
 }
 
-function Products({ products }: { products: { id: string; name: string; icon: string; tagline: string }[] }) {
+function Products({
+  products,
+}: {
+  products: { id: string; slug: string; name: string; summary: string; images: string[]; price: number; salePrice: number | null }[];
+}) {
+  const featured = products
+    .filter((p) => (p as { featured?: boolean }).featured)
+    .slice(0, 3);
+  const items = featured.length > 0 ? featured : products.slice(0, 3);
+
   return (
     <section id="products" className="bg-white py-20 sm:py-24">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <SectionHeading
-          eyebrow="Products"
-          title="Products We Build & Operate"
-          description="A portfolio of technology products developed and maintained by TechBucket, trusted across Nepal."
+          eyebrow="Shop"
+          title="Featured Infrastructure Products"
+          description="Servers, networking, storage, VDI and power protection — available now with delivery and support across Nepal."
         />
         <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {products.map((product) => (
-            <div key={product.id} className="flex flex-col rounded-2xl border border-slate-100 bg-white p-8 shadow-sm">
-              <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
-                <Icon name={product.icon} className="h-6 w-6" />
-              </span>
-              <h3 className="mt-5 text-lg font-semibold text-ink">{product.name}</h3>
-              <p className="mt-1 flex-1 text-sm leading-relaxed text-slate-600">{product.tagline}</p>
-              <Link
-                href="/products"
-                className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 hover:text-brand-800"
-              >
-                Learn more
-                <Icon name="arrow" className="h-4 w-4" />
-              </Link>
-            </div>
+          {items.map((product) => (
+            <Link
+              key={product.id}
+              href={`/products/${product.slug}`}
+              className="group flex flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition-all hover:-translate-y-1 hover:border-brand-200 hover:shadow-md"
+            >
+              <div className="flex aspect-[4/3] items-center justify-center bg-brand-50/40 p-6">
+                <Image
+                  src={product.images[0] ?? "/images/products/placeholder.svg"}
+                  alt={product.name}
+                  width={400}
+                  height={300}
+                  className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
+                />
+              </div>
+              <div className="flex flex-1 flex-col p-5">
+                <h3 className="text-base font-bold text-ink group-hover:text-brand-700">
+                  {product.name}
+                </h3>
+                <p className="mt-1 line-clamp-2 flex-1 text-sm leading-relaxed text-slate-600">
+                  {product.summary}
+                </p>
+                <div className="mt-4 flex items-center justify-between">
+                  <p className="text-lg font-bold text-brand-700">
+                    {product.salePrice
+                      ? formatNPR(product.salePrice)
+                      : formatNPR(product.price)}
+                  </p>
+                  <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700">
+                    Shop now
+                    <Icon name="arrow" className="h-4 w-4" />
+                  </span>
+                </div>
+              </div>
+            </Link>
           ))}
+        </div>
+        <div className="mt-12 text-center">
+          <Link
+            href="/products"
+            className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-brand-300 hover:text-brand-700"
+          >
+            View all products
+            <Icon name="arrow" className="h-4 w-4" />
+          </Link>
         </div>
       </div>
     </section>

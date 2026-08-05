@@ -6,10 +6,12 @@ import { useState } from "react";
 import { navLinks } from "@/lib/nav";
 import { Icon } from "./icons";
 import Logo from "./Logo";
+import { useCart } from "./shop/CartContext";
 
 export default function Navbar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const { count } = useCart();
 
   function isActive(href: string) {
     if (href === "/") return pathname === "/";
@@ -47,6 +49,19 @@ export default function Navbar() {
         >
           <Icon name={open ? "x" : "menu"} className="h-5 w-5" />
         </button>
+
+        <Link
+          href="/cart"
+          className="ml-auto flex h-10 items-center gap-1.5 rounded-full border border-slate-200 px-3 text-sm font-medium text-slate-700 transition-colors hover:border-brand-500 hover:text-brand-700 lg:ml-0"
+          aria-label={`Cart with ${count} item${count === 1 ? "" : "s"}`}
+        >
+          <Icon name="cart" className="h-5 w-5" />
+          {count > 0 && (
+            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-600 px-1.5 text-xs font-semibold text-white">
+              {count}
+            </span>
+          )}
+        </Link>
       </div>
 
       {open && (

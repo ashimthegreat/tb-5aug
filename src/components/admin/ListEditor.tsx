@@ -13,7 +13,10 @@ export type FieldType =
   | "select"
   | "icon"
   | "image"
-  | "stringlist";
+  | "images"
+  | "stringlist"
+  | "specs"
+  | "checkbox";
 
 export interface FieldDef {
   key: string;
@@ -98,6 +101,109 @@ function FieldControl({
           />
         </div>
       );
+    case "checkbox":
+      return (
+        <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
+          <input
+            type="checkbox"
+            checked={Boolean(value)}
+            onChange={(e) => onChange(e.target.checked)}
+            className="h-4 w-4 rounded border-slate-300 accent-brand-600"
+          />
+          {field.label}
+        </label>
+      );
+    case "images": {
+      const imgs = (Array.isArray(value) ? value : []) as string[];
+      return (
+        <div>
+          <Label>{field.label}</Label>
+          <div className="space-y-3">
+            {imgs.map((img, i) => (
+              <div key={i} className="flex items-start gap-2">
+                <div className="flex-1">
+                  <ImageUpload
+                    label={`Image ${i + 1}`}
+                    value={img || undefined}
+                    onChange={(v) => {
+                      const next = [...imgs];
+                      next[i] = v;
+                      onChange(next);
+                    }}
+                  />
+                </div>
+                <DangerButton
+                  type="button"
+                  onClick={() => onChange(imgs.filter((_, j) => j !== i))}
+                >
+                  Remove
+                </DangerButton>
+              </div>
+            ))}
+            {imgs.length === 0 && (
+              <p className="text-xs text-slate-400">
+                No images yet — add the product image below.
+              </p>
+            )}
+            <GhostButton
+              type="button"
+              onClick={() => onChange([...imgs, ""])}
+            >
+              + Add image
+            </GhostButton>
+          </div>
+        </div>
+      );
+    }
+    case "specs": {
+      const rows = (Array.isArray(value) ? value : []) as {
+        label: string;
+        value: string;
+      }[];
+      return (
+        <div>
+          <Label>{field.label}</Label>
+          <div className="space-y-2">
+            {rows.map((row, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <input
+                  className={fieldInput}
+                  placeholder="Label"
+                  value={row.label}
+                  onChange={(e) => {
+                    const next = [...rows];
+                    next[i] = { ...next[i], label: e.target.value };
+                    onChange(next);
+                  }}
+                />
+                <input
+                  className={fieldInput}
+                  placeholder="Value"
+                  value={row.value}
+                  onChange={(e) => {
+                    const next = [...rows];
+                    next[i] = { ...next[i], value: e.target.value };
+                    onChange(next);
+                  }}
+                />
+                <DangerButton
+                  type="button"
+                  onClick={() => onChange(rows.filter((_, j) => j !== i))}
+                >
+                  ✕
+                </DangerButton>
+              </div>
+            ))}
+            <GhostButton
+              type="button"
+              onClick={() => onChange([...rows, { label: "", value: "" }])}
+            >
+              + Add row
+            </GhostButton>
+          </div>
+        </div>
+      );
+    }
     default:
       return (
         <Input
@@ -191,7 +297,14 @@ export default function ListEditor({
                     {fields.map((field) => (
                       <div
                         key={field.key}
-                        className={field.type === "textarea" || field.type === "stringlist" ? "sm:col-span-2" : ""}
+                        className={
+                          field.type === "textarea" ||
+                          field.type === "stringlist" ||
+                          field.type === "specs" ||
+                          field.type === "images"
+                            ? "sm:col-span-2"
+                            : ""
+                        }
                       >
                         <FieldControl
                           field={field}

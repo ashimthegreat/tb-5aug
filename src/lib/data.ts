@@ -45,14 +45,35 @@ export interface Service {
   order: number;
 }
 
-export interface Product {
+export interface ProductCategory {
   id: string;
   name: string;
   icon: string;
-  tagline: string;
   description: string;
+  order: number;
+}
+
+export type ProductStock = "in-stock" | "out-of-stock" | "on-order";
+export type PurchaseType = "purchase" | "quote" | "both";
+
+export interface Product {
+  id: string;
+  slug: string;
+  name: string;
+  brand: string;
+  categoryId: string;
+  images: string[];
+  price: number;
+  salePrice: number | null;
+  currency: string;
+  stock: ProductStock;
+  purchaseType: PurchaseType;
+  summary: string;
+  description: string;
+  specs: { label: string; value: string }[];
   features: string[];
-  url?: string;
+  featured: boolean;
+  active: boolean;
   order: number;
 }
 
@@ -105,6 +126,10 @@ export async function getServices(): Promise<Service[]> {
 
 export async function getProducts(): Promise<Product[]> {
   return readJson<Product[]>("products.json");
+}
+
+export async function getProductCategories(): Promise<ProductCategory[]> {
+  return readJson<ProductCategory[]>("product-categories.json");
 }
 
 export async function getBrands(): Promise<Brand[]> {

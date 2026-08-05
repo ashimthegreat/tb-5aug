@@ -92,6 +92,21 @@ const paths: Record<string, React.ReactNode> = {
       <path d="M18 6 6 18M6 6l12 12" />
     </>
   ),
+  cart: (
+    <>
+      <circle cx="8" cy="21" r="1" />
+      <circle cx="19" cy="21" r="1" />
+      <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
+    </>
+  ),
+  plus: <path d="M12 5v14M5 12h14" />,
+  minus: <path d="M5 12h14" />,
+  trash: (
+    <>
+      <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+      <path d="M10 11v6M14 11v6" />
+    </>
+  ),
   send: (
     <>
       <path d="m22 2-7 20-4-9-9-4Z" />
