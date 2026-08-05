@@ -67,6 +67,7 @@ interface RenderOptions {
   billTo: QuotationParty;
   letterhead: boolean;
   showToolbar?: boolean;
+  variant?: "print" | "email";
 }
 
 function itemsTable(rows: QuotationLine[], label: string): string {
@@ -107,8 +108,10 @@ function partyBlock(title: string, party: QuotationParty, meta: string): string 
 
 export function renderQuotationHtml(opts: RenderOptions): string {
   const { origin, company, quote, preparedBy, billTo, letterhead } = opts;
-  const showToolbar = opts.showToolbar ?? true;
-  const noLetterhead = letterhead ? "" : " no-letterhead";
+  const variant = opts.variant === "email" ? "email" : "print";
+  const isPrint = variant === "print";
+  const showToolbar = isPrint && (opts.showToolbar ?? true);
+  const noLetterhead = isPrint && !letterhead ? " no-letterhead" : "";
 
   const products = quote.items.filter((i) => i.type === "item");
   const services = quote.items.filter((i) => i.type === "service");
@@ -153,17 +156,17 @@ export function renderQuotationHtml(opts: RenderOptions): string {
   body {
     font-family: Arial, Helvetica, sans-serif;
     color: #1f2937;
-    background: #e2e8f0;
+    background: ${isPrint ? "#e2e8f0" : "#f4f5f7"};
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
   .sheet {
-    width: 210mm;
-    min-height: 297mm;
-    margin: 16px auto;
+    width: ${isPrint ? "210mm" : "100%"};
+    max-width: ${isPrint ? "none" : "700px"};
+    ${isPrint
+      ? "min-height: 297mm; padding: 0 14mm; margin: 16px auto; box-shadow: 0 4px 24px rgba(15,23,42,.15);"
+      : "margin: 24px auto; padding: 24px 30px; box-shadow: 0 1px 3px rgba(15,23,42,.08);"}
     background: #fff;
-    padding: 0 14mm;
-    box-shadow: 0 4px 24px rgba(15,23,42,.15);
     position: relative;
   }
   .letterhead {
@@ -239,13 +242,13 @@ export function renderQuotationHtml(opts: RenderOptions): string {
   .tb-btn:hover { background: #e05010; }
   .no-letterhead .letterhead { display: none; }
   .no-letterhead .footer { display: none; }
-  @media print {
+  ${isPrint ? `@media print {
     @page { size: A4; margin: 12mm 14mm; }
     body { background: #fff; }
     .sheet { margin: 0; width: auto; min-height: auto; box-shadow: none; padding: 0; }
     .toolbar { display: none; }
     .party-row, table, .totals, .sign, .notes { page-break-inside: avoid; }
-  }
+  }` : ""}
 </style>
 </head>
 <body class="${noLetterhead.trim() || "with-letterhead"}">

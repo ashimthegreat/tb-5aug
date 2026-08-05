@@ -2,7 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser, type AdminRole } from "@/lib/admin";
 import { readJson, writeJson } from "@/lib/store";
 import { resolveSender, sendMailWith } from "@/lib/mail";
-import { esc, money, quoteDate, round2 } from "@/lib/quotation";
+import {
+  money,
+  quoteDate,
+  renderQuotationHtml,
+  round2,
+  type QuotationParty,
+} from "@/lib/quotation";
 
 const ALLOWED_ROLES: AdminRole[] = ["superadmin", "sales"];
 const DEFAULT_VAT = 13;
@@ -38,33 +44,6 @@ interface Customer {
   company?: string;
   address?: string;
   quotes?: Quote[];
-}
-
-function itemsTable(rows: QuoteItem[], label: string): string {
-  const body = rows
-    .map(
-      (r) =>
-        `<tr>
-          <td style="border:1px solid #e5e7eb;padding:8px;text-align:center">${r.qty}</td>
-          <td style="border:1px solid #e5e7eb;padding:8px">${esc(r.description)}</td>
-          <td style="border:1px solid #e5e7eb;padding:8px;text-align:right">${money(r.price)}</td>
-          <td style="border:1px solid #e5e7eb;padding:8px;text-align:right">${money(r.qty * r.price)}</td>
-        </tr>`
-    )
-    .join("");
-  return `
-    <h3 style="font-size:14px;margin:20px 0 6px">${label}</h3>
-    <table style="border-collapse:collapse;width:100%;font-size:13px">
-      <thead>
-        <tr style="background:#f9fafb">
-          <th style="border:1px solid #e5e7eb;padding:8px;text-align:center">Qty</th>
-          <th style="border:1px solid #e5e7eb;padding:8px;text-align:left">Description</th>
-          <th style="border:1px solid #e5e7eb;padding:8px;text-align:right">Unit Price</th>
-          <th style="border:1px solid #e5e7eb;padding:8px;text-align:right">Amount</th>
-        </tr>
-      </thead>
-      <tbody>${body}</tbody>
-    </table>`;
 }
 
 export async function POST(req: NextRequest) {
@@ -172,7 +151,12 @@ export async function POST(req: NextRequest) {
 
   interface SiteInfo {
     name?: string;
-    contact?: { email?: string; address?: string; phones?: { label: string }[] };
+    contact?: {
+      email?: string;
+      address?: string;
+      phones?: { label: string }[];
+      vatNo?: string;
+    };
   }
   let site: SiteInfo | null = null;
   try {
@@ -180,77 +164,51 @@ export async function POST(req: NextRequest) {
   } catch {
     site = null;
   }
+  const contact = site?.contact ?? {};
   const siteName = site?.name ?? "TechBucket";
-  const siteContact = site?.contact ?? {};
-  const phones = (siteContact.phones ?? []).map((p) => p.label).join(" · ");
-  const siteLine = `${siteContact.address ?? ""}${siteContact.address ? " · " : ""}${siteContact.email ?? ""}${phones ? ` · ${phones}` : ""}`;
+  const company = {
+    name: siteName,
+    email: contact.email ?? "",
+    address: contact.address ?? "",
+    phones: (contact.phones ?? []).map((p) => p.label),
+    vatNo: contact.vatNo ?? "",
+  };
+  const siteLine = [company.address, company.email, ...company.phones]
+    .filter(Boolean)
+    .join(" · ");
 
   const subject = `Quotation ${quoteNo} for ${customer.name}`;
-
-  const billTo = [
-    customer.name,
-    customer.company,
-    customer.address,
-    customer.phone,
-    customer.email,
-  ]
-    .filter((v): v is string => Boolean(v))
-    .map(esc)
-    .join("<br>");
 
   const products = items.filter((i) => i.type === "item");
   const services = items.filter((i) => i.type === "service");
 
-  const html = `
-    <div style="font-family:Arial,sans-serif;max-width:720px;margin:auto;color:#1f2937">
-      <div style="border-bottom:3px solid #f06020;padding:16px 0;margin-bottom:16px">
-        <div style="font-size:22px;font-weight:bold">${esc(siteName)} Pvt. Ltd.</div>
-        <div style="color:#6b7280;font-size:12px">${siteLine || siteName}</div>
-      </div>
-      <h1 style="font-size:20px;margin:0 0 4px">QUOTATION</h1>
-      <div style="font-size:12px;color:#6b7280;margin-bottom:16px">
-        Ref: ${esc(quoteNo)} · Date: ${quoteDate()} · Valid for 30 days
-      </div>
-      <table style="width:100%;font-size:13px">
-        <tr>
-          <td style="vertical-align:top">
-            <div style="font-weight:bold;font-size:13px">Prepared for:</div>
-            <div style="font-size:13px;color:#374151">${billTo}</div>
-          </td>
-          <td style="vertical-align:top;text-align:right;font-size:13px;color:#374151">
-            <div style="font-weight:bold">Prepared by:</div>
-            ${esc(user.name)}<br>${esc(fromEmail)}
-          </td>
-        </tr>
-      </table>
-      ${products.length ? itemsTable(products, "Products") : ""}
-      ${services.length ? itemsTable(services, "Services") : ""}
-      <table style="margin:16px 0 0 auto;font-size:13px;border-collapse:collapse">
-        <tr>
-          <td style="padding:4px 12px">Subtotal</td>
-          <td style="padding:4px 12px;text-align:right">${money(subtotal)}</td>
-        </tr>
-        <tr>
-          <td style="padding:4px 12px">VAT (${vatRate}%)</td>
-          <td style="padding:4px 12px;text-align:right">${money(vat)}</td>
-        </tr>
-        <tr style="font-weight:bold;border-top:2px solid #1f2937">
-          <td style="padding:6px 12px">Grand Total</td>
-          <td style="padding:6px 12px;text-align:right">${money(total)}</td>
-        </tr>
-      </table>
-      ${
-        notes
-          ? `<div style="margin-top:16px;font-size:12px;color:#374151;border-top:1px solid #e5e7eb;padding-top:12px"><b>Notes:</b><br>${esc(notes).replace(/\n/g, "<br>")}</div>`
-          : ""
-      }
-      <div style="margin-top:24px;font-size:13px;color:#374151;border-top:1px solid #e5e7eb;padding-top:12px">
-        Regards,<br>
-        <b>${esc(user.name)}</b><br>
-        ${esc(fromEmail)}<br>
-        ${esc(siteName)} Pvt. Ltd.
-      </div>
-    </div>`;
+  const billTo: QuotationParty = {
+    name: customer.name,
+    email: customer.email,
+    company: customer.company,
+    address: customer.address,
+    phone: customer.phone,
+  };
+  const preparedBy: QuotationParty = { name: user.name, email: fromEmail };
+
+  const html = renderQuotationHtml({
+    origin: new URL(req.url).origin,
+    company,
+    quote: {
+      quoteNo,
+      date: quoteDate(),
+      items,
+      vatRate,
+      subtotal,
+      vat,
+      total,
+      notes,
+    },
+    preparedBy,
+    billTo,
+    letterhead: true,
+    variant: "email",
+  });
 
   const textLines = [
     `QUOTATION ${quoteNo}`,
