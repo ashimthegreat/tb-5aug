@@ -5,6 +5,7 @@ import { apiGet, apiPut } from "@/lib/adminApi";
 import {
   DangerButton,
   GhostButton,
+  Label,
   PrimaryButton,
   Select,
   fieldInput,
@@ -25,8 +26,12 @@ interface DraftUser {
   username: string;
   role: Role;
   active: boolean;
-  password: string;
   createdAt: string;
+  email: string;
+  smtpHost: string;
+  smtpPort: string;
+  password: string;
+  smtpPassword: string;
 }
 
 function blankUser(): DraftUser {
@@ -36,8 +41,12 @@ function blankUser(): DraftUser {
     username: "",
     role: "content",
     active: true,
-    password: "",
     createdAt: new Date().toISOString(),
+    email: "",
+    smtpHost: "",
+    smtpPort: "",
+    password: "",
+    smtpPassword: "",
   };
 }
 
@@ -54,9 +63,17 @@ export default function UsersEditor({
       .then((data) =>
         setUsers(
           data.map((u) => ({
-            ...u,
-            password: "",
+            id: u.id,
+            name: u.name,
+            username: u.username,
             role: u.role as Role,
+            active: u.active,
+            createdAt: u.createdAt,
+            email: u.email ?? "",
+            smtpHost: u.smtpHost ?? "",
+            smtpPort: u.smtpPort ? String(u.smtpPort) : "",
+            password: "",
+            smtpPassword: "",
           }))
         )
       )
@@ -82,8 +99,21 @@ export default function UsersEditor({
   async function save() {
     if (!users) return;
     setStatus("");
+    const payload = users.map((u) => ({
+      id: u.id,
+      name: u.name,
+      username: u.username,
+      role: u.role,
+      active: u.active,
+      createdAt: u.createdAt,
+      password: u.password || undefined,
+      email: u.email,
+      smtpHost: u.smtpHost,
+      smtpPort: u.smtpPort === "" ? null : Number(u.smtpPort),
+      smtpPassword: u.smtpPassword || undefined,
+    }));
     try {
-      await apiPut("users", users);
+      await apiPut("users", payload);
       setStatus("Saved");
     } catch (e) {
       setStatus(`Error: ${(e as Error).message}`);
@@ -112,100 +142,155 @@ export default function UsersEditor({
       </div>
 
       <p className="text-xs text-slate-500">
-        Passwords are stored hashed (scrypt). Leave the password blank on an
-        existing user to keep it unchanged. You cannot delete, rename, demote,
-        or deactivate your own account.
+        Passwords and SMTP passwords are stored encrypted. Leave a password
+        blank to keep the current one. SMTP host/port default to the email
+        provider (Gmail, Outlook, Zoho, Yahoo…) when left blank. Quotes are
+        sent from the salesperson&apos;s own email. Gmail/Outlook need an App
+        Password, not your normal login password. You cannot delete, rename,
+        demote, or deactivate your own account.
       </p>
 
-      <div className="overflow-x-auto rounded-xl border border-slate-200">
-        <table className="w-full min-w-[640px] text-left text-sm">
-          <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-            <tr>
-              <th className="px-3 py-2 font-semibold">Name</th>
-              <th className="px-3 py-2 font-semibold">Username</th>
-              <th className="px-3 py-2 font-semibold">Role</th>
-              <th className="px-3 py-2 font-semibold">Active</th>
-              <th className="px-3 py-2 font-semibold">New password</th>
-              <th className="px-3 py-2" />
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {users.map((u) => {
-              const self = u.username === currentUsername;
-              return (
-                <tr key={u.id} className="align-top">
-                  <td className="px-3 py-2">
+      <ul className="space-y-3">
+        {users.map((u) => {
+          const self = u.username === currentUsername;
+          return (
+            <li
+              key={u.id}
+              className="rounded-xl border border-slate-200 bg-white p-4"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-semibold text-slate-900">
+                    {u.name || "Untitled user"}
+                  </p>
+                  <span className="text-xs text-slate-400">@{u.username}</span>
+                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+                    {u.role}
+                  </span>
+                  {!u.active && (
+                    <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
+                      Inactive
+                    </span>
+                  )}
+                </div>
+                <DangerButton
+                  type="button"
+                  onClick={() => remove(u.id)}
+                  disabled={self}
+                >
+                  Delete
+                </DangerButton>
+              </div>
+
+              <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div>
+                  <Label>Name</Label>
+                  <input
+                    className={fieldInput}
+                    value={u.name}
+                    onChange={(e) => update(u.id, { name: e.target.value })}
+                    placeholder="Display name"
+                  />
+                </div>
+                <div>
+                  <Label>Username</Label>
+                  <input
+                    className={fieldInput}
+                    value={u.username}
+                    disabled={self}
+                    onChange={(e) =>
+                      update(u.id, {
+                        username: e.target.value.trim().toLowerCase(),
+                      })
+                    }
+                    placeholder="username"
+                  />
+                </div>
+                <div>
+                  <Label>Role</Label>
+                  <Select
+                    label=""
+                    options={ROLE_OPTIONS}
+                    value={u.role}
+                    disabled={self}
+                    onChange={(e) =>
+                      update(u.id, { role: e.target.value as Role })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Active</Label>
+                  <label className="flex h-9 items-center gap-2 text-sm text-slate-700">
                     <input
-                      className={fieldInput}
-                      value={u.name}
-                      onChange={(e) => update(u.id, { name: e.target.value })}
-                      placeholder="Display name"
-                    />
-                  </td>
-                  <td className="px-3 py-2">
-                    <input
-                      className={fieldInput}
-                      value={u.username}
+                      type="checkbox"
+                      checked={u.active}
                       disabled={self}
                       onChange={(e) =>
-                        update(u.id, {
-                          username: e.target.value.trim().toLowerCase(),
-                        })
+                        update(u.id, { active: e.target.checked })
                       }
-                      placeholder="username"
+                      className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
                     />
-                  </td>
-                  <td className="px-3 py-2">
-                    <Select
-                      label=""
-                      options={ROLE_OPTIONS}
-                      value={u.role}
-                      disabled={self}
-                      onChange={(e) =>
-                        update(u.id, { role: e.target.value as Role })
-                      }
-                    />
-                  </td>
-                  <td className="px-3 py-2">
-                    <label className="flex h-9 items-center gap-2 text-sm text-slate-700">
-                      <input
-                        type="checkbox"
-                        checked={u.active}
-                        disabled={self}
-                        onChange={(e) =>
-                          update(u.id, { active: e.target.checked })
-                        }
-                        className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
-                      />
-                      {u.active ? "Active" : "Inactive"}
-                    </label>
-                  </td>
-                  <td className="px-3 py-2">
-                    <input
-                      type="password"
-                      className={fieldInput}
-                      value={u.password}
-                      onChange={(e) => update(u.id, { password: e.target.value })}
-                      placeholder={
-                        u.username ? "Leave blank to keep" : "Required"
-                      }
-                    />
-                  </td>
-                  <td className="px-3 py-2">
-                    <DangerButton
-                      type="button"
-                      onClick={() => remove(u.id)}
-                      disabled={self}
-                    >
-                      Delete
-                    </DangerButton>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+                    {u.active ? "Active" : "Inactive"}
+                  </label>
+                </div>
+                <div>
+                  <Label>Email (used to send quotes)</Label>
+                  <input
+                    className={fieldInput}
+                    type="email"
+                    value={u.email}
+                    onChange={(e) => update(u.id, { email: e.target.value })}
+                    placeholder="sales@example.com"
+                  />
+                </div>
+                <div>
+                  <Label>SMTP host</Label>
+                  <input
+                    className={fieldInput}
+                    value={u.smtpHost}
+                    onChange={(e) => update(u.id, { smtpHost: e.target.value })}
+                    placeholder="(auto)"
+                  />
+                </div>
+                <div>
+                  <Label>SMTP port</Label>
+                  <input
+                    className={fieldInput}
+                    type="number"
+                    value={u.smtpPort}
+                    onChange={(e) => update(u.id, { smtpPort: e.target.value })}
+                    placeholder="(auto)"
+                  />
+                </div>
+                <div>
+                  <Label>SMTP password</Label>
+                  <input
+                    className={fieldInput}
+                    type="password"
+                    value={u.smtpPassword}
+                    onChange={(e) =>
+                      update(u.id, { smtpPassword: e.target.value })
+                    }
+                    placeholder="Blank = keep"
+                    autoComplete="new-password"
+                  />
+                </div>
+                <div>
+                  <Label>Login password</Label>
+                  <input
+                    className={fieldInput}
+                    type="password"
+                    value={u.password}
+                    onChange={(e) => update(u.id, { password: e.target.value })}
+                    placeholder={u.username ? "Blank = keep" : "Required"}
+                    autoComplete="new-password"
+                  />
+                </div>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }

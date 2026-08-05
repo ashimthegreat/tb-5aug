@@ -1,42 +1,58 @@
 [
   {
-    "id": "34173cb1-5b77-443a-a15d-2e058b0bc867",
+    "id": "5e9ec1bc-e5de-49ef-848c-24172ef2fde6",
     "name": "Admin",
     "username": "admin",
-    "passwordHash": "7ac6cbdaadc76893b4c7996a110ba9f791951abb11e9e3c390eac303816253c2ef91e43bdde24f8e5e6090c4b4a032900a1c5c5b6c83488015521a737817e53f",
-    "salt": "3c36d6e69f35258f6b2fbe1da8aeed20",
+    "passwordHash": "8d0eece33621fa6599fe79a73899081966487f704a8b46f8336793f8b91e822d407511283e1c3fb65009771f27d000f0d14e682893a93161198454122207b371",
+    "salt": "6321473433d2e2790db7d914fb4ed54b",
     "role": "superadmin",
     "active": true,
-    "createdAt": "2026-08-05T08:57:46.862Z"
+    "createdAt": "2026-08-05T09:21:36.873Z",
+    "email": "admin@techbucket.com.np",
+    "smtpHost": "smtp.zoho.com",
+    "smtpPort": 465,
+    "smtpPassEnc": "7WvAFKZfgkE2Gz7Q53xGJRhMNBMas6ungP4oHBjPZfBToCBEhdqL"
   },
   {
-    "id": "eb901582-b7a0-4777-9518-69e74c533529",
+    "id": "cd12f22a-a1b6-4d2a-8913-983ad80a6bb3",
     "name": "Sales",
     "username": "sales",
-    "passwordHash": "7ef81ea443435a7f2ab7223bb0909d03e5509b372d10087056512536ebd8dd2416674f82f4bcc26ee9ff0a3acdd9596c8c4b98796b3e32ac8dc38c090569aa30",
-    "salt": "d65fbdf3e2ed18e78f1c13854ababeb9",
+    "passwordHash": "5ff83764c91648ff3dabcb2229ed0d067f2bd4cc199ca385f1de118c86b3b4794d11f664f9ff8f70e82efbd2da069443d7dae5a85627312ab2063385980d47ca",
+    "salt": "309b4cdaccc1f215229ba8fdd68638ad",
     "role": "sales",
     "active": true,
-    "createdAt": "2026-08-05T08:57:46.888Z"
+    "createdAt": "2026-08-05T09:21:36.896Z",
+    "email": "",
+    "smtpHost": "",
+    "smtpPort": null,
+    "smtpPassEnc": ""
   },
   {
-    "id": "10f2fcfd-2e00-4c47-a06f-5fc2c80e534d",
+    "id": "7e9be86f-c340-4ade-b5ce-e780845e9922",
     "name": "Support",
     "username": "support",
-    "passwordHash": "7d0cc9f9f8c44069f6b1bdaeb05b379e3e621edf1749b0f5b932ba94c3d86a2837be106c007a61561972e98d0ab6263f5051b7a6a43cbe9a960dfe7b3cf61535",
-    "salt": "3c6e20eb1ebf3db2af146c6bace2d38c",
+    "passwordHash": "372e2ff64ff34830c9e7385763b242ea2ac5861cf215a49a3317ee00fab0b4ea33dad33677509127d761895d1b607bb656eb2744f1a98b4620e854bb6a3c881b",
+    "salt": "ecb01c2ed708e0dc9bd3d9bc094a79c1",
     "role": "support",
     "active": true,
-    "createdAt": "2026-08-05T08:57:46.913Z"
+    "createdAt": "2026-08-05T09:21:36.919Z",
+    "email": "",
+    "smtpHost": "",
+    "smtpPort": null,
+    "smtpPassEnc": ""
   },
   {
-    "id": "e2ab733c-2847-4e1d-9c30-10f06eecc4aa",
+    "id": "b3a83c8e-52ff-4699-83cb-e3e9bb6d129a",
     "name": "Content",
     "username": "content",
-    "passwordHash": "91e7b04fda1613f94866d42267a893f446256fcce5a452d9968cb951681dd231f9f2778befb35cc8560310af92064037a2ae141673e3e5c63757d8a72366c090",
-    "salt": "6e2d57543b8e587e6d14eb0347b83f72",
+    "passwordHash": "0b060d0d14b4d3eccf1d764ddf0f141caa3fde3807f4595f272924890d24241edccdd8406cfa70e2f464d435fa13ff4f8417b184c97d45b59e63475bebac1422",
+    "salt": "d2825641b24c4d040fd7b0d2549c6723",
     "role": "content",
     "active": true,
-    "createdAt": "2026-08-05T08:57:46.936Z"
+    "createdAt": "2026-08-05T09:21:36.942Z",
+    "email": "",
+    "smtpHost": "",
+    "smtpPort": null,
+    "smtpPassEnc": ""
   }
 ]

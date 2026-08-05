@@ -1,5 +1,12 @@
 import "server-only";
-import { createHash, randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
+import {
+  createCipheriv,
+  createDecipheriv,
+  createHash,
+  randomBytes,
+  scryptSync,
+  timingSafeEqual,
+} from "node:crypto";
 import { cookies } from "next/headers";
 import { readJson } from "./store";
 
@@ -16,6 +23,10 @@ export interface AdminUser {
   role: AdminRole;
   active: boolean;
   createdAt: string;
+  email: string;
+  smtpHost: string;
+  smtpPort: number | null;
+  smtpPassEnc: string;
 }
 
 export const ROLES: { value: AdminRole; label: string }[] = [
@@ -27,6 +38,28 @@ export const ROLES: { value: AdminRole; label: string }[] = [
 
 function adminSecret(): string {
   return process.env.ADMIN_SECRET || "techbucket-local-admin-secret";
+}
+
+function mailKey(): Buffer {
+  return createHash("sha256").update(`${adminSecret()}:mail`).digest();
+}
+
+export function encryptSecret(plaintext: string): string {
+  const iv = randomBytes(12);
+  const cipher = createCipheriv("aes-256-gcm", mailKey(), iv);
+  const enc = Buffer.concat([cipher.update(plaintext, "utf8"), cipher.final()]);
+  const tag = cipher.getAuthTag();
+  return Buffer.concat([iv, tag, enc]).toString("base64");
+}
+
+export function decryptSecret(blob: string): string {
+  const buf = Buffer.from(blob, "base64");
+  const iv = buf.subarray(0, 12);
+  const tag = buf.subarray(12, 28);
+  const enc = buf.subarray(28);
+  const decipher = createDecipheriv("aes-256-gcm", mailKey(), iv);
+  decipher.setAuthTag(tag);
+  return Buffer.concat([decipher.update(enc), decipher.final()]).toString("utf8");
 }
 
 export async function getUsers(): Promise<AdminUser[]> {

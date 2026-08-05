@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
+  encryptSecret,
   getCurrentUser,
   getUsers,
   hashPassword,
@@ -9,6 +10,7 @@ import {
 import { writeJson } from "@/lib/store";
 
 const VALID_ROLES = new Set<AdminRole>(ROLES.map((r) => r.value));
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function GET() {
   const user = await getCurrentUser();
@@ -38,8 +40,11 @@ export async function PUT(req: NextRequest) {
     role: string;
     active: boolean;
     password?: string;
-    passwordHash?: string;
-    salt?: string;
+    createdAt?: string;
+    email?: string;
+    smtpHost?: string;
+    smtpPort?: number | string;
+    smtpPassword?: string;
   }>;
 
   const seen = new Set<string>();
@@ -67,6 +72,13 @@ export async function PUT(req: NextRequest) {
     if (u.username !== current.username && username === current.username) {
       return NextResponse.json(
         { error: "You cannot take over the signed-in username" },
+        { status: 400 }
+      );
+    }
+    const email = (u.email ?? "").trim().toLowerCase();
+    if (email && !EMAIL_RE.test(email)) {
+      return NextResponse.json(
+        { error: `"${username}" has an invalid email address` },
         { status: 400 }
       );
     }
@@ -121,15 +133,50 @@ export async function PUT(req: NextRequest) {
 
   const result = updated.map((u) => {
     const existing = users.find((x) => x.username === u.username);
-    const { password, ...rest } = u;
-    if (password && password.length > 0) {
-      const { hash, salt } = hashPassword(password);
-      return { ...rest, passwordHash: hash, salt };
+    const email = (u.email ?? "").trim().toLowerCase();
+    const smtpHost = (u.smtpHost ?? "").trim();
+    const rawPort = u.smtpPort;
+    const smtpPort =
+      rawPort === undefined || rawPort === null || rawPort === ""
+        ? null
+        : Number(rawPort);
+    const smtpPassword = (u.smtpPassword ?? "").trim();
+
+    let smtpPassEnc = existing?.smtpPassEnc ?? "";
+    if (smtpPassword) {
+      smtpPassEnc = encryptSecret(smtpPassword);
+    }
+
+    if (u.password && u.password.length > 0) {
+      const { hash, salt } = hashPassword(u.password);
+      return {
+        id: u.id,
+        name: u.name,
+        username: u.username,
+        passwordHash: hash,
+        salt,
+        role: u.role,
+        active: u.active,
+        createdAt: existing?.createdAt ?? u.createdAt ?? new Date().toISOString(),
+        email,
+        smtpHost,
+        smtpPort: Number.isNaN(smtpPort) ? null : smtpPort,
+        smtpPassEnc,
+      };
     }
     return {
-      ...rest,
+      id: u.id,
+      name: u.name,
+      username: u.username,
       passwordHash: existing?.passwordHash ?? "",
       salt: existing?.salt ?? "",
+      role: u.role,
+      active: u.active,
+      createdAt: existing?.createdAt ?? u.createdAt ?? new Date().toISOString(),
+      email,
+      smtpHost,
+      smtpPort: Number.isNaN(smtpPort) ? null : smtpPort,
+      smtpPassEnc,
     };
   });
 

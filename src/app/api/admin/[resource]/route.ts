@@ -12,6 +12,7 @@ const RESOURCES: Record<string, string> = {
   brands: "brands.json",
   partners: "partners.json",
   careers: "careers.json",
+  customers: "customers.json",
   support: "tickets.json",
 };
 
@@ -24,6 +25,7 @@ const RESOURCE_ROLES: Record<string, AdminRole[]> = {
   brands: ["superadmin", "content", "sales"],
   partners: ["superadmin", "content", "sales"],
   careers: ["superadmin", "content"],
+  customers: ["superadmin", "sales"],
   support: ["superadmin", "support"],
 };
 

@@ -13,7 +13,12 @@ export default async function AdminPage() {
   if (!user) return <AdminLogin />;
   return (
     <AdminShell
-      user={{ name: user.name, username: user.username, role: user.role }}
+      user={{
+        name: user.name,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+      }}
     />
   );
 }
