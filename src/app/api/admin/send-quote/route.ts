@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { decryptSecret, getCurrentUser, type AdminRole } from "@/lib/admin";
+import { getCurrentUser, type AdminRole } from "@/lib/admin";
 import { readJson, writeJson } from "@/lib/store";
-import { sendMailWith, smtpDefaultsFor } from "@/lib/mail";
+import { resolveSender, sendMailWith } from "@/lib/mail";
 
 const ALLOWED_ROLES: AdminRole[] = ["superadmin", "sales"];
 const DEFAULT_VAT = 13;
@@ -176,8 +176,8 @@ export async function POST(req: NextRequest) {
   const vat = vatRate > 0 ? round2((subtotal * vatRate) / 100) : 0;
   const total = round2(subtotal + vat);
 
-  const fromEmail = (user.email ?? "").trim().toLowerCase();
-  if (!fromEmail || !user.smtpPassEnc) {
+  const sender = await resolveSender();
+  if (!sender) {
     return NextResponse.json(
       {
         error:
@@ -186,28 +186,13 @@ export async function POST(req: NextRequest) {
       { status: 400 }
     );
   }
-
-  let pass: string;
-  try {
-    pass = decryptSecret(user.smtpPassEnc);
-  } catch {
-    return NextResponse.json(
-      {
-        error:
-          "Your stored SMTP password could not be decrypted. Re-enter it in the My Profile tab and save.",
-      },
-      { status: 400 }
-    );
-  }
-
-  const defaults = smtpDefaultsFor(fromEmail);
-  const port = user.smtpPort ?? defaults.port;
+  const fromEmail = sender.email;
   const config = {
-    host: user.smtpHost || defaults.host,
-    port,
-    secure: user.smtpPort ? port === 465 : defaults.secure,
-    user: fromEmail,
-    pass,
+    host: sender.host,
+    port: sender.port,
+    secure: sender.secure,
+    user: sender.email,
+    pass: sender.pass,
   };
 
   interface SiteInfo {

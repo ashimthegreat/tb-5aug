@@ -1,5 +1,11 @@
 import "server-only";
 import nodemailer from "nodemailer";
+import {
+  decryptSecret,
+  getCurrentUser,
+  getUsers,
+  type AdminUser,
+} from "./admin";
 
 export interface MailMessage {
   to: string;
@@ -42,6 +48,51 @@ export function smtpDefaultsFor(email: string): {
     "icloud.com": { host: "smtp.mail.me.com", port: 587, secure: false },
   };
   return map[domain] ?? zoho;
+}
+
+export interface ResolvedSender {
+  fromName: string;
+  email: string;
+  host: string;
+  port: number;
+  secure: boolean;
+  pass: string;
+}
+
+function senderFor(user: AdminUser): ResolvedSender | null {
+  const email = (user.email ?? "").trim().toLowerCase();
+  if (!email || !user.smtpPassEnc) return null;
+  let pass: string;
+  try {
+    pass = decryptSecret(user.smtpPassEnc);
+  } catch {
+    return null;
+  }
+  const defaults = smtpDefaultsFor(email);
+  const port = user.smtpPort ?? defaults.port;
+  return {
+    fromName: user.name,
+    email,
+    host: user.smtpHost || defaults.host,
+    port,
+    secure: user.smtpPort ? port === 465 : defaults.secure,
+    pass,
+  };
+}
+
+export async function resolveSender(): Promise<ResolvedSender | null> {
+  const current = await getCurrentUser();
+  if (!current) return null;
+  const own = senderFor(current);
+  if (own) return own;
+  const users = await getUsers();
+  for (const u of users) {
+    if (u.role === "superadmin") {
+      const fallback = senderFor(u);
+      if (fallback) return fallback;
+    }
+  }
+  return null;
 }
 
 export async function sendMailWith(
