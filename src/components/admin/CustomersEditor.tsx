@@ -135,9 +135,15 @@ export default function CustomersEditor({
 
   async function sendQuote() {
     if (!quoteTarget) return;
+    if (!quoteTarget.email.trim()) {
+      setQuoteStatus("Failed: add an email address for this customer first.");
+      return;
+    }
     setSending(true);
     setQuoteStatus("");
     try {
+      const cleaned = customers?.filter((c) => c.name.trim() || c.email.trim());
+      if (cleaned) await apiPut("customers", cleaned);
       const res = await fetch("/api/admin/send-quote", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
