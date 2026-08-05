@@ -14,6 +14,7 @@ const RESOURCES: Record<string, string> = {
   careers: "careers.json",
   customers: "customers.json",
   support: "tickets.json",
+  discounts: "discounts.json",
 };
 
 const RESOURCE_ROLES: Record<string, AdminRole[]> = {
@@ -27,6 +28,7 @@ const RESOURCE_ROLES: Record<string, AdminRole[]> = {
   careers: ["superadmin", "content"],
   customers: ["superadmin", "sales"],
   support: ["superadmin", "support"],
+  discounts: ["superadmin"],
 };
 
 const PUBLIC_PATHS = [

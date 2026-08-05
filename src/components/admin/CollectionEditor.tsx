@@ -62,7 +62,7 @@ const schemas: Record<
       { key: "specs", label: "Specifications", type: "specs" },
       { key: "features", label: "Features (one per line)", type: "stringlist" },
       { key: "featured", label: "Featured on home page", type: "checkbox" },
-      { key: "active", label: "Visible in catalog", type: "checkbox" },
+      { key: "active", label: "Visible on website", type: "checkbox" },
       { key: "order", label: "Order", type: "number" },
     ],
     labelKey: "name",

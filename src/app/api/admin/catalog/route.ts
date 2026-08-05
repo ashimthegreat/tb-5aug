@@ -23,6 +23,13 @@ interface SiteInfo {
   };
 }
 
+interface DiscountInfo {
+  id: string;
+  name: string;
+  percent: number;
+  active?: boolean;
+}
+
 export async function GET() {
   const user = await getCurrentUser();
   if (!user || !ALLOWED_ROLES.includes(user.role)) {
@@ -41,6 +48,12 @@ export async function GET() {
   } catch {
     services = [];
   }
+  let discounts: DiscountInfo[] = [];
+  try {
+    discounts = await readJson<DiscountInfo[]>("discounts.json");
+  } catch {
+    discounts = [];
+  }
 
   let site: SiteInfo = {};
   try {
@@ -58,6 +71,15 @@ export async function GET() {
       services: services
         .filter((s) => s.title)
         .sort((a, b) => a.title.localeCompare(b.title)),
+      discounts: discounts
+        .filter(
+          (d) =>
+            d.active !== false &&
+            d.name &&
+            typeof d.percent === "number" &&
+            d.percent > 0
+        )
+        .sort((a, b) => a.name.localeCompare(b.name)),
       company: {
         name: site.name ?? "TechBucket",
         email: contact.email ?? "",

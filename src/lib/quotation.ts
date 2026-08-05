@@ -10,6 +10,8 @@ export interface QuotationData {
   date: string;
   items: QuotationLine[];
   vatRate: number;
+  discountPercent?: number;
+  discountAmount?: number;
   subtotal: number;
   vat: number;
   total: number;
@@ -275,6 +277,12 @@ export function renderQuotationHtml(opts: RenderOptions): string {
 
     <table class="totals">
       <tr><td>Subtotal</td><td style="text-align:right">${money(quote.subtotal)}</td></tr>
+      ${
+        quote.discountAmount
+          ? `<tr><td>Discount (${quote.discountPercent}%)</td><td style="text-align:right">−${money(quote.discountAmount)}</td></tr>
+      <tr><td>After discount</td><td style="text-align:right">${money(quote.subtotal - quote.discountAmount)}</td></tr>`
+          : ""
+      }
       <tr><td>VAT (${quote.vatRate}%)</td><td style="text-align:right">${money(quote.vat)}</td></tr>
       <tr class="gt"><td>Grand Total</td><td style="text-align:right">${money(quote.total)}</td></tr>
     </table>

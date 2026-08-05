@@ -28,6 +28,8 @@ interface Quote {
   items: QuoteItem[];
   vatRate: number;
   subtotal: number;
+  discountPercent?: number;
+  discountAmount?: number;
   vat: number;
   total: number;
   notes: string;
@@ -57,6 +59,7 @@ export async function POST(req: NextRequest) {
     items?: unknown;
     vatRate?: unknown;
     notes?: unknown;
+    discountId?: string;
   };
   try {
     body = await req.json();
@@ -127,8 +130,29 @@ export async function POST(req: NextRequest) {
   const quoteNo = `QT-${(allQuoteNos.reduce((m, n) => Math.max(m, n), 1000) + 1)}`;
 
   const subtotal = round2(items.reduce((s, it) => s + it.qty * it.price, 0));
-  const vat = vatRate > 0 ? round2((subtotal * vatRate) / 100) : 0;
-  const total = round2(subtotal + vat);
+
+  let discountPercent = 0;
+  const discountId = (body.discountId ?? "").trim();
+  if (discountId) {
+    const discounts = await readJson<
+      { id: string; name: string; percent: number; active?: boolean }[]
+    >("discounts.json");
+    const scheme = discounts.find((d) => d.id === discountId);
+    if (!scheme || scheme.active === false) {
+      return NextResponse.json(
+        { error: "Selected discount scheme is not available." },
+        { status: 400 }
+      );
+    }
+    discountPercent = Math.min(
+      100,
+      Math.max(0, Number(scheme.percent) || 0)
+    );
+  }
+  const discountAmount = round2((subtotal * discountPercent) / 100);
+  const net = round2(subtotal - discountAmount);
+  const vat = vatRate > 0 ? round2((net * vatRate) / 100) : 0;
+  const total = round2(net + vat);
 
   const sender = await resolveSender();
   if (!sender) {
@@ -200,6 +224,8 @@ export async function POST(req: NextRequest) {
       items,
       vatRate,
       subtotal,
+      discountPercent,
+      discountAmount,
       vat,
       total,
       notes,
@@ -246,6 +272,12 @@ export async function POST(req: NextRequest) {
         ]
       : []),
     `Subtotal: ${money(subtotal)}`,
+    ...(discountPercent > 0
+      ? [
+          `Discount (${discountPercent}%): −${money(discountAmount)}`,
+          `After discount: ${money(net)}`,
+        ]
+      : []),
     `VAT (${vatRate}%): ${money(vat)}`,
     `Grand Total: ${money(total)}`,
     "",
@@ -273,6 +305,8 @@ export async function POST(req: NextRequest) {
     items,
     vatRate,
     subtotal,
+    discountPercent: discountPercent > 0 ? discountPercent : undefined,
+    discountAmount: discountPercent > 0 ? discountAmount : undefined,
     vat,
     total,
     notes,

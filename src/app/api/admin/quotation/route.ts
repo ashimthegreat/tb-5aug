@@ -20,6 +20,8 @@ interface Quote {
   items: QuotationLine[];
   vatRate: number;
   subtotal: number;
+  discountPercent?: number;
+  discountAmount?: number;
   vat: number;
   total: number;
   notes: string;
@@ -110,6 +112,8 @@ export async function GET(req: NextRequest) {
       date: quoteDate(quote.sentAt),
       items: quote.items,
       vatRate: quote.vatRate,
+      discountPercent: quote.discountPercent ?? 0,
+      discountAmount: quote.discountAmount ?? 0,
       subtotal: quote.subtotal,
       vat: quote.vat,
       total: quote.total,

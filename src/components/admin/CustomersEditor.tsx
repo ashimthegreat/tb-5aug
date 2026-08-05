@@ -21,6 +21,7 @@ import SearchablePicker from "./SearchablePicker";
 interface Catalog {
   products: { name: string; price: number }[];
   services: { title: string }[];
+  discounts?: { id: string; name: string; percent: number }[];
   company?: {
     name: string;
     email: string;
@@ -117,6 +118,7 @@ export default function CustomersEditor({
   const [quoteTarget, setQuoteTarget] = useState<Customer | null>(null);
   const [quoteLines, setQuoteLines] = useState<QuoteLine[]>([]);
   const [quoteVatRate, setQuoteVatRate] = useState("13");
+  const [quoteDiscountId, setQuoteDiscountId] = useState("");
   const [quoteNotes, setQuoteNotes] = useState("");
   const [quoteStatus, setQuoteStatus] = useState("");
   const [sending, setSending] = useState(false);
@@ -171,6 +173,7 @@ export default function CustomersEditor({
     setQuoteTarget(c);
     setQuoteLines([blankQuoteLine("item")]);
     setQuoteVatRate("13");
+    setQuoteDiscountId("");
     setQuoteNotes("");
     setQuoteStatus("");
   }
@@ -213,8 +216,16 @@ export default function CustomersEditor({
   const vatRate = Number(quoteVatRate);
   const effectiveVatRate =
     Number.isFinite(vatRate) && vatRate > 0 ? Math.min(100, vatRate) : 0;
-  const vat = round2((subtotal * effectiveVatRate) / 100);
-  const grandTotal = round2(subtotal + vat);
+  const discountScheme = (catalog?.discounts ?? []).find(
+    (d) => d.id === quoteDiscountId
+  );
+  const discountPercent = discountScheme
+    ? Math.min(100, Math.max(0, Number(discountScheme.percent) || 0))
+    : 0;
+  const discountAmount = round2((subtotal * discountPercent) / 100);
+  const net = round2(subtotal - discountAmount);
+  const vat = round2((net * effectiveVatRate) / 100);
+  const grandTotal = round2(net + vat);
 
   async function sendQuote() {
     if (!quoteTarget) return;
@@ -245,6 +256,7 @@ export default function CustomersEditor({
           })),
           vatRate: effectiveVatRate,
           notes: quoteNotes.trim(),
+          discountId: quoteDiscountId || undefined,
         }),
       });
       const body = await res.json();
@@ -295,6 +307,8 @@ export default function CustomersEditor({
         date: quoteDate(),
         items: validLines,
         vatRate: effectiveVatRate,
+        discountPercent,
+        discountAmount,
         subtotal,
         vat,
         total: grandTotal,
@@ -605,21 +619,54 @@ export default function CustomersEditor({
             </div>
 
             <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
-              <div className="w-40">
-                <Label>VAT rate (%)</Label>
-                <input
-                  className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={quoteVatRate}
-                  onChange={(e) => setQuoteVatRate(e.target.value)}
-                />
+              <div className="flex flex-wrap items-end gap-4">
+                <div className="w-40">
+                  <Label>VAT rate (%)</Label>
+                  <input
+                    className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={quoteVatRate}
+                    onChange={(e) => setQuoteVatRate(e.target.value)}
+                  />
+                </div>
+                {catalog?.discounts?.length ? (
+                  <div>
+                    <Label>Discount scheme</Label>
+                    <select
+                      className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:border-brand-500 focus:outline-none"
+                      value={quoteDiscountId}
+                      onChange={(e) => setQuoteDiscountId(e.target.value)}
+                    >
+                      <option value="">No discount</option>
+                      {catalog.discounts.map((d) => (
+                        <option key={d.id} value={d.id}>
+                          {d.name} ({d.percent}%)
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : null}
               </div>
               <div className="space-y-1 text-right text-sm">
                 <p className="text-slate-600">
                   Subtotal: <span className="font-medium">{money(subtotal)}</span>
                 </p>
+                {discountAmount > 0 && (
+                  <>
+                    <p className="text-slate-600">
+                      Discount ({discountPercent}%):{" "}
+                      <span className="font-medium text-emerald-600">
+                        −{money(discountAmount)}
+                      </span>
+                    </p>
+                    <p className="text-slate-600">
+                      After discount:{" "}
+                      <span className="font-medium">{money(net)}</span>
+                    </p>
+                  </>
+                )}
                 <p className="text-slate-600">
                   VAT ({effectiveVatRate}%):{" "}
                   <span className="font-medium">{money(vat)}</span>
