@@ -139,23 +139,34 @@ export default async function ProductDetailPage({
                 </p>
               )}
 
-              <div className="mt-6 flex items-end gap-3">
-                {product.salePrice ? (
-                  <>
-                    <p className="text-xs text-slate-400 line-through">
-                      {formatNPR(product.price)}
-                    </p>
-                    <p className="text-4xl font-bold text-brand-700">
-                      {formatNPR(product.salePrice)}
-                    </p>
-                  </>
-                ) : (
-                  <p className="text-4xl font-bold text-ink">{formatNPR(price)}</p>
-                )}
-              </div>
-              <p className="mt-1 text-sm text-slate-400">
-                NPR, inclusive of VAT · {purchaseLabels[product.purchaseType]}
-              </p>
+              {product.purchaseType === "quote" ? (
+                <p className="mt-6 text-4xl font-bold text-brand-700">
+                  Price on request
+                </p>
+              ) : (
+                <>
+                  <div className="mt-6 flex items-end gap-3">
+                    {product.salePrice ? (
+                      <>
+                        <p className="text-xs text-slate-400 line-through">
+                          {formatNPR(product.price)}
+                        </p>
+                        <p className="text-4xl font-bold text-brand-700">
+                          {formatNPR(product.salePrice)}
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-4xl font-bold text-ink">
+                        {formatNPR(price)}
+                      </p>
+                    )}
+                  </div>
+                  <p className="mt-1 text-sm text-slate-400">
+                    NPR, inclusive of VAT ·{" "}
+                    {purchaseLabels[product.purchaseType]}
+                  </p>
+                </>
+              )}
 
               <p className="mt-6 text-base leading-relaxed text-slate-600">
                 {product.description}

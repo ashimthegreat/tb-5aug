@@ -33,21 +33,25 @@ export default function ProductCard({ product }: { product: Product }) {
           {product.summary}
         </p>
         <div className="mt-4 flex items-end justify-between">
-          <div>
-            {product.salePrice ? (
-              <>
-                <p className="text-xs text-slate-400 line-through">
-                  {formatNPR(product.price)}
-                </p>
-                <p className="text-lg font-bold text-brand-700">
-                  {formatNPR(product.salePrice)}
-                </p>
-              </>
-            ) : (
-              <p className="text-lg font-bold text-ink">{formatNPR(price)}</p>
-            )}
-            <p className="text-xs text-slate-400">NPR incl. VAT</p>
-          </div>
+          {product.purchaseType === "quote" ? (
+            <p className="text-lg font-bold text-brand-700">Price on request</p>
+          ) : (
+            <div>
+              {product.salePrice ? (
+                <>
+                  <p className="text-xs text-slate-400 line-through">
+                    {formatNPR(product.price)}
+                  </p>
+                  <p className="text-lg font-bold text-brand-700">
+                    {formatNPR(product.salePrice)}
+                  </p>
+                </>
+              ) : (
+                <p className="text-lg font-bold text-ink">{formatNPR(price)}</p>
+              )}
+              <p className="text-xs text-slate-400">NPR incl. VAT</p>
+            </div>
+          )}
           <span className="rounded-full bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600 transition-colors group-hover:bg-brand-50 group-hover:text-brand-700">
             View details
           </span>

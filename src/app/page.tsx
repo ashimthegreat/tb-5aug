@@ -242,7 +242,7 @@ function Services({
 function Products({
   products,
 }: {
-  products: { id: string; slug: string; name: string; summary: string; images: string[]; price: number; salePrice: number | null }[];
+  products: { id: string; slug: string; name: string; summary: string; images: string[]; price: number; salePrice: number | null; purchaseType: string }[];
 }) {
   const featured = products
     .filter((p) => (p as { featured?: boolean }).featured)
@@ -282,9 +282,11 @@ function Products({
                 </p>
                 <div className="mt-4 flex items-center justify-between">
                   <p className="text-lg font-bold text-brand-700">
-                    {product.salePrice
-                      ? formatNPR(product.salePrice)
-                      : formatNPR(product.price)}
+                    {product.purchaseType === "quote"
+                      ? "Price on request"
+                      : product.salePrice
+                        ? formatNPR(product.salePrice)
+                        : formatNPR(product.price)}
                   </p>
                   <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700">
                     Shop now
