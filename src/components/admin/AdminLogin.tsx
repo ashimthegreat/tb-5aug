@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function AdminLogin() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -23,7 +25,7 @@ export default function AdminLogin() {
         setError("Invalid username or password. Try again.");
         return;
       }
-      window.location.href = "/admin";
+      router.push("/admin");
     } catch {
       setError("Network error. Please try again.");
     } finally {

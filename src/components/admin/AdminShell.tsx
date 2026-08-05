@@ -1,26 +1,39 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import SiteEditor from "./SiteEditor";
 import ServicesEditor from "./ServicesEditor";
 import CareersEditor from "./CareersEditor";
 import CollectionEditor from "./CollectionEditor";
+import SupportEditor from "./SupportEditor";
+import UsersEditor from "./UsersEditor";
+import type { AdminRole } from "@/lib/admin";
 
-const tabs = [
-  { id: "content", label: "Content" },
-  { id: "services", label: "Services" },
-  { id: "products", label: "Products" },
-  { id: "product-categories", label: "Product Categories" },
-  { id: "brands", label: "Brands" },
-  { id: "partners", label: "Partners" },
-  { id: "careers", label: "Careers" },
-] as const;
+export interface ShellUser {
+  name: string;
+  username: string;
+  role: AdminRole;
+}
 
-type TabId = (typeof tabs)[number]["id"];
+const tabs: { id: string; label: string; roles: AdminRole[] }[] = [
+  { id: "content", label: "Content", roles: ["superadmin", "content"] },
+  { id: "services", label: "Services", roles: ["superadmin", "content"] },
+  { id: "products", label: "Products", roles: ["superadmin", "content", "sales"] },
+  { id: "product-categories", label: "Product Categories", roles: ["superadmin", "content", "sales"] },
+  { id: "brands", label: "Brands", roles: ["superadmin", "content", "sales"] },
+  { id: "partners", label: "Partners", roles: ["superadmin", "content", "sales"] },
+  { id: "careers", label: "Careers", roles: ["superadmin", "content"] },
+  { id: "support", label: "Support", roles: ["superadmin", "support"] },
+  { id: "users", label: "Users", roles: ["superadmin"] },
+];
 
-export default function AdminShell() {
-  const [tab, setTab] = useState<TabId>("content");
+export default function AdminShell({ user }: { user: ShellUser }) {
+  const allowedTabs = useMemo(
+    () => tabs.filter((t) => t.roles.includes(user.role)),
+    [user.role]
+  );
+  const [tab, setTab] = useState<string>(allowedTabs[0]?.id ?? "content");
   const router = useRouter();
 
   async function logout() {
@@ -35,7 +48,10 @@ export default function AdminShell() {
           <div>
             <h1 className="text-lg font-bold text-slate-900">TechBucket Admin</h1>
             <p className="text-xs text-slate-500">
-              Manage site content — changes are saved to the content/ folder.
+              Signed in as{" "}
+              <span className="font-medium text-slate-700">
+                {user.name} ({user.role})
+              </span>
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -58,7 +74,7 @@ export default function AdminShell() {
 
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
         <nav className="flex flex-wrap gap-2">
-          {tabs.map((t) => (
+          {allowedTabs.map((t) => (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
@@ -83,6 +99,8 @@ export default function AdminShell() {
           {tab === "brands" && <CollectionEditor resource="brands" />}
           {tab === "partners" && <CollectionEditor resource="partners" />}
           {tab === "careers" && <CareersEditor />}
+          {tab === "support" && <SupportEditor />}
+          {tab === "users" && <UsersEditor currentUsername={user.username} />}
         </div>
       </div>
     </div>

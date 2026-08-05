@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
-import { isAuthed } from "@/lib/admin";
+import { getCurrentUser, type AdminRole } from "@/lib/admin";
 import { readJson, writeJson } from "@/lib/store";
 
 const RESOURCES: Record<string, string> = {
@@ -12,6 +12,19 @@ const RESOURCES: Record<string, string> = {
   brands: "brands.json",
   partners: "partners.json",
   careers: "careers.json",
+  support: "tickets.json",
+};
+
+const RESOURCE_ROLES: Record<string, AdminRole[]> = {
+  site: ["superadmin", "content"],
+  categories: ["superadmin", "content"],
+  services: ["superadmin", "content"],
+  products: ["superadmin", "content", "sales"],
+  "product-categories": ["superadmin", "content", "sales"],
+  brands: ["superadmin", "content", "sales"],
+  partners: ["superadmin", "content", "sales"],
+  careers: ["superadmin", "content"],
+  support: ["superadmin", "support"],
 };
 
 const PUBLIC_PATHS = [
@@ -24,18 +37,26 @@ const PUBLIC_PATHS = [
   "/brands",
   "/partners",
   "/careers",
+  "/support",
 ];
 
 const OBJECT_RESOURCES = new Set(["site", "careers"]);
+
+async function requireAccess(resource: string): Promise<boolean> {
+  const user = await getCurrentUser();
+  if (!user || !user.active) return false;
+  const allowed = RESOURCE_ROLES[resource];
+  return !!allowed && allowed.includes(user.role);
+}
 
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ resource: string }> }
 ) {
-  if (!(await isAuthed())) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
   const { resource } = await params;
+  if (!(await requireAccess(resource))) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
   const file = RESOURCES[resource];
   if (!file) {
     return NextResponse.json({ error: "Unknown resource" }, { status: 404 });
@@ -48,10 +69,10 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ resource: string }> }
 ) {
-  if (!(await isAuthed())) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
   const { resource } = await params;
+  if (!(await requireAccess(resource))) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
   const file = RESOURCES[resource];
   if (!file) {
     return NextResponse.json({ error: "Unknown resource" }, { status: 404 });

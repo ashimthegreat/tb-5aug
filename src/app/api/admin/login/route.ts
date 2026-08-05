@@ -1,26 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  clearAuthed,
-  setAuthed,
-  adminPassword,
-  adminUsername,
-} from "@/lib/admin";
+import { clearAuthed, setAuthed, verifyCredentials } from "@/lib/admin";
 
 export async function POST(req: NextRequest) {
   const body = (await req.json()) as {
     username?: string;
     password?: string;
   };
-  if (
-    body.username !== adminUsername() ||
-    body.password !== adminPassword()
-  ) {
+  const user = await verifyCredentials(
+    (body.username ?? "").trim().toLowerCase(),
+    body.password ?? ""
+  );
+  if (!user) {
     return NextResponse.json(
       { error: "Invalid username or password" },
       { status: 401 }
     );
   }
-  await setAuthed();
+  await setAuthed(user.username);
   return NextResponse.json({ ok: true });
 }
 

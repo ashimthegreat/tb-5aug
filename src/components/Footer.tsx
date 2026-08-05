@@ -11,6 +11,7 @@ const quickLinks = [
   { label: "Technology Partners", href: "/brands" },
   { label: "Partners", href: "/partners" },
   { label: "Careers", href: "/careers" },
+  { label: "Support", href: "/support" },
   { label: "Contact", href: "/#contact" },
 ];
 
