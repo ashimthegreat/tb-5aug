@@ -17,6 +17,8 @@ export default async function AdminPage() {
         name: user.name,
         username: user.username,
         email: user.email,
+        smtpHost: user.smtpHost,
+        smtpPort: user.smtpPort,
         role: user.role,
       }}
     />

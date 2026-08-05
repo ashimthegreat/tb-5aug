@@ -9,12 +9,15 @@ import CollectionEditor from "./CollectionEditor";
 import SupportEditor from "./SupportEditor";
 import UsersEditor from "./UsersEditor";
 import CustomersEditor from "./CustomersEditor";
+import MyProfileEditor from "./MyProfileEditor";
 import type { AdminRole } from "@/lib/admin";
 
 export interface ShellUser {
   name: string;
   username: string;
   email?: string;
+  smtpHost?: string;
+  smtpPort?: number | null;
   role: AdminRole;
 }
 
@@ -28,6 +31,7 @@ const tabs: { id: string; label: string; roles: AdminRole[] }[] = [
   { id: "careers", label: "Careers", roles: ["superadmin", "content"] },
   { id: "customers", label: "Customers", roles: ["superadmin", "sales"] },
   { id: "support", label: "Support", roles: ["superadmin", "support"] },
+  { id: "profile", label: "My Profile", roles: ["superadmin", "content", "sales", "support"] },
   { id: "users", label: "Users", roles: ["superadmin"] },
 ];
 
@@ -104,6 +108,7 @@ export default function AdminShell({ user }: { user: ShellUser }) {
           {tab === "careers" && <CareersEditor />}
           {tab === "customers" && <CustomersEditor user={user} />}
           {tab === "support" && <SupportEditor />}
+          {tab === "profile" && <MyProfileEditor user={user} />}
           {tab === "users" && <UsersEditor currentUsername={user.username} />}
         </div>
       </div>

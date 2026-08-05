@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         error:
-          "You don't have a sender email configured yet. Go to the Users tab and set your email + SMTP password, then try again.",
+          "You don't have a sender email configured yet. Open the My Profile tab, set your email + SMTP password, save, then try again.",
       },
       { status: 400 }
     );
