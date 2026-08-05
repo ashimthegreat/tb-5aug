@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
     contentDispositionType: "attachment",
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
+  allowedDevOrigins: ["127.0.0.1", "localhost"],
 };
 
 export default nextConfig;
