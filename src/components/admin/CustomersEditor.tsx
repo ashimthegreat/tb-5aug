@@ -11,6 +11,11 @@ import {
   Textarea,
 } from "./ui";
 
+interface Catalog {
+  products: { name: string; price: number }[];
+  services: { title: string }[];
+}
+
 interface QuoteLine {
   id: string;
   type: "item" | "service";
@@ -101,11 +106,15 @@ export default function CustomersEditor({
   const [quoteNotes, setQuoteNotes] = useState("");
   const [quoteStatus, setQuoteStatus] = useState("");
   const [sending, setSending] = useState(false);
+  const [catalog, setCatalog] = useState<Catalog | null>(null);
 
   useEffect(() => {
     apiGet<Customer[]>("customers")
       .then(setCustomers)
       .catch((e) => setStatus(`Error: ${e.message}`));
+    apiGet<Catalog>("catalog")
+      .then(setCatalog)
+      .catch(() => setCatalog(null));
   }, []);
 
   function update(id: string, patch: Partial<Customer>) {
@@ -164,6 +173,26 @@ export default function CustomersEditor({
 
   function removeLine(id: string) {
     setQuoteLines((prev) => prev.filter((l) => l.id !== id));
+  }
+
+  function addFromProducts(e: React.ChangeEvent<HTMLSelectElement>) {
+    const name = e.target.value;
+    if (!name || !catalog) return;
+    const p = catalog.products.find((x) => x.name === name);
+    if (p) {
+      const line = blankQuoteLine("item");
+      setQuoteLines((prev) => [
+        ...prev,
+        { ...line, description: p.name, price: p.price },
+      ]);
+    }
+  }
+
+  function addFromServices(e: React.ChangeEvent<HTMLSelectElement>) {
+    const title = e.target.value;
+    if (!title || !catalog) return;
+    const line = blankQuoteLine("service");
+    setQuoteLines((prev) => [...prev, { ...line, description: title }]);
   }
 
   const subtotal = round2(
@@ -474,7 +503,35 @@ export default function CustomersEditor({
                 </div>
               ))}
 
-              <div className="flex gap-2 pt-1">
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                {catalog && (
+                  <>
+                    <select
+                      className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:border-brand-500 focus:outline-none"
+                      value=""
+                      onChange={addFromProducts}
+                    >
+                      <option value="">Add product…</option>
+                      {catalog.products.map((p) => (
+                        <option key={p.name} value={p.name}>
+                          {p.name}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:border-brand-500 focus:outline-none"
+                      value=""
+                      onChange={addFromServices}
+                    >
+                      <option value="">Add service…</option>
+                      {catalog.services.map((s) => (
+                        <option key={s.title} value={s.title}>
+                          {s.title}
+                        </option>
+                      ))}
+                    </select>
+                  </>
+                )}
                 <GhostButton type="button" onClick={() => addLine("item")}>
                   + Add item
                 </GhostButton>
