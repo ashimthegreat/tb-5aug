@@ -4,12 +4,18 @@ import { cookies } from "next/headers";
 
 export const ADMIN_COOKIE = "tb_admin";
 
+export function adminUsername(): string {
+  return process.env.ADMIN_USERNAME || "admin";
+}
+
 export function adminPassword(): string {
-  return process.env.ADMIN_PASSWORD || "techbucket-admin";
+  return process.env.ADMIN_PASSWORD || "Uzumaki@123";
 }
 
 export function adminToken(): string {
-  return createHash("sha256").update(adminPassword()).digest("hex");
+  return createHash("sha256")
+    .update(`${adminUsername()}:${adminPassword()}`)
+    .digest("hex");
 }
 
 export async function isAuthed(): Promise<boolean> {
