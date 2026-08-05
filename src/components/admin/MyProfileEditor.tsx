@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Label, PrimaryButton, fieldInput } from "./ui";
+import { GhostButton, Label, PrimaryButton, fieldInput } from "./ui";
 
 export default function MyProfileEditor({
   user,
@@ -22,7 +22,9 @@ export default function MyProfileEditor({
   const [smtpPassword, setSmtpPassword] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState("");
+  const [testStatus, setTestStatus] = useState("");
   const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
 
   async function save() {
     setStatus("");
@@ -51,6 +53,25 @@ export default function MyProfileEditor({
       setStatus(`Error: ${(e as Error).message}`);
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function sendTest() {
+    setTestStatus("");
+    setTesting(true);
+    try {
+      await save();
+      const res = await fetch("/api/admin/me/test", { method: "POST" });
+      const body = await res.json();
+      if (res.ok) {
+        setTestStatus(`Test email sent to ${body.to} — check your inbox.`);
+      } else {
+        setTestStatus(`Test failed: ${body.error || "could not send"}`);
+      }
+    } catch (e) {
+      setTestStatus(`Test failed: ${(e as Error).message}`);
+    } finally {
+      setTesting(false);
     }
   }
 
@@ -123,8 +144,14 @@ export default function MyProfileEditor({
         <PrimaryButton type="button" onClick={save} disabled={saving}>
           {saving ? "Saving…" : "Save"}
         </PrimaryButton>
+        <GhostButton type="button" onClick={sendTest} disabled={testing}>
+          {testing ? "Sending test…" : "Send test email to me"}
+        </GhostButton>
         {status && <span className="text-sm text-slate-500">{status}</span>}
       </div>
+      {testStatus && (
+        <p className="text-sm text-slate-600">{testStatus}</p>
+      )}
     </div>
   );
 }
