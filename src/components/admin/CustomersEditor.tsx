@@ -16,6 +16,7 @@ import {
   PrimaryButton,
   Textarea,
 } from "./ui";
+import SearchablePicker from "./SearchablePicker";
 
 interface Catalog {
   products: { name: string; price: number }[];
@@ -188,8 +189,7 @@ export default function CustomersEditor({
     setQuoteLines((prev) => prev.filter((l) => l.id !== id));
   }
 
-  function addFromProducts(e: React.ChangeEvent<HTMLSelectElement>) {
-    const name = e.target.value;
+  function addFromProducts(name: string) {
     if (!name || !catalog) return;
     const p = catalog.products.find((x) => x.name === name);
     if (p) {
@@ -201,9 +201,8 @@ export default function CustomersEditor({
     }
   }
 
-  function addFromServices(e: React.ChangeEvent<HTMLSelectElement>) {
-    const title = e.target.value;
-    if (!title || !catalog) return;
+  function addFromServices(title: string) {
+    if (!title) return;
     const line = blankQuoteLine("service");
     setQuoteLines((prev) => [...prev, { ...line, description: title }]);
   }
@@ -582,30 +581,18 @@ export default function CustomersEditor({
               <div className="flex flex-wrap items-center gap-2 pt-1">
                 {catalog && (
                   <>
-                    <select
-                      className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:border-brand-500 focus:outline-none"
-                      value=""
-                      onChange={addFromProducts}
-                    >
-                      <option value="">Add product…</option>
-                      {catalog.products.map((p) => (
-                        <option key={p.name} value={p.name}>
-                          {p.name}
-                        </option>
-                      ))}
-                    </select>
-                    <select
-                      className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:border-brand-500 focus:outline-none"
-                      value=""
-                      onChange={addFromServices}
-                    >
-                      <option value="">Add service…</option>
-                      {catalog.services.map((s) => (
-                        <option key={s.title} value={s.title}>
-                          {s.title}
-                        </option>
-                      ))}
-                    </select>
+                    <SearchablePicker
+                      placeholder="Search products…"
+                      items={catalog.products.map((p) => p.name)}
+                      onPick={addFromProducts}
+                      disabled={sending}
+                    />
+                    <SearchablePicker
+                      placeholder="Search services…"
+                      items={catalog.services.map((s) => s.title)}
+                      onPick={addFromServices}
+                      disabled={sending}
+                    />
                   </>
                 )}
                 <GhostButton type="button" onClick={() => addLine("item")}>
