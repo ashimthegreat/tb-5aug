@@ -9,7 +9,7 @@ export function adminUsername(): string {
 }
 
 export function adminPassword(): string {
-  return process.env.ADMIN_PASSWORD || "Uzumaki@123";
+  return process.env.ADMIN_PASSWORD || "admin";
 }
 
 export function adminToken(): string {
