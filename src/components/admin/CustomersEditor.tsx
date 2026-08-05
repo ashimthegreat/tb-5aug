@@ -115,10 +115,11 @@ export default function CustomersEditor({
   }
 
   function addNew() {
+    const blank = blankCustomer(user.username);
     setCustomers((prev) =>
-      prev ? [blankCustomer(user.username), ...prev] : [blankCustomer(user.username)]
+      prev ? [blank, ...prev] : [blank]
     );
-    setEditingId(blankCustomer(user.username).id);
+    setEditingId(blank.id);
     setShowNew(true);
     setStatus("");
   }
@@ -307,15 +308,16 @@ export default function CustomersEditor({
                       </div>
                     </div>
                     <div className="mt-4 flex gap-2">
-                      <GhostButton
+                      <PrimaryButton
                         type="button"
                         onClick={() => {
                           setEditingId(null);
                           setShowNew(false);
+                          void save();
                         }}
                       >
                         Done
-                      </GhostButton>
+                      </PrimaryButton>
                       <DangerButton
                         type="button"
                         onClick={() => remove(c.id)}
