@@ -11,10 +11,25 @@ import {
   Textarea,
 } from "./ui";
 
+interface QuoteLine {
+  id: string;
+  type: "item" | "service";
+  description: string;
+  qty: number;
+  price: number;
+}
+
 interface Quote {
   id: string;
+  quoteNo?: string;
   to: string;
   subject: string;
+  items?: QuoteLine[];
+  vatRate?: number;
+  subtotal?: number;
+  vat?: number;
+  total?: number;
+  notes?: string;
   sentBy: string;
   sentAt: string;
   status: "sent" | "failed";
@@ -31,6 +46,21 @@ interface Customer {
   createdBy: string;
   createdAt: string;
   quotes?: Quote[];
+}
+
+function blankQuoteLine(type: "item" | "service"): QuoteLine {
+  return { id: crypto.randomUUID(), type, description: "", qty: 1, price: 0 };
+}
+
+function money(n: number): string {
+  return `NPR ${(Number.isFinite(n) ? n : 0).toLocaleString("en-IN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+}
+
+function round2(n: number): number {
+  return Math.round(n * 100) / 100;
 }
 
 function blankCustomer(createdBy: string): Customer {
@@ -66,8 +96,9 @@ export default function CustomersEditor({
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const [quoteTarget, setQuoteTarget] = useState<Customer | null>(null);
-  const [quoteSubject, setQuoteSubject] = useState("");
-  const [quoteBody, setQuoteBody] = useState("");
+  const [quoteLines, setQuoteLines] = useState<QuoteLine[]>([]);
+  const [quoteVatRate, setQuoteVatRate] = useState("13");
+  const [quoteNotes, setQuoteNotes] = useState("");
   const [quoteStatus, setQuoteStatus] = useState("");
   const [sending, setSending] = useState(false);
 
@@ -114,29 +145,44 @@ export default function CustomersEditor({
 
   function openQuote(c: Customer) {
     setQuoteTarget(c);
-    setQuoteSubject(`Quotation for ${c.name} — TechBucket`);
-    setQuoteBody(
-      [
-        `Dear ${c.name},`,
-        "",
-        "Thank you for your interest in TechBucket. Please find our quotation below:",
-        "",
-        "[Item]  [Qty] x [Description] — NPR [price]",
-        "",
-        "This quotation is valid for 30 days. For any questions, contact us at info@techbucket.com.np.",
-        "",
-        "Regards,",
-        user.email ? `${user.name} (${user.email})` : user.name,
-        "TechBucket Pvt. Ltd.",
-      ].join("\n")
-    );
+    setQuoteLines([blankQuoteLine("item")]);
+    setQuoteVatRate("13");
+    setQuoteNotes("");
     setQuoteStatus("");
   }
+
+  function addLine(type: "item" | "service") {
+    setQuoteLines((prev) => [...prev, blankQuoteLine(type)]);
+  }
+
+  function updateLine(id: string, patch: Partial<QuoteLine>) {
+    setQuoteLines((prev) =>
+      prev.map((l) => (l.id === id ? { ...l, ...patch } : l))
+    );
+  }
+
+  function removeLine(id: string) {
+    setQuoteLines((prev) => prev.filter((l) => l.id !== id));
+  }
+
+  const subtotal = round2(
+    quoteLines.reduce((s, l) => s + (Number(l.qty) || 0) * (Number(l.price) || 0), 0)
+  );
+  const vatRate = Number(quoteVatRate);
+  const effectiveVatRate =
+    Number.isFinite(vatRate) && vatRate > 0 ? Math.min(100, vatRate) : 0;
+  const vat = round2((subtotal * effectiveVatRate) / 100);
+  const grandTotal = round2(subtotal + vat);
 
   async function sendQuote() {
     if (!quoteTarget) return;
     if (!quoteTarget.email.trim()) {
       setQuoteStatus("Failed: add an email address for this customer first.");
+      return;
+    }
+    const validLines = quoteLines.filter((l) => l.description.trim());
+    if (validLines.length === 0) {
+      setQuoteStatus("Failed: add at least one item or service.");
       return;
     }
     setSending(true);
@@ -149,8 +195,14 @@ export default function CustomersEditor({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           customerId: quoteTarget.id,
-          subject: quoteSubject,
-          body: quoteBody,
+          items: validLines.map((l) => ({
+            type: l.type,
+            description: l.description.trim(),
+            qty: Number(l.qty) || 1,
+            price: Number(l.price) || 0,
+          })),
+          vatRate: effectiveVatRate,
+          notes: quoteNotes.trim(),
         }),
       });
       const body = await res.json();
@@ -331,7 +383,11 @@ export default function CustomersEditor({
                               >
                                 {q.status}
                               </span>
-                              <span className="text-slate-700">{q.subject}</span>
+                              <span className="text-slate-700">
+                                {q.quoteNo ? `${q.quoteNo} · ` : ""}
+                                {q.subject}
+                                {q.total !== undefined ? ` — ${money(q.total)}` : ""}
+                              </span>
                               <span className="text-slate-400">
                                 to {q.to} · by {q.sentBy} · {formatDate(q.sentAt)}
                               </span>
@@ -350,27 +406,118 @@ export default function CustomersEditor({
 
       {quoteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-          <div className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
+          <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
             <h3 className="text-base font-semibold text-slate-900">
-              Send quote to {quoteTarget.name}
+              Quotation for {quoteTarget.name}
             </h3>
             <p className="mt-1 text-xs text-slate-500">
               Sent from your email ({user.email || "not configured"}) to{" "}
-              {quoteTarget.email}
+              {quoteTarget.email} · Subject: Quotation QT-… for{" "}
+              {quoteTarget.name}
             </p>
-            <div className="mt-4 space-y-3">
-              <Input
-                label="Subject"
-                value={quoteSubject}
-                onChange={(e) => setQuoteSubject(e.target.value)}
-              />
+
+            <div className="mt-4 space-y-2">
+              {quoteLines.map((line) => (
+                <div
+                  key={line.id}
+                  className="grid grid-cols-12 items-center gap-2 rounded-lg border border-slate-200 p-2"
+                >
+                  <span
+                    className={`col-span-2 rounded-full px-2 py-1 text-center text-xs font-semibold ${
+                      line.type === "item"
+                        ? "bg-brand-50 text-brand-700"
+                        : "bg-sky-50 text-sky-700"
+                    }`}
+                  >
+                    {line.type === "item" ? "Product" : "Service"}
+                  </span>
+                  <input
+                    className="col-span-4 rounded-lg border border-slate-300 px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none"
+                    placeholder="Description"
+                    value={line.description}
+                    onChange={(e) =>
+                      updateLine(line.id, { description: e.target.value })
+                    }
+                  />
+                  <input
+                    className="col-span-2 rounded-lg border border-slate-300 px-2 py-1.5 text-sm text-right focus:border-brand-500 focus:outline-none"
+                    type="number"
+                    min="1"
+                    placeholder="Qty"
+                    value={line.qty || ""}
+                    onChange={(e) =>
+                      updateLine(line.id, { qty: Number(e.target.value) })
+                    }
+                  />
+                  <input
+                    className="col-span-2 rounded-lg border border-slate-300 px-2 py-1.5 text-sm text-right focus:border-brand-500 focus:outline-none"
+                    type="number"
+                    min="0"
+                    placeholder="Price"
+                    value={line.price || ""}
+                    onChange={(e) =>
+                      updateLine(line.id, { price: Number(e.target.value) })
+                    }
+                  />
+                  <span className="col-span-1 text-right text-sm text-slate-700">
+                    {money((Number(line.qty) || 0) * (Number(line.price) || 0))}
+                  </span>
+                  <button
+                    type="button"
+                    className="col-span-1 rounded-lg border border-red-200 bg-red-50 px-2 py-1 text-xs font-medium text-red-700 transition-colors hover:bg-red-100"
+                    onClick={() => removeLine(line.id)}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+
+              <div className="flex gap-2 pt-1">
+                <GhostButton type="button" onClick={() => addLine("item")}>
+                  + Add item
+                </GhostButton>
+                <GhostButton type="button" onClick={() => addLine("service")}>
+                  + Add service
+                </GhostButton>
+              </div>
+            </div>
+
+            <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
+              <div className="w-40">
+                <Label>VAT rate (%)</Label>
+                <input
+                  className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={quoteVatRate}
+                  onChange={(e) => setQuoteVatRate(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1 text-right text-sm">
+                <p className="text-slate-600">
+                  Subtotal: <span className="font-medium">{money(subtotal)}</span>
+                </p>
+                <p className="text-slate-600">
+                  VAT ({effectiveVatRate}%):{" "}
+                  <span className="font-medium">{money(vat)}</span>
+                </p>
+                <p className="text-base font-bold text-slate-900">
+                  Grand Total: {money(grandTotal)}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4">
               <Textarea
-                label="Message"
-                rows={12}
-                value={quoteBody}
-                onChange={(e) => setQuoteBody(e.target.value)}
+                label="Notes (optional)"
+                rows={3}
+                value={quoteNotes}
+                onChange={(e) => setQuoteNotes(e.target.value)}
+                placeholder="Terms, delivery info, validity, etc."
               />
             </div>
+
             {quoteStatus && (
               <p className="mt-3 text-sm text-slate-600">{quoteStatus}</p>
             )}
