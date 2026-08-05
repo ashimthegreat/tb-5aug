@@ -284,6 +284,51 @@ export default function ListEditor({
       </div>
 
       <ul className="mt-4 space-y-3">
+        {showNew && draft && (
+          <li className="rounded-xl border-2 border-dashed border-brand-300 bg-brand-50/40">
+            <div className="p-4">
+              <p className="mb-4 text-sm font-semibold text-brand-700">
+                New item
+              </p>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {fields.map((field) => (
+                  <div
+                    key={field.key}
+                    className={
+                      field.type === "textarea" ||
+                      field.type === "stringlist" ||
+                      field.type === "specs" ||
+                      field.type === "images"
+                        ? "sm:col-span-2"
+                        : ""
+                    }
+                  >
+                    <FieldControl
+                      field={field}
+                      value={draft[field.key]}
+                      onChange={(v) => setDraft({ ...draft, [field.key]: v })}
+                    />
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 flex gap-2">
+                <PrimaryButton type="button" onClick={commit}>
+                  Add item
+                </PrimaryButton>
+                <GhostButton
+                  type="button"
+                  onClick={() => {
+                    setEditingId(null);
+                    setDraft(null);
+                    setShowNew(false);
+                  }}
+                >
+                  Cancel
+                </GhostButton>
+              </div>
+            </div>
+          </li>
+        )}
         {items.map((item, index) => {
           const editing = editingId === String(item.id);
           return (
@@ -316,7 +361,7 @@ export default function ListEditor({
                   </div>
                   <div className="mt-4 flex gap-2">
                     <PrimaryButton type="button" onClick={commit}>
-                      {showNew ? "Add item" : "Save"}
+                      Save
                     </PrimaryButton>
                     <GhostButton
                       type="button"
