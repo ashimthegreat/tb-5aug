@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser, type AdminRole } from "@/lib/admin";
 import { readJson, writeJson } from "@/lib/store";
 import { resolveSender, sendMailWith } from "@/lib/mail";
+import { esc, money, quoteDate, round2 } from "@/lib/quotation";
 
 const ALLOWED_ROLES: AdminRole[] = ["superadmin", "sales"];
 const DEFAULT_VAT = 13;
@@ -37,32 +38,6 @@ interface Customer {
   company?: string;
   address?: string;
   quotes?: Quote[];
-}
-
-function round2(n: number): number {
-  return Math.round(n * 100) / 100;
-}
-
-function money(n: number): string {
-  return `NPR ${n.toLocaleString("en-IN", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-}
-
-function esc(text: string): string {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-}
-
-function quoteDate(): string {
-  return new Date().toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
 }
 
 function itemsTable(rows: QuoteItem[], label: string): string {

@@ -13,6 +13,16 @@ interface ServiceInfo {
   title: string;
 }
 
+interface SiteInfo {
+  name?: string;
+  contact?: {
+    email?: string;
+    address?: string;
+    phones?: { label: string }[];
+    vatNo?: string;
+  };
+}
+
 export async function GET() {
   const user = await getCurrentUser();
   if (!user || !ALLOWED_ROLES.includes(user.role)) {
@@ -32,6 +42,14 @@ export async function GET() {
     services = [];
   }
 
+  let site: SiteInfo = {};
+  try {
+    site = await readJson<SiteInfo>("site.json");
+  } catch {
+    site = {};
+  }
+  const contact = site.contact ?? {};
+
   return NextResponse.json({
     data: {
       products: products
@@ -40,6 +58,13 @@ export async function GET() {
       services: services
         .filter((s) => s.title)
         .sort((a, b) => a.title.localeCompare(b.title)),
+      company: {
+        name: site.name ?? "TechBucket",
+        email: contact.email ?? "",
+        address: contact.address ?? "",
+        phones: (contact.phones ?? []).map((p) => p.label),
+        vatNo: contact.vatNo ?? "",
+      },
     },
   });
 }

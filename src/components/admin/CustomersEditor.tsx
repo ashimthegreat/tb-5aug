@@ -3,6 +3,12 @@
 import { useEffect, useState } from "react";
 import { apiGet, apiPut } from "@/lib/adminApi";
 import {
+  renderQuotationHtml,
+  quoteDate,
+  type QuotationLine,
+  type QuotationParty,
+} from "@/lib/quotation";
+import {
   DangerButton,
   GhostButton,
   Input,
@@ -14,6 +20,13 @@ import {
 interface Catalog {
   products: { name: string; price: number }[];
   services: { title: string }[];
+  company?: {
+    name: string;
+    email: string;
+    address: string;
+    phones: string[];
+    vatNo: string;
+  };
 }
 
 interface QuoteLine {
@@ -250,6 +263,57 @@ export default function CustomersEditor({
     }
   }
 
+  function previewQuote() {
+    if (!quoteTarget) return;
+    const validLines: QuotationLine[] = quoteLines
+      .filter((l) => l.description.trim())
+      .map((l) => ({
+        type: l.type,
+        description: l.description.trim(),
+        qty: Number(l.qty) || 1,
+        price: Number(l.price) || 0,
+      }));
+    const billTo: QuotationParty = {
+      name: quoteTarget.name,
+      email: quoteTarget.email,
+      company: quoteTarget.company,
+      address: quoteTarget.address,
+      phone: quoteTarget.phone,
+    };
+    const co = catalog?.company;
+    const company = co?.name
+      ? co
+      : { name: "TechBucket", email: "", address: "", phones: [], vatNo: "" };
+    const preparedBy: QuotationParty = {
+      name: user.name,
+      email: user.email || company.email,
+    };
+    const html = renderQuotationHtml({
+      origin: window.location.origin,
+      company,
+      quote: {
+        quoteNo: "DRAFT",
+        date: quoteDate(),
+        items: validLines,
+        vatRate: effectiveVatRate,
+        subtotal,
+        vat,
+        total: grandTotal,
+        notes: quoteNotes.trim(),
+      },
+      preparedBy,
+      billTo,
+      letterhead: true,
+    });
+    const w = window.open("", "_blank");
+    if (w) {
+      w.document.write(html);
+      w.document.close();
+    } else {
+      setQuoteStatus("Allow pop-ups to preview the quotation.");
+    }
+  }
+
   if (!customers) {
     return <p className="text-sm text-slate-500">{status || "Loading…"}</p>;
   }
@@ -422,6 +486,18 @@ export default function CustomersEditor({
                               <span className="text-slate-400">
                                 to {q.to} · by {q.sentBy} · {formatDate(q.sentAt)}
                               </span>
+                              <button
+                                type="button"
+                                className="rounded-lg border border-slate-200 bg-white px-2 py-0.5 font-medium text-slate-600 transition-colors hover:bg-slate-50"
+                                onClick={() =>
+                                  window.open(
+                                    `/api/admin/quotation?id=${q.id}`,
+                                    "_blank"
+                                  )
+                                }
+                              >
+                                Print
+                              </button>
                             </li>
                           ))}
                         </ul>
@@ -587,6 +663,9 @@ export default function CustomersEditor({
                 disabled={sending}
               >
                 Cancel
+              </GhostButton>
+              <GhostButton type="button" onClick={previewQuote} disabled={sending}>
+                Preview / Print
               </GhostButton>
               <PrimaryButton
                 type="button"
