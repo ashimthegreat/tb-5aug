@@ -1,1 +1,14 @@
-[]
+[
+  {
+    "id": "633bce3b-1e57-4415-9881-af21a697a6bb",
+    "name": "cusctomer 1",
+    "email": "ashim.reno@gmail.com",
+    "phone": "jasfajdfa",
+    "company": "aasda",
+    "address": "adsa",
+    "notes": "",
+    "createdBy": "sales",
+    "createdAt": "2026-08-05T11:32:24.756Z",
+    "quotes": []
+  }
+]
