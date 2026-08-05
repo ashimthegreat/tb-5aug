@@ -1,45 +1,52 @@
-import { site, stats, trustPoints, services, values } from "@/lib/data";
+import { getSite, getCategories, getServices, getProducts } from "@/lib/data";
 import SectionHeading from "@/components/SectionHeading";
 import ServiceCard from "@/components/ServiceCard";
 import ContactForm from "@/components/ContactForm";
 import { Icon } from "@/components/icons";
+import Link from "next/link";
 
 export const metadata = {
   title: "Healthcare IT Solutions in Nepal",
   description:
-    "TechBucket builds modern, reliable software for hospitals and clinics in Nepal — hospital management systems, LIS, mobile health apps and more.",
+    "TechBucket builds modern, reliable software and infrastructure for hospitals, clinics and other industries in Nepal.",
 };
 
-export default function HomePage() {
+export default async function HomePage() {
+  const [site, categories, services, products] = await Promise.all([
+    getSite(),
+    getCategories(),
+    getServices(),
+    getProducts(),
+  ]);
+
   return (
     <>
-      <Hero />
-      <TrustBar />
-      <About />
-      <Stats />
-      <Services />
-      <Vision />
-      <Contact />
+      <Hero hero={site.hero} />
+      <TrustBar points={site.trustPoints} />
+      <About site={site} />
+      <Stats stats={site.stats} />
+      <Services categories={categories} services={services} />
+      <Products products={products} />
+      <Vision site={site} />
+      <Contact site={site} />
     </>
   );
 }
 
-function Hero() {
+function Hero({ hero }: { hero: { eyebrow: string; title: string; subtitle: string } }) {
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-brand-50 via-surface to-white">
       <div className="mx-auto max-w-6xl px-4 pb-20 pt-20 sm:px-6 sm:pt-28 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
           <p className="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-white px-4 py-1.5 text-sm font-medium text-brand-700">
             <span className="h-2 w-2 rounded-full bg-brand-500" />
-            Trusted healthcare IT partner since {site.founded}
+            {hero.eyebrow}
           </p>
           <h1 className="mt-6 text-4xl font-bold tracking-tight text-ink sm:text-6xl">
-            Powering Healthcare Through Technology
+            {hero.title}
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-slate-600 sm:text-xl">
-            We build modern, reliable software solutions for healthcare providers
-            in Nepal and beyond. Trusted by clinics, hospitals and health
-            organisations across the Kathmandu Valley.
+            {hero.subtitle}
           </p>
           <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <a
@@ -58,38 +65,36 @@ function Hero() {
           </div>
         </div>
       </div>
-      <ScrollHint />
+      <div className="flex justify-center pb-8">
+        <a
+          href="#about"
+          className="inline-flex flex-col items-center gap-1 text-xs font-medium uppercase tracking-widest text-slate-400 transition-colors hover:text-brand-600"
+        >
+          Scroll
+          <svg
+            className="h-4 w-4 animate-bounce"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </a>
+      </div>
     </section>
   );
 }
 
-function ScrollHint() {
-  return (
-    <div className="flex justify-center pb-8">
-      <a
-        href="#about"
-        className="inline-flex flex-col items-center gap-1 text-xs font-medium uppercase tracking-widest text-slate-400 transition-colors hover:text-brand-600"
-      >
-        Scroll
-        <svg
-          className="h-4 w-4 animate-bounce"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </a>
-    </div>
-  );
-}
-
-function TrustBar() {
+function TrustBar({
+  points,
+}: {
+  points: { title: string; description: string }[];
+}) {
   return (
     <section className="border-y border-slate-100 bg-white">
       <div className="mx-auto grid max-w-6xl grid-cols-1 gap-px sm:grid-cols-2 lg:grid-cols-4">
-        {trustPoints.map((point) => (
+        {points.map((point) => (
           <div key={point.title} className="flex items-start gap-4 px-4 py-8">
             <span className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
               <Icon name="check" className="h-4 w-4" />
@@ -107,29 +112,18 @@ function TrustBar() {
   );
 }
 
-function About() {
+function About({ site }: { site: Awaited<ReturnType<typeof getSite>> }) {
   return (
     <section id="about" className="bg-white py-20 sm:py-24">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="grid items-center gap-12 lg:grid-cols-2">
           <div>
-            <SectionHeading
-              align="left"
-              eyebrow="About Us"
-              title="Transforming Healthcare with Smart Technology"
-            />
-            <p className="mt-6 text-lg leading-relaxed text-slate-600">
-              {site.name} Pvt. Ltd. is a Nepal-based healthcare IT and software
-              development company. We design, build, and maintain digital
-              solutions that improve patient outcomes, streamline clinical
-              workflows, and empower healthcare organisations to deliver better
-              care.
-            </p>
-            <p className="mt-4 text-lg leading-relaxed text-slate-600">
-              Founded in {site.founded}, we have grown from a small startup to a
-              trusted partner for hospitals, clinics, and health startups across
-              Nepal.
-            </p>
+            <SectionHeading align="left" eyebrow="About Us" title={site.about.title} />
+            {site.about.paragraphs.map((paragraph) => (
+              <p key={paragraph.slice(0, 32)} className="mt-6 text-lg leading-relaxed text-slate-600">
+                {paragraph}
+              </p>
+            ))}
             <a
               href="#contact"
               className="mt-8 inline-flex items-center gap-2 rounded-full bg-brand-600 px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-brand-700"
@@ -140,34 +134,25 @@ function About() {
           </div>
 
           <div className="grid gap-5 sm:grid-cols-2">
-            <div className="rounded-2xl border border-brand-100 bg-brand-50 p-6">
-              <p className="text-4xl font-bold text-brand-700">
-                {stats[0].value}
-              </p>
-              <p className="mt-1 text-sm font-medium text-slate-600">
-                {stats[0].label}
-              </p>
-            </div>
-            <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-              <p className="text-4xl font-bold text-ink">{stats[1].value}</p>
-              <p className="mt-1 text-sm font-medium text-slate-600">
-                {stats[1].label}
-              </p>
-            </div>
-            <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-              <p className="text-4xl font-bold text-ink">{stats[2].value}</p>
-              <p className="mt-1 text-sm font-medium text-slate-600">
-                {stats[2].label}
-              </p>
-            </div>
-            <div className="rounded-2xl border border-brand-100 bg-brand-50 p-6">
-              <p className="text-4xl font-bold text-brand-700">
-                {stats[3].value}
-              </p>
-              <p className="mt-1 text-sm font-medium text-slate-600">
-                {stats[3].label}
-              </p>
-            </div>
+            {site.stats.map((stat, index) => (
+              <div
+                key={stat.label}
+                className={
+                  index % 2 === 0
+                    ? "rounded-2xl border border-brand-100 bg-brand-50 p-6"
+                    : "rounded-2xl border border-slate-100 bg-white p-6 shadow-sm"
+                }
+              >
+                <p
+                  className={
+                    index % 2 === 0 ? "text-4xl font-bold text-brand-700" : "text-4xl font-bold text-ink"
+                  }
+                >
+                  {stat.value}
+                </p>
+                <p className="mt-1 text-sm font-medium text-slate-600">{stat.label}</p>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -175,7 +160,7 @@ function About() {
   );
 }
 
-function Stats() {
+function Stats({ stats }: { stats: { value: string; label: string }[] }) {
   return (
     <section className="bg-slate-900">
       <div className="mx-auto grid max-w-6xl grid-cols-2 gap-8 px-4 py-14 sm:px-6 lg:grid-cols-4 lg:px-8">
@@ -194,18 +179,89 @@ function Stats() {
   );
 }
 
-function Services() {
+function Services({
+  categories,
+  services,
+}: {
+  categories: { id: string; name: string; icon: string; description: string }[];
+  services: { id: string; categoryId: string; icon: string; title: string; description: string; order: number }[];
+}) {
   return (
     <section id="services" className="bg-surface py-20 sm:py-24">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <SectionHeading
           eyebrow="What We Do"
-          title="Solutions Built for Healthcare"
-          description="From hospital management systems to mobile health apps, we deliver end-to-end digital solutions."
+          title="Solutions Built for Every Industry"
+          description="From hospital management systems to IT infrastructure, we deliver end-to-end digital solutions."
+        />
+        {categories.map((category) => {
+          const items = services
+            .filter((s) => s.categoryId === category.id)
+            .sort((a, b) => a.order - b.order);
+          if (items.length === 0) return null;
+          return (
+            <div key={category.id} className="mt-14">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-600 text-white">
+                  <Icon name={category.icon} className="h-5 w-5" />
+                </span>
+                <div>
+                  <h3 className="text-xl font-bold text-ink">{category.name}</h3>
+                  <p className="text-sm text-slate-500">{category.description}</p>
+                </div>
+              </div>
+              <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {items.map((service) => (
+                  <ServiceCard
+                    key={service.id}
+                    icon={service.icon}
+                    title={service.title}
+                    description={service.description}
+                  />
+                ))}
+              </div>
+            </div>
+          );
+        })}
+        <div className="mt-12 text-center">
+          <Link
+            href="/services"
+            className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-brand-300 hover:text-brand-700"
+          >
+            View all services
+            <Icon name="arrow" className="h-4 w-4" />
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Products({ products }: { products: { id: string; name: string; icon: string; tagline: string }[] }) {
+  return (
+    <section id="products" className="bg-white py-20 sm:py-24">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <SectionHeading
+          eyebrow="Products"
+          title="Products We Build & Operate"
+          description="A portfolio of technology products developed and maintained by TechBucket, trusted across Nepal."
         />
         <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {services.map((service) => (
-            <ServiceCard key={service.title} {...service} />
+          {products.map((product) => (
+            <div key={product.id} className="flex flex-col rounded-2xl border border-slate-100 bg-white p-8 shadow-sm">
+              <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
+                <Icon name={product.icon} className="h-6 w-6" />
+              </span>
+              <h3 className="mt-5 text-lg font-semibold text-ink">{product.name}</h3>
+              <p className="mt-1 flex-1 text-sm leading-relaxed text-slate-600">{product.tagline}</p>
+              <Link
+                href="/products"
+                className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 hover:text-brand-800"
+              >
+                Learn more
+                <Icon name="arrow" className="h-4 w-4" />
+              </Link>
+            </div>
           ))}
         </div>
       </div>
@@ -213,23 +269,20 @@ function Services() {
   );
 }
 
-function Vision() {
+function Vision({ site }: { site: Awaited<ReturnType<typeof getSite>> }) {
   return (
-    <section id="vision" className="bg-white py-20 sm:py-24">
+    <section id="vision" className="bg-surface py-20 sm:py-24">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <SectionHeading
-          eyebrow="What Drives Us"
-          title="What Drives Us Forward"
-        />
+        <SectionHeading eyebrow="What Drives Us" title="What Drives Us Forward" />
         <div className="mt-14 grid gap-6 lg:grid-cols-3">
           <div className="rounded-2xl bg-gradient-to-br from-brand-700 to-slate-900 p-8 text-white lg:row-span-2">
-            <h3 className="text-xl font-bold">{values[0].title}</h3>
-            <p className="mt-3 leading-relaxed text-brand-100">{values[0].body}</p>
+            <h3 className="text-xl font-bold">{site.mission.title}</h3>
+            <p className="mt-3 leading-relaxed text-brand-100">{site.mission.body}</p>
             <div className="my-8 h-px bg-white/20" />
-            <h3 className="text-xl font-bold">{values[1].title}</h3>
-            <p className="mt-3 leading-relaxed text-brand-100">{values[1].body}</p>
+            <h3 className="text-xl font-bold">{site.vision.title}</h3>
+            <p className="mt-3 leading-relaxed text-brand-100">{site.vision.body}</p>
           </div>
-          {values.slice(2).map((value) => (
+          {site.values.map((value) => (
             <div
               key={value.title}
               className="rounded-2xl border border-slate-100 bg-white p-8 shadow-sm"
@@ -244,17 +297,17 @@ function Vision() {
   );
 }
 
-function Contact() {
+function Contact({ site }: { site: Awaited<ReturnType<typeof getSite>> }) {
   return (
-    <section id="contact" className="bg-surface py-20 sm:py-24">
+    <section id="contact" className="bg-white py-20 sm:py-24">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="grid gap-12 lg:grid-cols-2">
           <div>
             <SectionHeading
               align="left"
               eyebrow="Contact"
-              title="Let's Build Something Great Together"
-              description="Looking to build better software for your healthcare organisation? Write to us and our team will respond within 24 hours."
+              title={site.contact.heading}
+              description={site.contact.subheading}
             />
             <ul className="mt-8 space-y-5">
               <li className="flex items-start gap-4">
@@ -264,7 +317,7 @@ function Contact() {
                 <div>
                   <p className="text-sm font-semibold text-ink">Address</p>
                   <p className="mt-1 text-sm leading-relaxed text-slate-600">
-                    {site.address}
+                    {site.contact.address}
                   </p>
                 </div>
               </li>
@@ -275,10 +328,10 @@ function Contact() {
                 <div>
                   <p className="text-sm font-semibold text-ink">Email</p>
                   <a
-                    href={`mailto:${site.email}`}
+                    href={`mailto:${site.contact.email}`}
                     className="mt-1 block text-sm text-brand-700 transition-colors hover:text-brand-800"
                   >
-                    {site.email}
+                    {site.contact.email}
                   </a>
                 </div>
               </li>
@@ -288,7 +341,7 @@ function Contact() {
                 </span>
                 <div>
                   <p className="text-sm font-semibold text-ink">Phone</p>
-                  {site.phones.map((phone) => (
+                  {site.contact.phones.map((phone) => (
                     <a
                       key={phone.href}
                       href={phone.href}
@@ -302,7 +355,7 @@ function Contact() {
             </ul>
           </div>
 
-          <ContactForm />
+          <ContactForm email={site.contact.email} />
         </div>
       </div>
     </section>

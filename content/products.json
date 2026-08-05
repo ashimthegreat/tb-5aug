@@ -1,0 +1,18 @@
+[
+  {
+    "id": "infrastructure",
+    "name": "Infrastructure",
+    "icon": "server",
+    "tagline": "Resilient IT infrastructure for hospitals and enterprises",
+    "description": "End-to-end IT infrastructure — network design and deployment, servers and storage, virtualization, secure remote access, and structured cabling — engineered for reliability and 99.9% uptime.",
+    "features": [
+      "Network design, deployment & Wi-Fi",
+      "Servers, storage & virtualization",
+      "Virtual desktops & secure remote access",
+      "Structured cabling, UPS & power",
+      "24/7 monitoring & managed support"
+    ],
+    "url": "https://techbucket.com.np",
+    "order": 1
+  }
+]

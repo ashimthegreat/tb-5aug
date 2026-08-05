@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { site } from "@/lib/data";
+import { siteName, siteUrl } from "@/lib/data";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,13 +16,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(site.url),
+  metadataBase: new URL(siteUrl),
   title: {
     default: "TechBucket | Healthcare IT Solutions in Nepal",
     template: "%s — TechBucket",
   },
   description:
-    "TechBucket is a Nepal-based healthcare IT company building modern software for hospitals, clinics and health organisations — hospital management systems, LIS, mobile health apps and more.",
+    "TechBucket is a Nepal-based software and IT company building modern software and infrastructure for healthcare providers and other industries — hospital management systems, LIS, mobile health apps and more.",
   keywords: [
     "healthcare IT Nepal",
     "hospital management system Nepal",
@@ -33,8 +33,8 @@ export const metadata: Metadata = {
     title: "TechBucket | Healthcare IT Solutions in Nepal",
     description:
       "Powering healthcare through technology. Modern, reliable software for healthcare providers in Nepal.",
-    url: site.url,
-    siteName: site.name,
+    url: siteUrl,
+    siteName,
     locale: "en_US",
     type: "website",
   },

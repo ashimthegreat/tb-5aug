@@ -1,0 +1,50 @@
+[
+  {
+    "id": "hms",
+    "categoryId": "healthcare",
+    "icon": "building",
+    "title": "Healthcare Management Systems",
+    "description": "End-to-end hospital and clinic management software covering patient registration, OPD/IPD workflows, billing, pharmacy, and laboratory integration.",
+    "order": 1
+  },
+  {
+    "id": "lis",
+    "categoryId": "healthcare",
+    "icon": "flask",
+    "title": "Laboratory Information Systems",
+    "description": "Streamlined LIS solutions for pathology labs — from sample collection and test ordering to result reporting and quality control dashboards.",
+    "order": 2
+  },
+  {
+    "id": "custom-software",
+    "categoryId": "healthcare",
+    "icon": "code",
+    "title": "Custom Software Development",
+    "description": "Bespoke web and desktop applications built for your specific clinical or administrative workflows, using modern frameworks and agile delivery.",
+    "order": 3
+  },
+  {
+    "id": "data-security",
+    "categoryId": "healthcare",
+    "icon": "shield",
+    "title": "Health Data Security",
+    "description": "Comprehensive security audits, encrypted storage, role-based access controls, and compliance reviews to protect sensitive patient data.",
+    "order": 4
+  },
+  {
+    "id": "analytics",
+    "categoryId": "healthcare",
+    "icon": "chart",
+    "title": "Healthcare Analytics",
+    "description": "Interactive dashboards and reports that transform clinical and operational data into actionable insights for better decision-making.",
+    "order": 5
+  },
+  {
+    "id": "mobile-health",
+    "categoryId": "healthcare",
+    "icon": "mobile",
+    "title": "Mobile Health Applications",
+    "description": "Patient-facing and provider-facing mobile apps for appointment booking, teleconsultation, medication reminders, and health tracking.",
+    "order": 6
+  }
+]

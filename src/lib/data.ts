@@ -1,177 +1,120 @@
-export const site = {
-  name: "TechBucket",
-  tagline: "Serving Nepal's healthcare sector with modern, reliable software since 2019.",
-  email: "info@techbucket.com.np",
-  phones: [
-    { label: "+977 9801151658", href: "tel:+9779801151658" },
-    { label: "01-4543897", href: "tel:+97714543897" },
-  ],
-  address: "Kathmandu, Balaju-16, Bagmati Province, Nepal",
-  vatNo: "609605497",
-  founded: 2019,
-  url: "https://techbucket.com.np",
-};
+import "server-only";
+import { readJson } from "./store";
 
-export const navLinks = [
-  { label: "Home", href: "/" },
-  { label: "About", href: "/#about" },
-  { label: "Services", href: "/#services" },
-  { label: "Brands", href: "/brands" },
-  { label: "Partners", href: "/partners" },
-  { label: "Careers", href: "/careers" },
-  { label: "Contact Us", href: "/#contact" },
-];
+export const siteName = "TechBucket";
+export const siteUrl = "https://techbucket.com.np";
 
-export const stats = [
-  { value: "5+", label: "Years Experience" },
-  { value: "50+", label: "Projects Delivered" },
-  { value: "20+", label: "Team Members" },
-  { value: "99%", label: "Client Satisfaction" },
-];
+export interface ContactInfo {
+  email: string;
+  phones: { label: string; href: string }[];
+  address: string;
+  vatNo: string;
+  heading: string;
+  subheading: string;
+}
 
-export const trustPoints = [
-  { title: "Healthcare Focused", description: "Every solution is built around real clinical workflows." },
-  { title: "Nepal Based", description: "A local team that understands the local health system." },
-  { title: "Data Privacy Secure", description: "Encrypted storage and strict access controls by default." },
-  { title: "Milestone-Based Projects", description: "Transparent delivery with clearly defined milestones." },
-];
+export interface SiteContent {
+  name: string;
+  url: string;
+  tagline: string;
+  hero: { eyebrow: string; title: string; subtitle: string };
+  about: { title: string; paragraphs: string[] };
+  stats: { value: string; label: string }[];
+  trustPoints: { title: string; description: string }[];
+  mission: { title: string; body: string };
+  vision: { title: string; body: string };
+  values: { title: string; body: string }[];
+  contact: ContactInfo;
+  footer: { blurb: string };
+}
+
+export interface ServiceCategory {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  order: number;
+}
 
 export interface Service {
+  id: string;
+  categoryId: string;
+  icon: string;
+  title: string;
+  description: string;
+  order: number;
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  icon: string;
+  tagline: string;
+  description: string;
+  features: string[];
+  url?: string;
+  order: number;
+}
+
+export interface Brand {
+  id: string;
+  name: string;
+  logo?: string;
+  url?: string;
+  blurb: string;
+  order: number;
+}
+
+export interface Partner {
+  id: string;
+  name: string;
+  logo?: string;
+  url?: string;
+  order: number;
+}
+
+export interface CareerPerk {
+  id: string;
   icon: string;
   title: string;
   description: string;
 }
 
-export const services: Service[] = [
-  {
-    icon: "building",
-    title: "Healthcare Management Systems",
-    description:
-      "End-to-end hospital and clinic management software covering patient registration, OPD/IPD workflows, billing, pharmacy, and laboratory integration.",
-  },
-  {
-    icon: "flask",
-    title: "Laboratory Information Systems",
-    description:
-      "Streamlined LIS solutions for pathology labs — from sample collection and test ordering to result reporting and quality control dashboards.",
-  },
-  {
-    icon: "code",
-    title: "Custom Software Development",
-    description:
-      "Bespoke web and desktop applications built for your specific clinical or administrative workflows, using modern frameworks and agile delivery.",
-  },
-  {
-    icon: "shield",
-    title: "Health Data Security",
-    description:
-      "Comprehensive security audits, encrypted storage, role-based access controls, and compliance reviews to protect sensitive patient data.",
-  },
-  {
-    icon: "chart",
-    title: "Healthcare Analytics",
-    description:
-      "Interactive dashboards and reports that transform clinical and operational data into actionable insights for better decision-making.",
-  },
-  {
-    icon: "mobile",
-    title: "Mobile Health Applications",
-    description:
-      "Patient-facing and provider-facing mobile apps for appointment booking, teleconsultation, medication reminders, and health tracking.",
-  },
-];
-
-export interface Brand {
-  name: string;
-  logo: string;
-  url?: string;
-  blurb: string;
+export interface CareersContent {
+  perks: CareerPerk[];
+  positionsTitle: string;
+  emptyTitle: string;
+  emptyMessage: string;
+  emptyCta: string;
+  speculativeTitle: string;
+  speculativeMessage: string;
+  speculativeCta: string;
 }
 
-export const brands: Brand[] = [
-  {
-    name: "Oracle Health",
-    logo: "/images/brands/oracle-health.jpg",
-    url: "https://www.oracle.com/health/",
-    blurb: "Enterprise electronic health records and healthcare cloud solutions.",
-  },
-  {
-    name: "Aruba",
-    logo: "/images/brands/aruba.jpg",
-    url: "https://www.hpe.com/emea_europe/en/networking/hpe-aruba-networking.html",
-    blurb: "Secure, AI-powered networking infrastructure for modern hospitals.",
-  },
-  {
-    name: "Imprivata",
-    logo: "/images/brands/imprivata.png",
-    url: "https://www.imprivata.com/",
-    blurb: "Healthcare IT identity, access, and authentication solutions.",
-  },
-  {
-    name: "Medisha",
-    logo: "/images/brands/medisha.jpg",
-    url: "https://mediisha.app/",
-    blurb: "Digital health platform for appointments, records, and communication.",
-  },
-  {
-    name: "Dell",
-    logo: "/images/brands/dell.png",
-    url: "https://www.dell.com/en-us",
-    blurb: "Reliable hardware and end-to-end IT infrastructure solutions.",
-  },
-  {
-    name: "Accops",
-    logo: "/images/brands/accops.png",
-    url: "https://www.accops.com/",
-    blurb: "Virtual desktops and secure remote access for healthcare teams.",
-  },
-];
-
-export interface Partner {
-  name: string;
-  logo?: string;
-  url?: string;
+export async function getSite(): Promise<SiteContent> {
+  return readJson<SiteContent>("site.json");
 }
 
-export const partners: Partner[] = [
-  { name: "Budhanilkantha Municipal Hospital" },
-  { name: "Central Jail Hospital", url: "https://cjhospital.gov.np/" },
-  { name: "Chitwan Medical College", logo: "/images/partners/chitwan-medical.png", url: "https://www.cmc.edu.np/" },
-  { name: "Dhulikhel Hospital", logo: "/images/partners/dhulikhel.png", url: "https://dhulikhelhospital.org/" },
-  { name: "Gaindakot Basic Hospital" },
-  { name: "Khwopa Hospital", logo: "/images/partners/khwopa.png", url: "https://khwopahospital.com/" },
-  { name: "MoHP — Ministry of Health & Population", url: "https://mohp.gov.np/" },
-  { name: "NSI Nick Simons Institute", logo: "/images/partners/nsi.png", url: "https://nsi.edu.np/" },
-  { name: "Nepal Police Hospital", logo: "/images/partners/nepal-police.png", url: "https://nph.nepalpolice.gov.np/" },
-  { name: "Trishuli Hospital", url: "https://trishulihospital.bagamati.gov.np/" },
-];
+export async function getCategories(): Promise<ServiceCategory[]> {
+  return readJson<ServiceCategory[]>("categories.json");
+}
 
-export const values = [
-  {
-    title: "Our Mission",
-    body: "To democratise healthcare technology in Nepal by delivering affordable, scalable and reliable digital solutions that empower healthcare providers to focus on what matters most — patient care. We believe every clinic, from Kathmandu to the remote hills, deserves world-class software.",
-  },
-  {
-    title: "Our Vision",
-    body: "To be the most trusted healthcare technology partner in South Asia — building a future where every healthcare worker has access to digital tools that are as powerful as they are intuitive, enabling Nepal's healthcare system to reach its full potential.",
-  },
-  {
-    title: "Innovation",
-    body: "We push the boundaries of healthcare technology with creative solutions that solve real-world clinical challenges.",
-  },
-  {
-    title: "Reliability",
-    body: "Healthcare never sleeps. Our systems are built for 99.9% uptime with rock-solid infrastructure and redundancy.",
-  },
-  {
-    title: "Compassion",
-    body: "Every line of code we write is in service of better patient outcomes and a healthier Nepal.",
-  },
-];
+export async function getServices(): Promise<Service[]> {
+  return readJson<Service[]>("services.json");
+}
 
-export const careerPerks = [
-  { icon: "heart", title: "Meaningful Work", description: "Every line of code contributes to better patient outcomes across Nepal." },
-  { icon: "book", title: "Continuous Learning", description: "Regular training, knowledge-sharing sessions, and career development opportunities." },
-  { icon: "users", title: "Great Team", description: "Collaborative environment where your ideas are heard and celebrated." },
-  { icon: "balance", title: "Work-Life Balance", description: "Flexible schedules, generous leave, and a culture that respects your time." },
-];
+export async function getProducts(): Promise<Product[]> {
+  return readJson<Product[]>("products.json");
+}
+
+export async function getBrands(): Promise<Brand[]> {
+  return readJson<Brand[]>("brands.json");
+}
+
+export async function getPartners(): Promise<Partner[]> {
+  return readJson<Partner[]>("partners.json");
+}
+
+export async function getCareers(): Promise<CareersContent> {
+  return readJson<CareersContent>("careers.json");
+}

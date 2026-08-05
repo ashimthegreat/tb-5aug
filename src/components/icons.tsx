@@ -101,6 +101,66 @@ const paths: Record<string, React.ReactNode> = {
   spark: (
     <path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8" />
   ),
+  hospital: (
+    <>
+      <path d="M3 21h18" />
+      <path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16" />
+      <path d="M9 21v-4h6v4M12 7v4M10 9h4" />
+    </>
+  ),
+  server: (
+    <>
+      <rect x="2" y="3" width="20" height="7" rx="2" />
+      <rect x="2" y="14" width="20" height="7" rx="2" />
+      <path d="M6 6.5h.01M6 17.5h.01M10 6.5h.01M10 17.5h.01" />
+    </>
+  ),
+  network: (
+    <>
+      <rect x="9" y="2" width="6" height="6" rx="1" />
+      <rect x="2" y="16" width="6" height="6" rx="1" />
+      <rect x="16" y="16" width="6" height="6" rx="1" />
+      <path d="M12 8v4M5 16v-1a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v1" />
+    </>
+  ),
+  cpu: (
+    <>
+      <rect x="6" y="6" width="12" height="12" rx="1" />
+      <path d="M9 1v4M15 1v4M9 19v4M15 19v4M1 9h4M1 15h4M19 9h4M19 15h4" />
+      <rect x="10" y="10" width="4" height="4" />
+    </>
+  ),
+  database: (
+    <>
+      <ellipse cx="12" cy="5" rx="9" ry="3" />
+      <path d="M3 5v14a9 3 0 0 0 18 0V5" />
+      <path d="M3 12a9 3 0 0 0 18 0" />
+    </>
+  ),
+  layers: (
+    <>
+      <path d="m12 2 8.5 4.5L12 11 3.5 6.5 12 2Z" />
+      <path d="m3.5 12 8.5 4.5 8.5-4.5M3.5 17.5 12 22l8.5-4.5" />
+    </>
+  ),
+  briefcase: (
+    <>
+      <rect x="2" y="7" width="20" height="14" rx="2" />
+      <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
+    </>
+  ),
+  globe: (
+    <>
+      <circle cx="12" cy="12" r="10" />
+      <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10Z" />
+    </>
+  ),
+  factory: (
+    <>
+      <path d="M2 20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8l-7 5V8l-7 5V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" />
+      <path d="M17 18h1M12 18h1M7 18h1" />
+    </>
+  ),
 };
 
 export function Icon({

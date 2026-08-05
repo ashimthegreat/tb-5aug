@@ -1,20 +1,23 @@
 import Link from "next/link";
-import { site } from "@/lib/data";
+import { getSite } from "@/lib/data";
 import { Icon } from "./icons";
 import Logo from "./Logo";
 
 const quickLinks = [
   { label: "Home", href: "/" },
   { label: "About Us", href: "/#about" },
-  { label: "Services", href: "/#services" },
-  { label: "Vision & Mission", href: "/#vision" },
-  { label: "Brands", href: "/brands" },
+  { label: "Services", href: "/services" },
+  { label: "Products", href: "/products" },
+  { label: "Technology Partners", href: "/brands" },
   { label: "Partners", href: "/partners" },
   { label: "Careers", href: "/careers" },
   { label: "Contact", href: "/#contact" },
 ];
 
-export default function Footer() {
+export default async function Footer() {
+  const site = await getSite();
+  const { contact } = site;
+
   return (
     <footer className="bg-slate-900 text-slate-300">
       <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:px-8">
@@ -22,12 +25,12 @@ export default function Footer() {
           <div>
             <Logo className="brightness-0 invert" />
             <p className="mt-4 max-w-xs text-sm leading-relaxed">
-              {site.tagline}
+              {site.footer.blurb}
             </p>
             <p className="mt-4 text-sm text-slate-400">
-              {site.address}
+              {contact.address}
               <br />
-              VAT No.: {site.vatNo}
+              VAT No.: {contact.vatNo}
             </p>
           </div>
 
@@ -56,18 +59,18 @@ export default function Footer() {
             <ul className="mt-4 space-y-3 text-sm">
               <li className="flex items-start gap-3">
                 <Icon name="pin" className="mt-0.5 h-4 w-4 shrink-0 text-brand-400" />
-                <span className="text-slate-400">{site.address}</span>
+                <span className="text-slate-400">{contact.address}</span>
               </li>
               <li className="flex items-center gap-3">
                 <Icon name="mail" className="h-4 w-4 shrink-0 text-brand-400" />
                 <a
-                  href={`mailto:${site.email}`}
+                  href={`mailto:${contact.email}`}
                   className="text-slate-400 transition-colors hover:text-brand-300"
                 >
-                  {site.email}
+                  {contact.email}
                 </a>
               </li>
-              {site.phones.map((phone) => (
+              {contact.phones.map((phone) => (
                 <li key={phone.href} className="flex items-center gap-3">
                   <Icon name="phone" className="h-4 w-4 shrink-0 text-brand-400" />
                   <a

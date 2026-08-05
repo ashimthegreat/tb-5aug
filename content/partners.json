@@ -1,0 +1,12 @@
+[
+  { "id": "budhanilkantha-municipal-hospital", "name": "Budhanilkantha Municipal Hospital", "url": "", "order": 1 },
+  { "id": "central-jail-hospital", "name": "Central Jail Hospital", "url": "https://cjhospital.gov.np/", "order": 2 },
+  { "id": "chitwan-medical-college", "name": "Chitwan Medical College", "logo": "/images/partners/chitwan-medical.png", "url": "https://www.cmc.edu.np/", "order": 3 },
+  { "id": "dhulikhel-hospital", "name": "Dhulikhel Hospital", "logo": "/images/partners/dhulikhel.png", "url": "https://dhulikhelhospital.org/", "order": 4 },
+  { "id": "gaindakot-basic-hospital", "name": "Gaindakot Basic Hospital", "url": "", "order": 5 },
+  { "id": "khwopa-hospital", "name": "Khwopa Hospital", "logo": "/images/partners/khwopa.png", "url": "https://khwopahospital.com/", "order": 6 },
+  { "id": "mohp", "name": "MoHP — Ministry of Health & Population", "url": "https://mohp.gov.np/", "order": 7 },
+  { "id": "nsi", "name": "NSI Nick Simons Institute", "logo": "/images/partners/nsi.png", "url": "https://nsi.edu.np/", "order": 8 },
+  { "id": "nepal-police-hospital", "name": "Nepal Police Hospital", "logo": "/images/partners/nepal-police.png", "url": "https://nph.nepalpolice.gov.np/", "order": 9 },
+  { "id": "trishuli-hospital", "name": "Trishuli Hospital", "url": "https://trishulihospital.bagamati.gov.np/", "order": 10 }
+]

@@ -1,0 +1,50 @@
+[
+  {
+    "id": "oracle-health",
+    "name": "Oracle Health",
+    "logo": "/images/brands/oracle-health.jpg",
+    "url": "https://www.oracle.com/health/",
+    "blurb": "Enterprise electronic health records and healthcare cloud solutions.",
+    "order": 1
+  },
+  {
+    "id": "aruba",
+    "name": "Aruba",
+    "logo": "/images/brands/aruba.jpg",
+    "url": "https://www.hpe.com/emea_europe/en/networking/hpe-aruba-networking.html",
+    "blurb": "Secure, AI-powered networking infrastructure for modern hospitals.",
+    "order": 2
+  },
+  {
+    "id": "imprivata",
+    "name": "Imprivata",
+    "logo": "/images/brands/imprivata.png",
+    "url": "https://www.imprivata.com/",
+    "blurb": "Healthcare IT identity, access, and authentication solutions.",
+    "order": 3
+  },
+  {
+    "id": "medisha",
+    "name": "Medisha",
+    "logo": "/images/brands/medisha.jpg",
+    "url": "https://mediisha.app/",
+    "blurb": "Digital health platform for appointments, records, and communication.",
+    "order": 4
+  },
+  {
+    "id": "dell",
+    "name": "Dell",
+    "logo": "/images/brands/dell.png",
+    "url": "https://www.dell.com/en-us",
+    "blurb": "Reliable hardware and end-to-end IT infrastructure solutions.",
+    "order": 5
+  },
+  {
+    "id": "accops",
+    "name": "Accops",
+    "logo": "/images/brands/accops.png",
+    "url": "https://www.accops.com/",
+    "blurb": "Virtual desktops and secure remote access for healthcare teams.",
+    "order": 6
+  }
+]

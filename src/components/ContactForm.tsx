@@ -1,13 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { site } from "@/lib/data";
 import { Icon } from "./icons";
 
 const inputClasses =
   "w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-ink placeholder:text-slate-400 transition-colors focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200";
 
-export default function ContactForm() {
+export default function ContactForm({ email }: { email: string }) {
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
 
@@ -16,18 +15,18 @@ export default function ContactForm() {
     const form = event.currentTarget;
     const data = new FormData(form);
     const name = String(data.get("name") ?? "").trim();
-    const email = String(data.get("email") ?? "").trim();
+    const visitorEmail = String(data.get("email") ?? "").trim();
     const subject = String(data.get("subject") ?? "").trim();
     const message = String(data.get("message") ?? "").trim();
 
     const body = [
       `Name: ${name}`,
-      `Email: ${email}`,
+      `Email: ${visitorEmail}`,
       "",
       message,
     ].join("\n");
 
-    const mailto = `mailto:${site.email}?subject=${encodeURIComponent(
+    const mailto = `mailto:${email}?subject=${encodeURIComponent(
       subject || "Website enquiry"
     )}&body=${encodeURIComponent(body)}`;
 
@@ -47,8 +46,8 @@ export default function ContactForm() {
         <h3 className="mt-5 text-2xl font-bold text-ink">Message Ready!</h3>
         <p className="mt-2 max-w-sm text-sm leading-relaxed text-slate-600">
           Your email client should have opened with your message addressed to{" "}
-          <span className="font-semibold text-ink">{site.email}</span>. Just hit
-          send and our team will respond within 24 hours.
+          <span className="font-semibold text-ink">{email}</span>. Just hit send
+          and our team will respond within 24 hours.
         </p>
         <button
           type="button"

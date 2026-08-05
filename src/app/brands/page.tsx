@@ -1,29 +1,31 @@
 import type { Metadata } from "next";
-import { brands } from "@/lib/data";
+import { getBrands } from "@/lib/data";
 import PageHeader from "@/components/PageHeader";
 import BrandCard from "@/components/BrandCard";
 import CTABanner from "@/components/CTABanner";
 
 export const metadata: Metadata = {
-  title: "Our Brands",
+  title: "Technology Partners",
   description:
-    "TechBucket develops and maintains a portfolio of healthcare and technology products trusted across Nepal — Oracle Health, Aruba, Imprivata, Medisha, Dell and Accops.",
+    "TechBucket partners with leading technology brands — Oracle Health, Aruba, Imprivata, Medisha, Dell and Accops — to deliver the best solutions for healthcare in Nepal.",
 };
 
-export default function BrandsPage() {
+export default async function BrandsPage() {
+  const brands = await getBrands();
+
   return (
     <>
       <PageHeader
-        eyebrow="Our Brands"
-        title="The Products We Build"
-        description="TechBucket develops and maintains a portfolio of healthcare and technology products trusted across Nepal."
-        breadcrumb="Brands"
+        eyebrow="Technology Partners"
+        title="Backed by the Best in the Industry"
+        description="We partner with leading technology brands to deliver world-class solutions — from enterprise health records to secure networking infrastructure."
+        breadcrumb="Technology Partners"
       />
       <section className="bg-white py-16 sm:py-20">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {brands.map((brand) => (
-              <BrandCard key={brand.name} brand={brand} />
+              <BrandCard key={brand.id} brand={brand} />
             ))}
           </div>
         </div>

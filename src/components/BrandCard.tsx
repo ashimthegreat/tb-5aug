@@ -6,13 +6,19 @@ export default function BrandCard({ brand }: { brand: Brand }) {
   return (
     <div className="flex h-full flex-col rounded-2xl border border-slate-100 bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:border-brand-200 hover:shadow-md">
       <div className="flex h-24 items-center justify-center rounded-xl bg-surface px-4">
-        <Image
-          src={brand.logo}
-          alt={`${brand.name} logo`}
-          width={200}
-          height={80}
-          className="max-h-20 w-auto object-contain"
-        />
+        {brand.logo ? (
+          <Image
+            src={brand.logo}
+            alt={`${brand.name} logo`}
+            width={200}
+            height={80}
+            className="max-h-20 w-auto object-contain"
+          />
+        ) : (
+          <span className="text-2xl font-bold text-brand-700">
+            {brand.name}
+          </span>
+        )}
       </div>
       <h3 className="mt-5 text-lg font-semibold text-ink">{brand.name}</h3>
       <p className="mt-2 flex-1 text-sm leading-relaxed text-slate-600">

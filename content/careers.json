@@ -1,0 +1,15 @@
+{
+  "perks": [
+    { "id": "meaningful-work", "icon": "heart", "title": "Meaningful Work", "description": "Every line of code contributes to better patient outcomes across Nepal." },
+    { "id": "continuous-learning", "icon": "book", "title": "Continuous Learning", "description": "Regular training, knowledge-sharing sessions, and career development opportunities." },
+    { "id": "great-team", "icon": "users", "title": "Great Team", "description": "Collaborative environment where your ideas are heard and celebrated." },
+    { "id": "work-life-balance", "icon": "balance", "title": "Work-Life Balance", "description": "Flexible schedules, generous leave, and a culture that respects your time." }
+  ],
+  "positionsTitle": "Open Positions",
+  "emptyTitle": "No open positions right now",
+  "emptyMessage": "We're not actively hiring at the moment, but we'd love to hear from talented developers, designers, and healthcare IT professionals.",
+  "emptyCta": "Send your CV anyway",
+  "speculativeTitle": "Don't see the right role?",
+  "speculativeMessage": "We love hearing from talented people. Send us your CV and tell us what you'd like to work on.",
+  "speculativeCta": "Send a Speculative Application"
+}
