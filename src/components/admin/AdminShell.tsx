@@ -11,6 +11,7 @@ import UsersEditor from "./UsersEditor";
 import CustomersEditor from "./CustomersEditor";
 import SentLogEditor from "./SentLogEditor";
 import OrdersEditor from "./OrdersEditor";
+import FulfillmentEditor from "./FulfillmentEditor";
 import MyProfileEditor from "./MyProfileEditor";
 import DiscountsEditor from "./DiscountsEditor";
 import type { AdminRole } from "@/lib/admin";
@@ -37,9 +38,10 @@ const tabs: { id: string; label: string; roles: AdminRole[] }[] = [
   { id: "careers", label: "Careers", roles: ["superadmin", "content"] },
   { id: "customers", label: "Customers", roles: ["superadmin", "sales"] },
   { id: "orders", label: "Orders & Requests", roles: ["superadmin", "sales"] },
+  { id: "fulfillment", label: "Fulfillment", roles: ["superadmin", "sales", "logistics"] },
   { id: "sent-log", label: "Sent Log", roles: ["superadmin"] },
   { id: "support", label: "Support", roles: ["superadmin", "support"] },
-  { id: "profile", label: "My Profile", roles: ["superadmin", "content", "sales", "support"] },
+  { id: "profile", label: "My Profile", roles: ["superadmin", "content", "sales", "support", "logistics"] },
   { id: "discounts", label: "Discounts", roles: ["superadmin"] },
   { id: "users", label: "Users", roles: ["superadmin"] },
 ];
@@ -117,6 +119,7 @@ export default function AdminShell({ user }: { user: ShellUser }) {
           {tab === "careers" && <CareersEditor />}
           {tab === "customers" && <CustomersEditor user={user} />}
           {tab === "orders" && <OrdersEditor />}
+          {tab === "fulfillment" && <FulfillmentEditor user={user} />}
           {tab === "sent-log" && <SentLogEditor />}
           {tab === "support" && <SupportEditor />}
           {tab === "profile" && <MyProfileEditor user={user} />}

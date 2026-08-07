@@ -24,6 +24,7 @@ import {
   Textarea,
 } from "./ui";
 import SearchablePicker from "./SearchablePicker";
+import type { FulfillmentOrder, OrderType } from "@/lib/fulfillment";
 
 interface Catalog {
   products: { name: string; price: number }[];
@@ -104,6 +105,11 @@ function round2(n: number): number {
   return Math.round(n * 100) / 100;
 }
 
+const ORDER_TYPE_LABELS: Record<OrderType, string> = {
+  delivery: "Delivery to customer",
+  pickup: "Pickup / handover to sales",
+};
+
 function blankCustomer(createdBy: string): Customer {
   return {
     id: crypto.randomUUID(),
@@ -153,6 +159,16 @@ export default function CustomersEditor({
   const [suchiStatus, setSuchiStatus] = useState("");
   const [suchiSending, setSuchiSending] = useState(false);
 
+  const [converted, setConverted] = useState<Record<string, string>>({});
+  const [orderTarget, setOrderTarget] = useState<{
+    customer: Customer;
+    quote: Quote;
+  } | null>(null);
+  const [orderType, setOrderType] = useState<OrderType>("delivery");
+  const [orderNote, setOrderNote] = useState("");
+  const [orderStatus, setOrderStatus] = useState("");
+  const [orderSending, setOrderSending] = useState(false);
+
   useEffect(() => {
     apiGet<Customer[]>("customers")
       .then(setCustomers)
@@ -160,6 +176,15 @@ export default function CustomersEditor({
     apiGet<Catalog>("catalog")
       .then(setCatalog)
       .catch(() => setCatalog(null));
+    apiGet<FulfillmentOrder[]>("fulfillment")
+      .then((list) => {
+        const map: Record<string, string> = {};
+        for (const o of list) {
+          if (o.quoteId) map[o.quoteId] = o.orderNo;
+        }
+        setConverted(map);
+      })
+      .catch(() => {});
   }, []);
 
   function update(id: string, patch: Partial<Customer>) {
@@ -449,6 +474,45 @@ export default function CustomersEditor({
     }
   }
 
+  function openOrder(c: Customer, q: Quote) {
+    setOrderTarget({ customer: c, quote: q });
+    setOrderType("delivery");
+    setOrderNote("");
+    setOrderStatus("");
+  }
+
+  async function submitOrder() {
+    if (!orderTarget) return;
+    setOrderSending(true);
+    setOrderStatus("");
+    try {
+      const res = await fetch("/api/admin/fulfillment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          quoteId: orderTarget.quote.id,
+          orderType,
+          notes: orderNote.trim(),
+        }),
+      });
+      const body = await res.json();
+      if (res.ok && body.ok) {
+        setOrderStatus(`Order created: ${body.order.orderNo}`);
+        setConverted((prev) => ({
+          ...prev,
+          [orderTarget.quote.id]: body.order.orderNo,
+        }));
+        setTimeout(() => setOrderTarget(null), 1400);
+      } else {
+        setOrderStatus(`Failed: ${body.error || "could not create order"}`);
+      }
+    } catch (e) {
+      setOrderStatus(`Failed: ${(e as Error).message}`);
+    } finally {
+      setOrderSending(false);
+    }
+  }
+
   if (!customers) {
     return <p className="text-sm text-slate-500">{status || "Loading…"}</p>;
   }
@@ -639,6 +703,20 @@ export default function CustomersEditor({
                               >
                                 Print
                               </button>
+                              {q.status === "sent" &&
+                                (converted[q.id] ? (
+                                  <span className="rounded-full bg-slate-100 px-2 py-0.5 font-medium text-slate-500">
+                                    Order placed · {converted[q.id]}
+                                  </span>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    className="rounded-lg border border-brand-200 bg-brand-50 px-2 py-0.5 font-medium text-brand-700 transition-colors hover:bg-brand-100"
+                                    onClick={() => openOrder(c, q)}
+                                  >
+                                    Proceed to order
+                                  </button>
+                                ))}
                             </li>
                           ))}
                         </ul>
@@ -961,6 +1039,86 @@ export default function CustomersEditor({
                 disabled={suchiSending}
               >
                 {suchiSending ? "Sending…" : "Send as email"}
+              </PrimaryButton>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {orderTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+          <div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
+            <h3 className="text-base font-semibold text-slate-900">
+              Proceed to order
+            </h3>
+            <p className="mt-1 text-xs text-slate-500">
+              Convert quote {orderTarget.quote.quoteNo} into a fulfillment order
+              for {orderTarget.customer.name}. The items and totals are copied
+              from the quote, and the logistics team will see it in the
+              Fulfillment tab.
+            </p>
+
+            <div className="mt-4">
+              <Label>Order type</Label>
+              <div className="space-y-2">
+                {(["delivery", "pickup"] as OrderType[]).map((t) => (
+                  <label
+                    key={t}
+                    className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 text-sm transition-colors ${
+                      orderType === t
+                        ? "border-brand-500 bg-brand-50"
+                        : "border-slate-200 bg-white hover:bg-slate-50"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="orderType"
+                      checked={orderType === t}
+                      onChange={() => setOrderType(t)}
+                      className="mt-0.5 h-4 w-4 text-brand-600 focus:ring-brand-500"
+                    />
+                    <span>
+                      <span className="block font-semibold text-slate-800">
+                        {ORDER_TYPE_LABELS[t]}
+                      </span>
+                      <span className="block text-xs text-slate-500">
+                        {t === "delivery"
+                          ? "Logistics prepares the devices and delivers them to the customer."
+                          : "Logistics prepares the devices, sales is notified, then the customer collects / sales hands over."}
+                      </span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <Textarea
+                label="Note for logistics (optional)"
+                rows={3}
+                value={orderNote}
+                onChange={(e) => setOrderNote(e.target.value)}
+                placeholder="Delivery instructions, installation note, etc."
+              />
+            </div>
+
+            {orderStatus && (
+              <p className="mt-3 text-sm text-slate-600">{orderStatus}</p>
+            )}
+            <div className="mt-4 flex justify-end gap-2">
+              <GhostButton
+                type="button"
+                onClick={() => setOrderTarget(null)}
+                disabled={orderSending}
+              >
+                Cancel
+              </GhostButton>
+              <PrimaryButton
+                type="button"
+                onClick={submitOrder}
+                disabled={orderSending}
+              >
+                {orderSending ? "Creating…" : "Create order"}
               </PrimaryButton>
             </div>
           </div>
