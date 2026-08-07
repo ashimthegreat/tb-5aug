@@ -155,6 +155,7 @@ export function renderBillHtml(opts: BillRenderOptions): string {
       <div class="toolbar">
         <strong style="font-size:13px">Bill ${esc(bill.billNo)}</strong>
         <span style="flex:1"></span>
+        <button class="tb-btn tb-btn-primary" onclick="window.print()">Print</button>
         <button class="tb-btn" onclick="document.body.classList.remove('no-letterhead');window.print()">Print with letterhead</button>
         <button class="tb-btn" onclick="document.body.classList.add('no-letterhead');window.print()">Print without letterhead</button>
       </div>`
@@ -297,6 +298,8 @@ export function renderBillHtml(opts: BillRenderOptions): string {
     font-weight: 600;
     cursor: pointer;
   }
+  .tb-btn-primary { background: #0f172a; }
+  .tb-btn-primary:hover { background: #1e293b; }
   .tb-btn:hover { background: #a00f15; }
   .no-letterhead .letterhead { display: none; }
   .no-letterhead .footer { display: none; }
