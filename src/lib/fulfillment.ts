@@ -26,10 +26,10 @@ export interface FulfillmentEvent {
   to: string;
   note?: string;
   amount?: number;
-  action?: "verify" | "payment";
+  action?: "verify" | "payment" | "void" | "void-bill";
 }
 
-export type { PaymentRecord, PaymentStatus } from "./payment";
+export type { PaymentRecord, PaymentStatus, AgingBucket, PaymentMethod } from "./payment";
 import type { PaymentRecord } from "./payment";
 export {
   DEFAULT_PAYMENT_DAYS,
@@ -38,6 +38,10 @@ export {
   remaining,
   hasDueDatePassed,
   paymentStatus,
+  activePayments,
+  daysPastDue,
+  agingBucket,
+  PAYMENT_METHODS,
 } from "./payment";
 
 export interface FulfillmentOrder {
@@ -145,4 +149,13 @@ export async function nextBillNo(): Promise<string> {
   );
   const next = nums.reduce((m, n) => Math.max(m, n), 0) + 1;
   return `TTR-BIL-${new Date().getFullYear()}-${String(next).padStart(4, "0")}`;
+}
+
+export async function nextReceiptNo(): Promise<string> {
+  const orders = await listFulfillment();
+  const nums = orders.flatMap((o) =>
+    (o.payments ?? []).map((p) => Number(p.receiptNo?.match(/(\d+)$/)?.[1]) || 0)
+  );
+  const next = nums.reduce((m, n) => Math.max(m, n), 0) + 1;
+  return `TCR-RCP-${new Date().getFullYear()}-${String(next).padStart(4, "0")}`;
 }

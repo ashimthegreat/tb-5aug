@@ -27,6 +27,9 @@ export interface BillData {
   vat: number;
   total: number;
   notes?: string;
+  dueDate?: string;
+  paid?: number;
+  received?: boolean;
 }
 
 export interface BillParty {
@@ -111,6 +114,33 @@ function totalsTable(bill: BillData): string {
     `<tr class="gt"><td class="tot-label">Total</td><td class="r">${money(bill.total)}</td></tr>`
   );
   return `<table class="totals"><tbody>${rows.join("")}</tbody></table>`;
+}
+
+function paymentBox(bill: BillData): string {
+  if (!bill.dueDate) return "";
+  const paid = bill.paid ?? 0;
+  const balance = Math.round((bill.total - paid) * 100) / 100;
+  const received = bill.received ?? balance <= 0;
+  const status = received
+    ? "PAID"
+    : balance > 0 && balance < bill.total
+      ? "PARTIALLY PAID"
+      : "UNPAID";
+  const rows = received
+    ? `<tr class="gt"><td class="tot-label">Amount Paid</td><td class="r">${money(paid)}</td></tr>
+       <tr class="paid-ok"><td class="tot-label">Balance Due</td><td class="r">0</td></tr>`
+    : `<tr><td class="tot-label">Amount Paid</td><td class="r">${money(paid)}</td></tr>
+       <tr class="balance-due"><td class="tot-label">Balance Due</td><td class="r">${money(balance)}</td></tr>`;
+  return `
+    <div class="payment-box${received ? " pb-received" : ""}">
+      <div class="pb-head">${status}</div>
+      <table class="totals payment-cols"><tbody>
+        <tr><td class="tot-label">Bill Date</td><td class="r">${esc(bill.date)}</td></tr>
+        <tr><td class="tot-label">Due Date</td><td class="r">${esc(bill.dueDate)} (BS ${esc(bsDate(bill.dueDate))})</td></tr>
+        <tr><td class="tot-label">Total</td><td class="r">${money(bill.total)}</td></tr>
+        ${rows}
+      </tbody></table>
+    </div>`;
 }
 
 export function renderBillHtml(opts: BillRenderOptions): string {
@@ -252,6 +282,13 @@ export function renderBillHtml(opts: BillRenderOptions): string {
   table.totals .tot-label { width: 70%; padding-left: 0; }
   table.totals .r { text-align: right; white-space: nowrap; }
   table.totals tr.gt td { font-weight: 700; border-top: 2px solid #1c2333; }
+  .payment-box { margin-top: 14px; border: 1.5px solid #c0141b; border-radius: 8px; padding: 8px 12px 10px; }
+  .payment-box .pb-head { font-weight: 800; font-size: 13pt; letter-spacing: .06em; color: #c0141b; }
+  .payment-box.pb-received { border-color: #15983d; }
+  .payment-box.pb-received .pb-head { color: #0f7a32; }
+  .payment-box table.totals td { border-top: 1px solid #ddd; }
+  table.totals .balance-due td { font-weight: 700; color: #c0141b; }
+  table.totals tr.paid-ok td { font-weight: 700; color: #0f7a32; }
   .in-words { margin: 12px 0; font-weight: 700; }
   .in-words span { font-weight: 400; }
   .closing { margin-top: 10px; }
@@ -344,6 +381,8 @@ export function renderBillHtml(opts: BillRenderOptions): string {
     ${itemsTable(bill.items)}
 
     ${totalsTable(bill)}
+
+    ${paymentBox(bill)}
 
     <div class="in-words">In words: <span>${esc(amountInWords(bill.total))}</span></div>
 

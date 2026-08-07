@@ -11,6 +11,7 @@ import {
   addDaysIso,
   type FulfillmentOrder,
 } from "@/lib/fulfillment";
+import { paidTotal, paymentStatus } from "@/lib/payment";
 import { signatureName } from "@/lib/quotation";
 import { publicUrlAsDataUri } from "@/lib/embed";
 import { stampDataUrl } from "@/lib/stamp";
@@ -178,6 +179,9 @@ export async function GET(req: NextRequest) {
       vat: order.vat,
       total: order.total,
       notes: order.notes,
+      dueDate: order.paymentDueDate,
+      paid: paidTotal(order),
+      received: paymentStatus(order) === "received",
     },
     billedBy,
     billTo,

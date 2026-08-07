@@ -52,6 +52,13 @@ const PAYMENT_BADGE: Record<PaymentStatus, string> = {
   received: "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
 };
 
+const METHOD_LABELS: Record<string, string> = {
+  bank: "Bank Transfer",
+  cash: "Cash",
+  online: "Online Payment",
+  transfer: "Offline Transfer",
+};
+
 const FILTERS: {
   id: string;
   label: string;
@@ -162,8 +169,18 @@ export default function FulfillmentEditor({
   const [busy, setBusy] = useState<string | null>(null);
   const [verifyNotes, setVerifyNotes] = useState<Record<string, string>>({});
   const [payments, setPayments] = useState<
-    Record<string, { amount: string; note: string }>
+    Record<string, { amount: string; note: string; method: string; ref: string }>
   >({});
+  const [voiding, setVoiding] = useState<{
+    orderId: string;
+    index: number;
+    amount: number;
+  } | null>(null);
+  const [voidReason, setVoidReason] = useState("");
+  const [voidBillOrder, setVoidBillOrder] = useState<FulfillmentOrder | null>(
+    null
+  );
+  const [voidBillReason, setVoidBillReason] = useState("");
 
   useEffect(() => {
     apiGet<FulfillmentOrder[]>("fulfillment")
@@ -224,7 +241,12 @@ export default function FulfillmentEditor({
   }
 
   async function recordPayment(o: FulfillmentOrder) {
-    const entry = payments[o.id] ?? { amount: "", note: "" };
+    const entry = payments[o.id] ?? {
+      amount: "",
+      note: "",
+      method: "",
+      ref: "",
+    };
     const amount = Number(entry.amount);
     if (!Number.isFinite(amount) || amount <= 0) {
       setError("Enter a valid payment amount.");
@@ -241,6 +263,8 @@ export default function FulfillmentEditor({
           action: "payment",
           amount,
           note: entry.note.trim() || undefined,
+          method: entry.method.trim() || undefined,
+          ref: entry.ref.trim() || undefined,
         }),
       });
       const body = await res.json();
@@ -248,7 +272,77 @@ export default function FulfillmentEditor({
         setError(body.error || "Could not record the payment.");
         return;
       }
-      setPayments((prev) => ({ ...prev, [o.id]: { amount: "", note: "" } }));
+      setPayments((prev) => ({
+        ...prev,
+        [o.id]: { amount: "", note: "", method: "", ref: "" },
+      }));
+      setOrders(await apiGet<FulfillmentOrder[]>("fulfillment"));
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function voidPayment(orderId: string, index: number) {
+    const reason = voidReason.trim();
+    if (!reason) {
+      setError("Please enter a reason for voiding the payment.");
+      return;
+    }
+    setBusy(orderId);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/fulfillment", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: orderId,
+          action: "void-payment",
+          index,
+          reason,
+        }),
+      });
+      const body = await res.json();
+      if (!res.ok || !body.ok) {
+        setError(body.error || "Could not void the payment.");
+        return;
+      }
+      setVoiding(null);
+      setVoidReason("");
+      setOrders(await apiGet<FulfillmentOrder[]>("fulfillment"));
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function voidBill(orderId: string) {
+    const reason = voidBillReason.trim();
+    if (!reason) {
+      setError("Please enter a reason for voiding the bill.");
+      return;
+    }
+    setBusy(orderId);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/fulfillment", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: orderId,
+          action: "void-bill",
+          reason,
+        }),
+      });
+      const body = await res.json();
+      if (!res.ok || !body.ok) {
+        setError(body.error || "Could not void the bill.");
+        return;
+      }
+      setVoidBillOrder(null);
+      setVoidBillReason("");
       setOrders(await apiGet<FulfillmentOrder[]>("fulfillment"));
     } catch {
       setError("Network error. Please try again.");
@@ -422,6 +516,16 @@ export default function FulfillmentEditor({
                               : "Create bill"}
                           </button>
                         )}
+                      {user.role === "superadmin" && o.billNo && (
+                        <button
+                          type="button"
+                          disabled={busy === o.id}
+                          onClick={() => void setVoidBillOrder(o)}
+                          className="rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 disabled:opacity-60"
+                        >
+                          Void bill
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
@@ -534,10 +638,57 @@ export default function FulfillmentEditor({
                     {o.payments && o.payments.length > 0 && (
                       <ul className="mt-1.5 space-y-0.5">
                         {o.payments.map((p, i) => (
-                          <li key={i} className="text-xs text-slate-500">
+                          <li
+                            key={i}
+                            className={`text-xs ${
+                              p.voided
+                                ? "text-slate-400 line-through"
+                                : "text-slate-500"
+                            }`}
+                          >
                             {money(p.amount)} received · {p.by} ·{" "}
                             {formatDate(p.at)}
+                            {p.method ? ` · ${METHOD_LABELS[p.method] ?? p.method}` : ""}
+                            {p.ref ? ` · ref ${p.ref}` : ""}
                             {p.note ? ` — ${p.note}` : ""}
+                            {p.receiptNo && !p.voided &&
+                              (user.role === "superadmin" ||
+                                user.role === "logistics" || user.role === "sales")  && (
+                                <button
+                                  type="button"
+                                  className="ml-2 font-medium text-brand-600 hover:text-brand-700"
+                                  onClick={() =>
+                                    window.open(
+                                      `/api/admin/receipt?id=${o.id}&index=${i}`,
+                                      "_blank"
+                                    )
+                                  }
+                                >
+                                  Receipt
+                                </button>
+                              )}
+                            {p.voided &&
+                              (p.voidReason
+                                ? ` — VOIDED (${p.voidReason})`
+                                : " — VOIDED")}
+                            {!p.voided &&
+                              (user.role === "superadmin" ||
+                                user.role === "logistics") && (
+                                <button
+                                  type="button"
+                                  className="ml-2 font-medium text-red-600 hover:text-red-700"
+                                  onClick={() => {
+                                    setVoiding({
+                                      orderId: o.id,
+                                      index: i,
+                                      amount: p.amount,
+                                    });
+                                    setVoidReason("");
+                                  }}
+                                >
+                                  Void
+                                </button>
+                              )}
                           </li>
                         ))}
                       </ul>
@@ -556,11 +707,52 @@ export default function FulfillmentEditor({
                                 [o.id]: {
                                   amount: e.target.value,
                                   note: prev[o.id]?.note ?? "",
+                                  method: prev[o.id]?.method ?? "",
+                                  ref: prev[o.id]?.ref ?? "",
                                 },
                               }))
                             }
                             placeholder={`Amount (upto ${remaining(o)})`}
-                            className="w-36 rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-800 placeholder:text-slate-400 focus:border-brand-500 focus:outline-none"
+                            className="w-32 rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-800 placeholder:text-slate-400 focus:border-brand-500 focus:outline-none"
+                          />
+                          <select
+                            value={payments[o.id]?.method ?? ""}
+                            onChange={(e) =>
+                              setPayments((prev) => ({
+                                ...prev,
+                                [o.id]: {
+                                  amount: prev[o.id]?.amount ?? "",
+                                  note: prev[o.id]?.note ?? "",
+                                  method: e.target.value,
+                                  ref: prev[o.id]?.ref ?? "",
+                                },
+                              }))
+                            }
+                            className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-800 focus:border-brand-500 focus:outline-none"
+                          >
+                            <option value="">Method</option>
+                            {Object.entries(METHOD_LABELS).map(([v, l]) => (
+                              <option key={v} value={v}>
+                                {l}
+                              </option>
+                            ))}
+                          </select>
+                          <input
+                            type="text"
+                            value={payments[o.id]?.ref ?? ""}
+                            onChange={(e) =>
+                              setPayments((prev) => ({
+                                ...prev,
+                                [o.id]: {
+                                  amount: prev[o.id]?.amount ?? "",
+                                  note: prev[o.id]?.note ?? "",
+                                  method: prev[o.id]?.method ?? "",
+                                  ref: e.target.value,
+                                },
+                              }))
+                            }
+                            placeholder="Reference (optional)"
+                            className="w-32 rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-800 placeholder:text-slate-400 focus:border-brand-500 focus:outline-none"
                           />
                           <input
                             type="text"
@@ -571,6 +763,8 @@ export default function FulfillmentEditor({
                                 [o.id]: {
                                   amount: prev[o.id]?.amount ?? "",
                                   note: e.target.value,
+                                  method: prev[o.id]?.method ?? "",
+                                  ref: prev[o.id]?.ref ?? "",
                                 },
                               }))
                             }
@@ -613,6 +807,22 @@ export default function FulfillmentEditor({
                               · {e.by} · {formatDate(e.at)}
                               {e.note ? ` — ${e.note}` : ""}
                             </>
+                          ) : e.action === "void" ? (
+                            <>
+                              <span className="font-medium text-red-600">
+                                Voted payment
+                              </span>{" "}
+                              · {e.by} · {formatDate(e.at)}
+                              {e.note ? ` — ${e.note}` : ""}
+                            </>
+                          ) : e.action === "void-bill" ? (
+                            <>
+                              <span className="font-medium text-red-600">
+                                Voided bill
+                              </span>{" "}
+                              · {e.by} · {formatDate(e.at)}
+                              {e.note ? ` — ${e.note}` : ""}
+                            </>
                           ) : (
                             <>
                               <span className="font-medium text-slate-700">
@@ -635,6 +845,88 @@ export default function FulfillmentEditor({
             );
           })}
         </ul>
+      )}
+
+      {voiding && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
+            <h3 className="text-sm font-bold text-slate-900">
+              Void payment
+            </h3>
+            <p className="mt-1 text-xs text-slate-500">
+              Void {money(voiding.amount)} from this bill? The amount will be
+              removed from “received” and the receivable restored.
+            </p>
+            <textarea
+              value={voidReason}
+              onChange={(e) => setVoidReason(e.target.value)}
+              placeholder="Reason (required)"
+              rows={2}
+              className="mt-3 w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-800 placeholder:text-slate-400 focus:border-brand-500 focus:outline-none"
+            />
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                onClick={() => {
+                  setVoiding(null);
+                  setVoidReason("");
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={busy === voiding.orderId}
+                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:opacity-60"
+                onClick={() => void voidPayment(voiding.orderId, voiding.index)}
+              >
+                Void payment
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {voidBillOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
+            <h3 className="text-sm font-bold text-slate-900">Void bill</h3>
+            <p className="mt-1 text-xs text-slate-500">
+              Void bill {voidBillOrder.billNo} for{" "}
+              {money(remaining(voidBillOrder))} remaining and remove it from
+              receivables? The order will return to delivered and will need to
+              be re-billed.
+            </p>
+            <textarea
+              value={voidBillReason}
+              onChange={(e) => setVoidBillReason(e.target.value)}
+              placeholder="Reason (required)"
+              rows={2}
+              className="mt-3 w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-800 placeholder:text-slate-400 focus:border-brand-500 focus:outline-none"
+            />
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                onClick={() => {
+                  setVoidBillOrder(null);
+                  setVoidBillReason("");
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={busy === voidBillOrder.id}
+                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:opacity-60"
+                onClick={() => void voidBill(voidBillOrder.id)}
+              >
+                Void bill
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

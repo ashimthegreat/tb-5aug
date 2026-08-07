@@ -7,15 +7,20 @@ import {
   listFulfillment,
   newFulfillmentId,
   nextOrderNo,
+  nextReceiptNo,
   saveFulfillment,
   isVerified,
   paidTotal,
   paymentStatus,
+  remaining,
+  activePayments,
+  PAYMENT_METHODS,
   ORDER_TYPE_LABELS,
   type FulfillmentOrder,
   type FulfillmentStatus,
   type OrderType,
   type PaymentRecord,
+  type PaymentMethod,
 } from "@/lib/fulfillment";
 
 export const dynamic = "force-dynamic";
@@ -365,6 +370,10 @@ export async function PATCH(req: NextRequest) {
     action?: string;
     note?: string;
     amount?: number;
+    index?: number;
+    reason?: string;
+    method?: string;
+    ref?: string;
   };
   try {
     body = await req.json();
@@ -480,7 +489,17 @@ export async function PATCH(req: NextRequest) {
     }
 
     const now = new Date().toISOString();
-    const record: PaymentRecord = { amount, at: now, by: user.name, note };
+    const method = (body.method ?? "").trim() as PaymentMethod;
+    const ref = String(body.ref ?? "").trim().slice(0, 100) || undefined;
+    const record: PaymentRecord = {
+      amount,
+      at: now,
+      by: user.name,
+      note,
+      method: PAYMENT_METHODS.includes(method) ? method : undefined,
+      ref,
+      receiptNo: await nextReceiptNo(),
+    };
     const payments = [...(order.payments ?? []), record];
     const newPaid = Math.round((paid + amount) * 100) / 100;
     const fullyPaid = newPaid >= order.total;
@@ -518,7 +537,148 @@ export async function PATCH(req: NextRequest) {
       ok: true,
       order: paidOrder,
       paymentStatus: paymentStatus(paidOrder),
+      receiptNo: record.receiptNo,
     });
+  }
+
+  if (body.action === "void-payment") {
+    if (!PAYMENT_TAKERS.includes(user.role)) {
+      return NextResponse.json(
+        { error: "You are not allowed to void payments." },
+        { status: 403 }
+      );
+    }
+    const index = Number(body.index ?? -1);
+    const payments = [...(order.payments ?? [])];
+    if (
+      !Number.isInteger(index) ||
+      index < 0 ||
+      index >= payments.length
+    ) {
+      return NextResponse.json(
+        { error: "Invalid payment." },
+        { status: 400 }
+      );
+    }
+    if (payments[index].voided) {
+      return NextResponse.json(
+        { error: "This payment is already voided." },
+        { status: 400 }
+      );
+    }
+    const reason = String(body.reason ?? body.note ?? "").trim();
+    if (!reason) {
+      return NextResponse.json(
+        { error: "A reason is required to void a payment." },
+        { status: 400 }
+      );
+    }
+
+    const now = new Date().toISOString();
+    payments[index] = {
+      ...payments[index],
+      voided: true,
+      voidedAt: now,
+      voidedBy: user.name,
+      voidReason: reason,
+    };
+
+    const active = activePayments({ payments });
+    const activePaid = active.reduce((s, p) => s + (p.amount || 0), 0);
+    const fullyPaid = activePaid >= order.total;
+
+    const nextOrder: FulfillmentOrder = {
+      ...order,
+      updatedAt: now,
+      payments,
+      paidAt: fullyPaid ? order.paidAt : undefined,
+      paidBy: fullyPaid ? order.paidBy : undefined,
+      events: [
+        ...order.events,
+        {
+          at: now,
+          by: user.name,
+          role: user.role,
+          from: "bill",
+          to: fullyPaid ? "payment" : "voided",
+          note: `Voided payment ${payments[index].amount} — ${reason}`,
+          action: "void",
+        },
+      ],
+    };
+
+    const orders = await listFulfillment();
+    const idx = orders.findIndex((o) => o.id === id);
+    if (idx < 0) {
+      return NextResponse.json({ error: "Order not found." }, { status: 404 });
+    }
+    orders[idx] = nextOrder;
+    await saveFulfillment(orders);
+
+    return NextResponse.json({
+      ok: true,
+      order: nextOrder,
+      paymentStatus: paymentStatus(nextOrder),
+    });
+  }
+
+  if (body.action === "void-bill") {
+    if (user.role !== "superadmin") {
+      return NextResponse.json(
+        { error: "Only the superadmin can void a bill." },
+        { status: 403 }
+      );
+    }
+    if (!order.billNo) {
+      return NextResponse.json(
+        { error: "This order has no bill to void." },
+        { status: 400 }
+      );
+    }
+    const reason = String(body.reason ?? body.note ?? "").trim();
+    if (!reason) {
+      return NextResponse.json(
+        { error: "A reason is required to void a bill." },
+        { status: 400 }
+      );
+    }
+
+    const now = new Date().toISOString();
+    const voidedBillNo = order.billNo;
+    const nextOrder: FulfillmentOrder = {
+      ...order,
+      updatedAt: now,
+      billNo: undefined,
+      billedAt: undefined,
+      billedBy: undefined,
+      paymentDueDate: undefined,
+      payments: undefined,
+      paidAt: undefined,
+      paidBy: undefined,
+      status: "delivered",
+      events: [
+        ...order.events,
+        {
+          at: now,
+          by: user.name,
+          role: user.role,
+          from: "bill",
+          to: "delivered",
+          note: `Voided bill ${voidedBillNo} — ${reason}`,
+          action: "void-bill",
+        },
+      ],
+    };
+
+    const orders = await listFulfillment();
+    const idx = orders.findIndex((o) => o.id === id);
+    if (idx < 0) {
+      return NextResponse.json({ error: "Order not found." }, { status: 404 });
+    }
+    orders[idx] = nextOrder;
+    await saveFulfillment(orders);
+
+    return NextResponse.json({ ok: true, order: nextOrder });
   }
 
   const status = (body.status ?? "").trim() as FulfillmentStatus;
@@ -536,6 +696,16 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json(
       { error: "You are not allowed to make that change." },
       { status: 403 }
+    );
+  }
+
+  if (status === "cancelled" && order.billNo && remaining(order) > 0) {
+    return NextResponse.json(
+      {
+        error:
+          "This order has an unpaid bill. Collect or void the receivable before cancelling.",
+      },
+      { status: 400 }
     );
   }
 
