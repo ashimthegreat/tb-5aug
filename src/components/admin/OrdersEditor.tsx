@@ -8,6 +8,8 @@ import type {
   FulfillmentStatus,
   OrderType,
 } from "@/lib/fulfillment";
+import type { PaymentStatus } from "@/lib/payment";
+import { paymentStatus } from "@/lib/payment";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleString(undefined, {
@@ -47,6 +49,20 @@ const TYPE_BADGE: Record<OrderType, string> = {
 const TYPE_LABELS: Record<OrderType, string> = {
   delivery: "Delivery",
   pickup: "Pickup",
+};
+
+const PAYMENT_LABELS: Record<PaymentStatus, string> = {
+  pending: "Payment pending",
+  partial: "Payment partial",
+  overdue: "Payment overdue",
+  received: "Payment received",
+};
+
+const PAYMENT_BADGE: Record<PaymentStatus, string> = {
+  pending: "bg-amber-50 text-amber-700 ring-amber-600/20",
+  partial: "bg-sky-50 text-sky-700 ring-sky-600/20",
+  overdue: "bg-red-50 text-red-700 ring-red-600/20",
+  received: "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
 };
 
 const ACTIVE: FulfillmentStatus[] = ["new", "preparing", "ready"];
@@ -93,6 +109,13 @@ function FulfillmentSection({
             {o.verifiedAt && (
               <span className="rounded-full bg-teal-50 px-2 py-0.5 text-xs font-semibold text-teal-700 ring-1 ring-inset ring-teal-600/20">
                 Verified ✓
+              </span>
+            )}
+            {o.billNo && (
+              <span
+                className={`rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ring-inset ${PAYMENT_BADGE[paymentStatus(o)]}`}
+              >
+                {PAYMENT_LABELS[paymentStatus(o)]}
               </span>
             )}
             <span className="min-w-0 flex-1">

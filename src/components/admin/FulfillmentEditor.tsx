@@ -8,6 +8,8 @@ import type {
   FulfillmentStatus,
   OrderType,
 } from "@/lib/fulfillment";
+import type { PaymentStatus } from "@/lib/payment";
+import { paidTotal, paymentStatus, remaining } from "@/lib/payment";
 import { GhostButton, PrimaryButton } from "./ui";
 
 const STATUS_LABELS: Record<FulfillmentStatus, string> = {
@@ -36,11 +38,46 @@ const TYPE_BADGE: Record<OrderType, string> = {
   pickup: "bg-orange-50 text-orange-700 ring-orange-600/20",
 };
 
-const FILTERS: { id: string; label: string; match: (s: FulfillmentStatus) => boolean }[] = [
-  { id: "active", label: "Active", match: (s) => s === "new" || s === "preparing" || s === "ready" },
+const PAYMENT_LABELS: Record<PaymentStatus, string> = {
+  pending: "Payment pending",
+  partial: "Payment partial",
+  overdue: "Payment overdue",
+  received: "Payment received",
+};
+
+const PAYMENT_BADGE: Record<PaymentStatus, string> = {
+  pending: "bg-amber-50 text-amber-700 ring-amber-600/20",
+  partial: "bg-sky-50 text-sky-700 ring-sky-600/20",
+  overdue: "bg-red-50 text-red-700 ring-red-600/20",
+  received: "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
+};
+
+const FILTERS: {
+  id: string;
+  label: string;
+  match: (o: FulfillmentOrder) => boolean;
+}[] = [
+  {
+    id: "active",
+    label: "Active",
+    match: (o) => o.status === "new" || o.status === "preparing" || o.status === "ready",
+  },
   { id: "all", label: "All", match: () => true },
-  { id: "delivered", label: "Delivered", match: (s) => s === "delivered" },
-  { id: "cancelled", label: "Cancelled", match: (s) => s === "cancelled" },
+  {
+    id: "delivered",
+    label: "Delivered",
+    match: (o) => o.status === "delivered",
+  },
+  {
+    id: "payment",
+    label: "Awaiting payment",
+    match: (o) => !!o.billNo && paymentStatus(o) !== "received",
+  },
+  {
+    id: "cancelled",
+    label: "Cancelled",
+    match: (o) => o.status === "cancelled",
+  },
 ];
 
 function formatDate(iso: string): string {
@@ -124,6 +161,9 @@ export default function FulfillmentEditor({
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [verifyNotes, setVerifyNotes] = useState<Record<string, string>>({});
+  const [payments, setPayments] = useState<
+    Record<string, { amount: string; note: string }>
+  >({});
 
   useEffect(() => {
     apiGet<FulfillmentOrder[]>("fulfillment")
@@ -183,6 +223,40 @@ export default function FulfillmentEditor({
     }
   }
 
+  async function recordPayment(o: FulfillmentOrder) {
+    const entry = payments[o.id] ?? { amount: "", note: "" };
+    const amount = Number(entry.amount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setError("Enter a valid payment amount.");
+      return;
+    }
+    setBusy(o.id);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/fulfillment", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: o.id,
+          action: "payment",
+          amount,
+          note: entry.note.trim() || undefined,
+        }),
+      });
+      const body = await res.json();
+      if (!res.ok || !body.ok) {
+        setError(body.error || "Could not record the payment.");
+        return;
+      }
+      setPayments((prev) => ({ ...prev, [o.id]: { amount: "", note: "" } }));
+      setOrders(await apiGet<FulfillmentOrder[]>("fulfillment"));
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
   async function transition(o: FulfillmentOrder, to: FulfillmentStatus) {
     setBusy(o.id);
     setError(null);
@@ -212,7 +286,7 @@ export default function FulfillmentEditor({
   }
 
   const activeFilter = FILTERS.find((f) => f.id === filter) ?? FILTERS[0];
-  const visible = (orders ?? []).filter((o) => activeFilter.match(o.status));
+  const visible = (orders ?? []).filter((o) => activeFilter.match(o));
 
   return (
     <div className="space-y-4">
@@ -281,6 +355,13 @@ export default function FulfillmentEditor({
                       {o.verifiedAt && (
                         <span className="rounded-full bg-teal-50 px-2 py-0.5 text-xs font-semibold text-teal-700 ring-1 ring-inset ring-teal-600/20">
                           Verified ✓
+                        </span>
+                      )}
+                      {o.billNo && (
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ring-inset ${PAYMENT_BADGE[paymentStatus(o)]}`}
+                        >
+                          {PAYMENT_LABELS[paymentStatus(o)]}
                         </span>
                       )}
                     </div>
@@ -436,6 +517,78 @@ export default function FulfillmentEditor({
                   </p>
                 )}
 
+                {o.billNo && (
+                  <div className="mt-2 rounded-lg bg-slate-50 p-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-xs font-semibold text-slate-700">
+                        Bill {o.billNo}
+                        {o.paymentDueDate
+                          ? ` · due ${o.paymentDueDate}`
+                          : ""}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        Paid {money(paidTotal(o))} of {money(o.total)} ·{" "}
+                        remaining {money(remaining(o))}
+                      </p>
+                    </div>
+                    {o.payments && o.payments.length > 0 && (
+                      <ul className="mt-1.5 space-y-0.5">
+                        {o.payments.map((p, i) => (
+                          <li key={i} className="text-xs text-slate-500">
+                            {money(p.amount)} received · {p.by} ·{" "}
+                            {formatDate(p.at)}
+                            {p.note ? ` — ${p.note}` : ""}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {(user.role === "superadmin" || user.role === "logistics") &&
+                      paymentStatus(o) !== "received" && (
+                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={payments[o.id]?.amount ?? ""}
+                            onChange={(e) =>
+                              setPayments((prev) => ({
+                                ...prev,
+                                [o.id]: {
+                                  amount: e.target.value,
+                                  note: prev[o.id]?.note ?? "",
+                                },
+                              }))
+                            }
+                            placeholder={`Amount (upto ${remaining(o)})`}
+                            className="w-36 rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-800 placeholder:text-slate-400 focus:border-brand-500 focus:outline-none"
+                          />
+                          <input
+                            type="text"
+                            value={payments[o.id]?.note ?? ""}
+                            onChange={(e) =>
+                              setPayments((prev) => ({
+                                ...prev,
+                                [o.id]: {
+                                  amount: prev[o.id]?.amount ?? "",
+                                  note: e.target.value,
+                                },
+                              }))
+                            }
+                            placeholder="Note (optional)"
+                            className="min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-800 placeholder:text-slate-400 focus:border-brand-500 focus:outline-none"
+                          />
+                          <PrimaryButton
+                            type="button"
+                            disabled={busy === o.id}
+                            onClick={() => void recordPayment(o)}
+                          >
+                            Record received
+                          </PrimaryButton>
+                        </div>
+                      )}
+                  </div>
+                )}
+
                 {o.events.length > 0 && (
                   <div className="mt-3 border-t border-slate-100 pt-2">
                     <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
@@ -448,6 +601,14 @@ export default function FulfillmentEditor({
                             <>
                               <span className="font-medium text-teal-700">
                                 Verified
+                              </span>{" "}
+                              · {e.by} · {formatDate(e.at)}
+                              {e.note ? ` — ${e.note}` : ""}
+                            </>
+                          ) : e.action === "payment" ? (
+                            <>
+                              <span className="font-medium text-sky-700">
+                                Payment {money(e.amount ?? 0)} received
                               </span>{" "}
                               · {e.by} · {formatDate(e.at)}
                               {e.note ? ` — ${e.note}` : ""}

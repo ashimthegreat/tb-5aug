@@ -7,6 +7,8 @@ import {
   listFulfillment,
   nextBillNo,
   saveFulfillment,
+  DEFAULT_PAYMENT_DAYS,
+  addDaysIso,
   type FulfillmentOrder,
 } from "@/lib/fulfillment";
 import { signatureName } from "@/lib/quotation";
@@ -83,12 +85,15 @@ export async function POST(req: NextRequest) {
   }
 
   const now = new Date().toISOString();
+  const billedDate = now.slice(0, 10);
   const updated: FulfillmentOrder = {
     ...order,
     updatedAt: now,
     billNo: await nextBillNo(),
     billedAt: now,
     billedBy: user.name,
+    payments: [],
+    paymentDueDate: addDaysIso(billedDate, DEFAULT_PAYMENT_DAYS),
     events: [
       ...order.events,
       {

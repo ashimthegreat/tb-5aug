@@ -25,8 +25,20 @@ export interface FulfillmentEvent {
   from: string;
   to: string;
   note?: string;
-  action?: "verify";
+  amount?: number;
+  action?: "verify" | "payment";
 }
+
+export type { PaymentRecord, PaymentStatus } from "./payment";
+import type { PaymentRecord } from "./payment";
+export {
+  DEFAULT_PAYMENT_DAYS,
+  addDaysIso,
+  paidTotal,
+  remaining,
+  hasDueDatePassed,
+  paymentStatus,
+} from "./payment";
 
 export interface FulfillmentOrder {
   id: string;
@@ -60,6 +72,10 @@ export interface FulfillmentOrder {
   billNo?: string;
   billedAt?: string;
   billedBy?: string;
+  payments?: PaymentRecord[];
+  paymentDueDate?: string;
+  paidAt?: string;
+  paidBy?: string;
   events: FulfillmentEvent[];
 }
 

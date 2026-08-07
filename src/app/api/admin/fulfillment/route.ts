@@ -9,16 +9,20 @@ import {
   nextOrderNo,
   saveFulfillment,
   isVerified,
+  paidTotal,
+  paymentStatus,
   ORDER_TYPE_LABELS,
   type FulfillmentOrder,
   type FulfillmentStatus,
   type OrderType,
+  type PaymentRecord,
 } from "@/lib/fulfillment";
 
 export const dynamic = "force-dynamic";
 
 const ALLOWED: AdminRole[] = ["superadmin", "sales", "logistics", "support"];
 const VERIFIERS: AdminRole[] = ["superadmin", "support"];
+const PAYMENT_TAKERS: AdminRole[] = ["superadmin", "logistics"];
 const CREATORS: AdminRole[] = ["superadmin", "sales"];
 const ALL_STATUSES: FulfillmentStatus[] = [
   "new",
@@ -360,6 +364,7 @@ export async function PATCH(req: NextRequest) {
     status?: string;
     action?: string;
     note?: string;
+    amount?: number;
   };
   try {
     body = await req.json();
@@ -436,6 +441,84 @@ export async function PATCH(req: NextRequest) {
 
     const notified = await notifySalesVerified(verified, user.name);
     return NextResponse.json({ ok: true, order: verified, notified });
+  }
+
+  if (body.action === "payment") {
+    if (!PAYMENT_TAKERS.includes(user.role)) {
+      return NextResponse.json(
+        { error: "You are not allowed to record payments." },
+        { status: 403 }
+      );
+    }
+    if (!order.billNo) {
+      return NextResponse.json(
+        { error: "This order has no bill yet." },
+        { status: 400 }
+      );
+    }
+    const paid = paidTotal(order);
+    const due = Math.round((order.total - paid) * 100) / 100;
+    if (due <= 0) {
+      return NextResponse.json(
+        { error: "This bill is already fully paid." },
+        { status: 400 }
+      );
+    }
+    const amountRaw = Number(body.amount ?? NaN);
+    const amount = Math.round((Number.isFinite(amountRaw) ? amountRaw : 0) * 100) / 100;
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return NextResponse.json(
+        { error: "Enter a valid payment amount." },
+        { status: 400 }
+      );
+    }
+    if (amount > due + 0.005) {
+      return NextResponse.json(
+        { error: `Payment exceeds the remaining balance (${due}).` },
+        { status: 400 }
+      );
+    }
+
+    const now = new Date().toISOString();
+    const record: PaymentRecord = { amount, at: now, by: user.name, note };
+    const payments = [...(order.payments ?? []), record];
+    const newPaid = Math.round((paid + amount) * 100) / 100;
+    const fullyPaid = newPaid >= order.total;
+
+    const paidOrder: FulfillmentOrder = {
+      ...order,
+      updatedAt: now,
+      payments,
+      paidAt: fullyPaid ? now : order.paidAt,
+      paidBy: fullyPaid ? user.name : order.paidBy,
+      events: [
+        ...order.events,
+        {
+          at: now,
+          by: user.name,
+          role: user.role,
+          from: "bill",
+          to: fullyPaid ? "received" : "partial",
+          note: note || `Payment ${amount} recorded`,
+          amount,
+          action: "payment",
+        },
+      ],
+    };
+
+    const orders = await listFulfillment();
+    const idx = orders.findIndex((o) => o.id === id);
+    if (idx < 0) {
+      return NextResponse.json({ error: "Order not found." }, { status: 404 });
+    }
+    orders[idx] = paidOrder;
+    await saveFulfillment(orders);
+
+    return NextResponse.json({
+      ok: true,
+      order: paidOrder,
+      paymentStatus: paymentStatus(paidOrder),
+    });
   }
 
   const status = (body.status ?? "").trim() as FulfillmentStatus;
