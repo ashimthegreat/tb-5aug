@@ -12,7 +12,12 @@ import { readJson } from "./store";
 
 export const ADMIN_COOKIE = "tb_admin";
 
-export type AdminRole = "superadmin" | "sales" | "support" | "content";
+export type AdminRole =
+  | "superadmin"
+  | "sales"
+  | "support"
+  | "content"
+  | "logistics";
 
 export interface AdminUser {
   id: string;
@@ -37,6 +42,7 @@ export const ROLES: { value: AdminRole; label: string }[] = [
   { value: "content", label: "Content" },
   { value: "sales", label: "Sales" },
   { value: "support", label: "Support" },
+  { value: "logistics", label: "Logistics" },
 ];
 
 function adminSecret(): string {
