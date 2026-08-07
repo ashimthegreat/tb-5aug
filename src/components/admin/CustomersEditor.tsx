@@ -5,9 +5,16 @@ import { apiGet, apiPut } from "@/lib/adminApi";
 import {
   renderQuotationHtml,
   quoteDate,
+  signatureName,
+  validUntil,
   type QuotationLine,
   type QuotationParty,
 } from "@/lib/quotation";
+import {
+  defaultSuchidartaBody,
+  letterContactLine,
+  renderSuchidartaHtml,
+} from "@/lib/suchidarta";
 import {
   DangerButton,
   GhostButton,
@@ -24,6 +31,7 @@ interface Catalog {
   discounts?: { id: string; name: string; percent: number }[];
   company?: {
     name: string;
+    signatory?: string;
     email: string;
     address: string;
     phones: string[];
@@ -66,6 +74,19 @@ interface Customer {
   createdBy: string;
   createdAt: string;
   quotes?: Quote[];
+  suchidarta?: SuchidartaRecord[];
+}
+
+interface SuchidartaRecord {
+  id: string;
+  recipient: string;
+  subject: string;
+  body: string;
+  signatory: string;
+  sentTo: string;
+  sentBy: string;
+  sentAt: string;
+  status: "sent" | "failed";
 }
 
 function blankQuoteLine(type: "item" | "service"): QuoteLine {
@@ -108,7 +129,7 @@ function formatDate(iso: string): string {
 export default function CustomersEditor({
   user,
 }: {
-  user: { name: string; username: string; email?: string };
+  user: { name: string; username: string; email?: string; signatory?: string; designation?: string; signature?: string };
 }) {
   const [customers, setCustomers] = useState<Customer[] | null>(null);
   const [status, setStatus] = useState("");
@@ -120,9 +141,17 @@ export default function CustomersEditor({
   const [quoteVatRate, setQuoteVatRate] = useState("13");
   const [quoteDiscountId, setQuoteDiscountId] = useState("");
   const [quoteNotes, setQuoteNotes] = useState("");
+  const [quoteSpecs, setQuoteSpecs] = useState("");
+  const [quoteTerms, setQuoteTerms] = useState("");
   const [quoteStatus, setQuoteStatus] = useState("");
   const [sending, setSending] = useState(false);
   const [catalog, setCatalog] = useState<Catalog | null>(null);
+
+  const [suchiTarget, setSuchiTarget] = useState<Customer | null>(null);
+  const [suchiRecipient, setSuchiRecipient] = useState("");
+  const [suchiBody, setSuchiBody] = useState("");
+  const [suchiStatus, setSuchiStatus] = useState("");
+  const [suchiSending, setSuchiSending] = useState(false);
 
   useEffect(() => {
     apiGet<Customer[]>("customers")
@@ -175,6 +204,8 @@ export default function CustomersEditor({
     setQuoteVatRate("13");
     setQuoteDiscountId("");
     setQuoteNotes("");
+    setQuoteSpecs("");
+    setQuoteTerms("");
     setQuoteStatus("");
   }
 
@@ -199,7 +230,7 @@ export default function CustomersEditor({
       const line = blankQuoteLine("item");
       setQuoteLines((prev) => [
         ...prev,
-        { ...line, description: p.name, price: p.price },
+        { ...line, description: p.name, price: p.price / 1.13 },
       ]);
     }
   }
@@ -256,6 +287,8 @@ export default function CustomersEditor({
           })),
           vatRate: effectiveVatRate,
           notes: quoteNotes.trim(),
+          specs: quoteSpecs.trim(),
+          terms: quoteTerms.trim(),
           discountId: quoteDiscountId || undefined,
         }),
       });
@@ -296,8 +329,13 @@ export default function CustomersEditor({
       ? co
       : { name: "TechBucket", email: "", address: "", phones: [], vatNo: "" };
     const preparedBy: QuotationParty = {
-      name: user.name,
+      name: signatureName(user.signatory, user.name),
       email: user.email || company.email,
+      title: user.designation,
+      signature: user.signature
+        ? `${window.location.origin}${user.signature}`
+        : undefined,
+      stamp: `${window.location.origin}/api/admin/stamp`,
     };
     const html = renderQuotationHtml({
       origin: window.location.origin,
@@ -313,6 +351,9 @@ export default function CustomersEditor({
         vat,
         total: grandTotal,
         notes: quoteNotes.trim(),
+        specs: quoteSpecs.trim(),
+        terms: quoteTerms.trim(),
+        validUntil: validUntil(),
       },
       preparedBy,
       billTo,
@@ -324,6 +365,87 @@ export default function CustomersEditor({
       w.document.close();
     } else {
       setQuoteStatus("Allow pop-ups to preview the quotation.");
+    }
+  }
+
+  function openSuchidarta(c: Customer) {
+    setSuchiTarget(c);
+    setSuchiRecipient(
+      [c.name, c.company, c.address].filter(Boolean).join("\n")
+    );
+    setSuchiBody(defaultSuchidartaBody());
+    setSuchiStatus("");
+  }
+
+  function previewSuchidarta() {
+    if (!suchiTarget) return;
+    const co = catalog?.company;
+    const companyName = co?.name || "TechBucket";
+    const html = renderSuchidartaHtml({
+      origin: window.location.origin,
+      data: {
+        recipient: suchiRecipient.trim(),
+        body: suchiBody.trim(),
+        signatory: signatureName(user.signatory, user.name),
+        designation: user.designation,
+        signatureSrc: user.signature
+          ? `${window.location.origin}${user.signature}`
+          : undefined,
+        stampSrc: `${window.location.origin}/api/admin/stamp`,
+        companyName,
+        contactLine: letterContactLine(co?.phones ?? []),
+      },
+      letterhead: true,
+    });
+    const w = window.open("", "_blank");
+    if (w) {
+      w.document.write(html);
+      w.document.close();
+    } else {
+      setSuchiStatus("Allow pop-ups to preview the letter.");
+    }
+  }
+
+  async function sendSuchidarta() {
+    if (!suchiTarget) return;
+    if (!suchiTarget.email.trim()) {
+      setSuchiStatus("Failed: add an email address for this customer first.");
+      return;
+    }
+    if (!suchiRecipient.trim()) {
+      setSuchiStatus("Failed: add the recipient address.");
+      return;
+    }
+    if (!suchiBody.trim()) {
+      setSuchiStatus("Failed: letter body cannot be empty.");
+      return;
+    }
+    setSuchiSending(true);
+    setSuchiStatus("");
+    try {
+      const cleaned = customers?.filter((c) => c.name.trim() || c.email.trim());
+      if (cleaned) await apiPut("customers", cleaned);
+      const res = await fetch("/api/admin/send-suchidarta", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerId: suchiTarget.id,
+          recipient: suchiRecipient.trim(),
+          body: suchiBody.trim(),
+        }),
+      });
+      const body = await res.json();
+      if (res.ok && body.ok) {
+        setSuchiStatus("Letter sent to " + suchiTarget.email);
+        await apiGet<Customer[]>("customers").then(setCustomers);
+        setTimeout(() => setSuchiTarget(null), 1200);
+      } else {
+        setSuchiStatus(`Failed: ${body.error || "could not send"}`);
+      }
+    } catch (e) {
+      setSuchiStatus(`Failed: ${(e as Error).message}`);
+    } finally {
+      setSuchiSending(false);
     }
   }
 
@@ -467,6 +589,12 @@ export default function CustomersEditor({
                         >
                           Edit
                         </GhostButton>
+                        <GhostButton
+                          type="button"
+                          onClick={() => openSuchidarta(c)}
+                        >
+                          Suchidarta
+                        </GhostButton>
                         <PrimaryButton type="button" onClick={() => openQuote(c)}>
                           Send quote
                         </PrimaryButton>
@@ -505,6 +633,49 @@ export default function CustomersEditor({
                                 onClick={() =>
                                   window.open(
                                     `/api/admin/quotation?id=${q.id}`,
+                                    "_blank"
+                                  )
+                                }
+                              >
+                                Print
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {c.suchidarta && c.suchidarta.length > 0 && (
+                      <div className="mt-3 border-t border-slate-100 pt-3">
+                        <Label>Suchidarta history</Label>
+                        <ul className="space-y-1.5">
+                          {c.suchidarta.map((r) => (
+                            <li
+                              key={r.id}
+                              className="flex flex-wrap items-center gap-2 text-xs"
+                            >
+                              <span
+                                className={`rounded-full px-2 py-0.5 font-semibold ring-1 ring-inset ${
+                                  r.status === "sent"
+                                    ? "bg-emerald-50 text-emerald-700 ring-emerald-600/20"
+                                    : "bg-red-50 text-red-700 ring-red-600/20"
+                                }`}
+                              >
+                                {r.status}
+                              </span>
+                              <span className="text-slate-700">
+                                सुची दर्ता निवेदन — {r.recipient.split("\n")[0]}
+                              </span>
+                              <span className="text-slate-400">
+                                to {r.sentTo} · by {r.sentBy} ·{" "}
+                                {formatDate(r.sentAt)}
+                              </span>
+                              <button
+                                type="button"
+                                className="rounded-lg border border-slate-200 bg-white px-2 py-0.5 font-medium text-slate-600 transition-colors hover:bg-slate-50"
+                                onClick={() =>
+                                  window.open(
+                                    `/api/admin/suchidarta?id=${r.id}`,
                                     "_blank"
                                   )
                                 }
@@ -687,6 +858,26 @@ export default function CustomersEditor({
               />
             </div>
 
+            <div className="mt-4">
+              <Textarea
+                label="Product description / technical specifications (optional)"
+                rows={5}
+                value={quoteSpecs}
+                onChange={(e) => setQuoteSpecs(e.target.value)}
+                placeholder={"1. Kiosk Cabinet\n> Durable cold-roll steel frame\n2. Industrial PC System\n> Intel Core i5, 8GB RAM + 256GB SSD"}
+              />
+            </div>
+
+            <div className="mt-4">
+              <Textarea
+                label="Terms & conditions (optional)"
+                rows={4}
+                value={quoteTerms}
+                onChange={(e) => setQuoteTerms(e.target.value)}
+                placeholder={"1. Payment terms\n2. Delivery schedule\n3. Warranty"}
+              />
+            </div>
+
             {quoteStatus && (
               <p className="mt-3 text-sm text-slate-600">{quoteStatus}</p>
             )}
@@ -707,6 +898,69 @@ export default function CustomersEditor({
                 disabled={sending}
               >
                 {sending ? "Sending…" : "Send quote"}
+              </PrimaryButton>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {suchiTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+          <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
+            <h3 className="text-base font-semibold text-slate-900">
+              Suchidarta letter for {suchiTarget.name}
+            </h3>
+            <p className="mt-1 text-xs text-slate-500">
+              सुची दर्ता निवेदन — formal Nepali letter in the Suchi Registrar
+              format. Date, subject, company name and contact are filled
+              automatically. The signature name comes from your profile.
+            </p>
+
+            <div className="mt-4 space-y-4">
+              <div>
+                <Textarea
+                  label="Recipient (श्री, …)"
+                  rows={4}
+                  value={suchiRecipient}
+                  onChange={(e) => setSuchiRecipient(e.target.value)}
+                  placeholder={"नेपाल सरकार\n… विभाग\nकाठमाडौँ, नेपाल ।"}
+                />
+              </div>
+
+              <div>
+                <Textarea
+                  label="Letter body (निवेदन)"
+                  rows={8}
+                  value={suchiBody}
+                  onChange={(e) => setSuchiBody(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {suchiStatus && (
+              <p className="mt-3 text-sm text-slate-600">{suchiStatus}</p>
+            )}
+            <div className="mt-4 flex justify-end gap-2">
+              <GhostButton
+                type="button"
+                onClick={() => setSuchiTarget(null)}
+                disabled={suchiSending}
+              >
+                Cancel
+              </GhostButton>
+              <GhostButton
+                type="button"
+                onClick={previewSuchidarta}
+                disabled={suchiSending}
+              >
+                Preview / Print
+              </GhostButton>
+              <PrimaryButton
+                type="button"
+                onClick={sendSuchidarta}
+                disabled={suchiSending}
+              >
+                {suchiSending ? "Sending…" : "Send as email"}
               </PrimaryButton>
             </div>
           </div>

@@ -15,7 +15,10 @@ export interface QuotationData {
   subtotal: number;
   vat: number;
   total: number;
-  notes: string;
+  notes?: string;
+  specs?: string;
+  terms?: string;
+  validUntil?: string;
 }
 
 export interface QuotationParty {
@@ -24,6 +27,9 @@ export interface QuotationParty {
   company?: string;
   address?: string;
   phone?: string;
+  title?: string;
+  signature?: string;
+  stamp?: string;
 }
 
 export interface SiteContact {
@@ -34,15 +40,21 @@ export interface SiteContact {
   vatNo?: string;
 }
 
+export const DEFAULT_VALIDITY_DAYS = 30;
+
 export function round2(n: number): number {
   return Math.round(n * 100) / 100;
 }
 
 export function money(n: number): string {
-  return `NPR ${n.toLocaleString("en-IN", {
+  return n.toLocaleString("en-IN", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  })}`;
+  });
+}
+
+export function moneyNPR(n: number): string {
+  return `Rs. ${money(n)}`;
 }
 
 export function esc(text: string): string {
@@ -52,13 +64,269 @@ export function esc(text: string): string {
     .replace(/>/g, "&gt;");
 }
 
+export function signatureName(signatory?: string, fallback?: string): string {
+  return (signatory ?? "").trim() || (fallback ?? "").trim();
+}
+
+function pad2(n: number): string {
+  return String(n).padStart(2, "0");
+}
+
+function toIsoParts(d: Date): string {
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+}
+
 export function quoteDate(iso?: string): string {
-  const d = iso ? new Date(iso) : new Date();
-  return d.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+  if (iso) {
+    const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (m) return iso.slice(0, 10);
+  }
+  return toIsoParts(new Date());
+}
+
+export function addDaysIso(iso: string, days: number): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  if (!y || !m || !d) return iso;
+  return toIsoParts(new Date(y, m - 1, d + days));
+}
+
+export function validUntil(iso?: string, days = DEFAULT_VALIDITY_DAYS): string {
+  return addDaysIso(quoteDate(iso), days);
+}
+
+const BS_MONTHS = [
+  "Baishakh",
+  "Jestha",
+  "Ashadh",
+  "Shrawan",
+  "Bhadra",
+  "Ashwin",
+  "Kartik",
+  "Mangsir",
+  "Poush",
+  "Magh",
+  "Falgun",
+  "Chaitra",
+];
+
+const BS_EPOCH_MS = Date.UTC(1943, 3, 14);
+const BS_DAY_MS = 86400000;
+
+const BS_LENGTHS: number[][] = [
+  [30,32,31,32,31,30,30,30,29,30,29,31],
+  [31,31,32,31,31,31,30,29,30,29,30,30],
+  [31,31,32,32,31,30,30,29,30,29,30,30],
+  [31,32,31,32,31,30,30,30,29,29,30,31],
+  [30,32,31,32,31,30,30,30,29,30,29,31],
+  [31,31,32,31,31,31,30,29,30,29,30,30],
+  [31,31,32,32,31,30,30,29,30,29,30,30],
+  [31,32,31,32,31,30,30,30,29,29,30,31],
+  [31,31,31,32,31,31,29,30,30,29,29,31],
+  [31,31,32,31,31,31,30,29,30,29,30,30],
+  [31,31,32,32,31,30,30,29,30,29,30,30],
+  [31,32,31,32,31,30,30,30,29,29,30,31],
+  [31,31,31,32,31,31,29,30,30,29,30,30],
+  [31,31,32,31,31,31,30,29,30,29,30,30],
+  [31,31,32,32,31,30,30,29,30,29,30,30],
+  [31,32,31,32,31,30,30,30,29,29,30,31],
+  [31,31,31,32,31,31,29,30,30,29,30,30],
+  [31,31,32,31,31,31,30,29,30,29,30,30],
+  [31,32,31,32,31,30,30,29,30,29,30,30],
+  [31,32,31,32,31,30,30,30,29,30,29,31],
+  [31,31,31,32,31,31,30,29,30,29,30,30],
+  [31,31,32,31,31,31,30,29,30,29,30,30],
+  [31,32,31,32,31,30,30,30,29,29,30,30],
+  [31,32,31,32,31,30,30,30,29,30,29,31],
+  [31,31,31,32,31,31,30,29,30,29,30,30],
+  [31,31,32,31,31,31,30,29,30,29,30,30],
+  [31,32,31,32,31,30,30,30,29,29,30,31],
+  [30,32,31,32,31,30,30,30,29,30,29,31],
+  [31,31,32,31,31,31,30,29,30,29,30,30],
+  [31,31,32,31,32,30,30,29,30,29,30,30],
+  [31,32,31,32,31,30,30,30,29,29,30,31],
+  [30,32,31,32,31,30,30,30,29,30,29,31],
+  [31,31,32,31,31,31,30,29,30,29,30,30],
+  [31,31,32,32,31,30,30,29,30,29,30,30],
+  [31,32,31,32,31,30,30,30,29,29,30,31],
+  [30,32,31,32,31,31,29,30,30,29,29,31],
+  [31,31,32,31,31,31,30,29,30,29,30,30],
+  [31,31,32,32,31,30,30,29,30,29,30,30],
+  [31,32,31,32,31,30,30,30,29,29,30,31],
+  [31,31,31,32,31,31,29,30,30,29,30,30],
+  [31,31,32,31,31,31,30,29,30,29,30,30],
+  [31,31,32,32,31,30,30,29,30,29,30,30],
+  [31,32,31,32,31,30,30,30,29,29,30,31],
+  [31,31,31,32,31,31,29,30,30,29,30,30],
+  [31,31,32,31,31,31,30,29,30,29,30,30],
+  [31,32,31,32,31,30,30,29,30,29,30,30],
+  [31,32,31,32,31,30,30,30,29,29,30,31],
+  [31,31,31,32,31,31,30,29,30,29,30,30],
+  [31,31,32,31,31,31,30,29,30,29,30,30],
+  [31,32,31,32,31,30,30,30,29,29,30,30],
+  [31,32,31,32,31,30,30,30,29,30,29,31],
+  [31,31,31,32,31,31,30,29,30,29,30,30],
+  [31,31,32,31,31,31,30,29,30,29,30,30],
+  [31,32,31,32,31,30,30,30,29,29,30,30],
+  [31,32,31,32,31,30,30,30,29,30,29,31],
+  [31,31,32,31,31,31,30,29,30,29,30,30],
+  [31,31,32,31,32,30,30,29,30,29,30,30],
+  [31,32,31,32,31,30,30,30,29,29,30,31],
+  [30,32,31,32,31,30,30,30,29,30,29,31],
+  [31,31,32,31,31,31,30,29,30,29,30,30],
+  [31,31,32,32,31,30,30,29,30,29,30,30],
+  [31,32,31,32,31,30,30,30,29,29,30,31],
+  [30,32,31,32,31,31,29,30,29,30,29,31],
+  [31,31,32,31,31,31,30,29,30,29,30,30],
+  [31,31,32,32,31,30,30,29,30,29,30,30],
+  [31,32,31,32,31,30,30,30,29,29,30,31],
+  [31,31,31,32,31,31,29,30,30,29,29,31],
+  [31,31,32,31,31,31,30,29,30,29,30,30],
+  [31,31,32,32,31,30,30,29,30,29,30,30],
+  [31,32,31,32,31,30,30,30,29,29,30,31],
+  [31,31,31,32,31,31,29,30,30,29,30,30],
+  [31,31,32,31,31,31,30,29,30,29,30,30],
+  [31,32,31,32,31,30,30,29,30,29,30,30],
+  [31,32,31,32,31,30,30,30,29,29,30,31],
+  [31,31,31,32,31,31,30,29,30,29,30,30],
+  [31,31,32,31,31,31,30,29,30,29,30,30],
+  [31,32,31,32,31,30,30,30,29,29,30,30],
+  [31,32,31,32,31,30,30,30,29,30,29,31],
+  [31,31,31,32,31,31,30,29,30,29,30,30],
+  [31,31,32,31,31,31,30,29,30,29,30,30],
+  [31,32,31,32,31,30,30,30,29,29,30,30],
+  [31,32,31,32,31,30,30,30,29,30,29,31],
+  [31,31,32,31,31,31,30,29,30,29,30,30],
+  [31,31,32,31,31,31,30,29,30,29,30,30],
+  [31,32,31,32,31,30,30,30,29,29,30,31],
+  [30,32,31,32,31,30,30,30,29,30,29,31],
+  [31,31,32,31,31,31,30,29,30,29,30,30],
+  [31,31,32,31,31,31,30,30,29,30,30,30],
+  [30,31,32,32,30,31,30,30,29,30,30,30],
+  [30,32,31,32,31,30,30,30,29,30,30,30],
+  [30,32,31,32,31,30,30,30,29,30,30,30],
+];
+
+export interface BsDateParts {
+  year: number;
+  month: number;
+  day: number;
+}
+
+export function bsDateParts(iso?: string): BsDateParts {
+  const parts = (iso ?? toIsoParts(new Date())).split("-").map(Number);
+  const y = parts[0];
+  const m = parts[1];
+  const d = parts[2];
+  let days = Math.round((Date.UTC(y, m - 1, d) - BS_EPOCH_MS) / BS_DAY_MS);
+  let year = 2000;
+  let idx = 0;
+  while (idx < BS_LENGTHS.length) {
+    const total = BS_LENGTHS[idx].reduce((a, b) => a + b, 0);
+    if (days < total) break;
+    days -= total;
+    year += 1;
+    idx += 1;
+  }
+  const lengths = BS_LENGTHS[idx] ?? BS_LENGTHS[BS_LENGTHS.length - 1];
+  let rem = days;
+  for (let mi = 0; mi < 12; mi++) {
+    if (rem < lengths[mi]) {
+      return { year, month: mi + 1, day: rem + 1 };
+    }
+    rem -= lengths[mi];
+  }
+  return { year, month: 1, day: 1 };
+}
+
+export function bsDate(iso?: string): string {
+  const p = bsDateParts(iso);
+  return `${p.day} ${BS_MONTHS[p.month - 1]} ${p.year}`;
+}
+
+const NEPALI_DIGITS = ["०", "१", "२", "३", "४", "५", "६", "७", "८", "९"];
+
+export function nepaliDigits(value: number | string): string {
+  return String(value).replace(/[0-9]/g, (d) => NEPALI_DIGITS[Number(d)]);
+}
+
+export function bsDateNepali(iso?: string): string {
+  const p = bsDateParts(iso);
+  const mm = String(p.month).padStart(2, "0");
+  const dd = String(p.day).padStart(2, "0");
+  return `${nepaliDigits(p.year)}/${nepaliDigits(mm)}/${nepaliDigits(dd)}`;
+}
+
+const ONES = [
+  "",
+  "One",
+  "Two",
+  "Three",
+  "Four",
+  "Five",
+  "Six",
+  "Seven",
+  "Eight",
+  "Nine",
+  "Ten",
+  "Eleven",
+  "Twelve",
+  "Thirteen",
+  "Fourteen",
+  "Fifteen",
+  "Sixteen",
+  "Seventeen",
+  "Eighteen",
+  "Nineteen",
+];
+const TENS = [
+  "",
+  "",
+  "Twenty",
+  "Thirty",
+  "Forty",
+  "Fifty",
+  "Sixty",
+  "Seventy",
+  "Eighty",
+  "Ninety",
+];
+
+function twoDigits(n: number): string {
+  if (n < 20) return ONES[n];
+  const t = Math.floor(n / 10);
+  const o = n % 10;
+  return TENS[t] + (o ? " " + ONES[o] : "");
+}
+
+function threeDigits(n: number): string {
+  const h = Math.floor(n / 100);
+  const rest = n % 100;
+  let s = "";
+  if (h) s += ONES[h] + " Hundred";
+  if (rest) s += (s ? " " : "") + twoDigits(rest);
+  return s;
+}
+
+export function amountInWords(amount: number): string {
+  const rupees = Math.floor(amount);
+  const paisa = Math.round((amount - rupees) * 100);
+  const crore = Math.floor(rupees / 10000000);
+  const lakh = Math.floor((rupees % 10000000) / 100000);
+  const thousand = Math.floor((rupees % 100000) / 1000);
+  const rest = rupees % 1000;
+  const parts: string[] = [];
+  if (crore) parts.push(`${threeDigits(crore)} Crore`);
+  if (lakh) parts.push(`${threeDigits(lakh)} Lakh`);
+  if (thousand) parts.push(`${threeDigits(thousand)} Thousand`);
+  if (rest) parts.push(threeDigits(rest));
+  const words = parts.join(" ");
+  if (!words) {
+    return paisa > 0 ? `${twoDigits(paisa)} Paisa Only` : "Zero Rupees Only";
+  }
+  if (paisa > 0) {
+    return `${words} Rupees and ${twoDigits(paisa)} Paisa Only`;
+  }
+  return `${words} Rupees Only`;
 }
 
 interface RenderOptions {
@@ -70,42 +338,69 @@ interface RenderOptions {
   letterhead: boolean;
   showToolbar?: boolean;
   variant?: "print" | "email";
+  logoSrc?: string;
+}
+
+function partyBlock(title: string, party: QuotationParty): string {
+  const lines = [party.name, party.company, party.address, party.phone, party.email]
+    .filter((v): v is string => Boolean(v))
+    .map(esc);
+  return `
+    <div class="party">
+      <div class="party-title">${esc(title)}</div>
+      <div>${lines.join("<br>")}</div>
+    </div>`;
 }
 
 function itemsTable(rows: QuotationLine[], label: string): string {
   const body = rows
     .map(
-      (r) =>
-        `<tr>
-          <td style="border:1px solid #d1d5db;padding:6px;text-align:center">${r.qty}</td>
-          <td style="border:1px solid #d1d5db;padding:6px">${esc(r.description)}</td>
-          <td style="border:1px solid #d1d5db;padding:6px;text-align:right">${money(r.price)}</td>
-          <td style="border:1px solid #d1d5db;padding:6px;text-align:right">${money(r.qty * r.price)}</td>
-        </tr>`
+      (r, i) => `
+      <tr>
+        <td class="c">${i + 1}</td>
+        <td>${esc(r.description)}</td>
+        <td class="c">${r.qty}</td>
+        <td class="r">${money(r.price)}</td>
+        <td class="r">${money(round2(r.qty * r.price))}</td>
+      </tr>`
     )
     .join("");
   return `
-    <h3 style="font-size:12px;margin:14px 0 6px">${label}</h3>
-    <table style="border-collapse:collapse;width:100%;font-size:11px">
+    <h2 class="sec">${esc(label)}</h2>
+    <table class="items">
       <thead>
-        <tr style="background:#f9fafb">
-          <th style="border:1px solid #d1d5db;padding:6px;text-align:center;width:42px">Qty</th>
-          <th style="border:1px solid #d1d5db;padding:6px;text-align:left">Description</th>
-          <th style="border:1px solid #d1d5db;padding:6px;text-align:right;width:110px">Unit Price</th>
-          <th style="border:1px solid #d1d5db;padding:6px;text-align:right;width:120px">Amount</th>
+        <tr>
+          <th class="c" style="width:36px">SN</th>
+          <th>Description</th>
+          <th class="c" style="width:46px">Qty</th>
+          <th class="r" style="width:110px">Unit Price (RS)</th>
+          <th class="r" style="width:120px">Amount (RS)</th>
         </tr>
       </thead>
       <tbody>${body}</tbody>
     </table>`;
 }
 
-function partyBlock(title: string, party: QuotationParty, meta: string): string {
-  const lines = [party.name, party.company, party.address, party.phone, party.email]
-    .filter((v): v is string => Boolean(v))
-    .map(esc);
-  return `
-    <div style="font-weight:bold;font-size:12px;margin-bottom:2px">${title}</div>
-    <div style="font-size:11px;color:#374151">${lines.join("<br>")}${meta ? `<br><span style="color:#6b7280">${esc(meta)}</span>` : ""}</div>`;
+function totalsTable(quote: QuotationData): string {
+  if (quote.items.length === 0) return "";
+  const rows: string[] = [
+    `<tr><td class="tot-label">Subtotal</td><td class="r">${money(quote.subtotal)}</td></tr>`,
+  ];
+  if (quote.discountAmount) {
+    rows.push(
+      `<tr><td class="tot-label">Discount (${quote.discountPercent}%)</td><td class="r">−${money(quote.discountAmount)}</td></tr>`,
+      `<tr><td class="tot-label">After discount</td><td class="r">${money(round2(quote.subtotal - quote.discountAmount))}</td></tr>`
+    );
+  }
+  const vatLabel = `VAT ${quote.vatRate.toLocaleString("en-IN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}%`;
+  rows.push(
+    `<tr><td class="tot-label">${vatLabel}</td><td class="r">${money(quote.vat)}</td></tr>`,
+    `<tr class="gt"><td class="tot-label">Total</td><td class="r">${money(quote.total)}</td></tr>`
+  );
+  return `<table class="totals"><tbody>${rows.join("")}</tbody></table>`;
 }
 
 export function renderQuotationHtml(opts: RenderOptions): string {
@@ -114,16 +409,21 @@ export function renderQuotationHtml(opts: RenderOptions): string {
   const isPrint = variant === "print";
   const showToolbar = isPrint && (opts.showToolbar ?? true);
   const noLetterhead = isPrint && !letterhead ? " no-letterhead" : "";
+  const logoSrc = opts.logoSrc || `${origin}/images/logo.png`;
 
   const products = quote.items.filter((i) => i.type === "item");
   const services = quote.items.filter((i) => i.type === "service");
 
-  const contactLine = [
-    company.email,
-    ...(company.phones ?? []),
-  ].join(" · ");
-  const headerCompany =
-    [company.name, company.address, contactLine].filter(Boolean).join(" · ");
+  const contactLine = [company.email, ...(company.phones ?? [])]
+    .filter(Boolean)
+    .join(" · ");
+  const tagline = [
+    company.address,
+    contactLine,
+    company.vatNo ? `PAN/VAT: ${company.vatNo}` : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
   const footerLine = [
     company.name,
@@ -134,8 +434,30 @@ export function renderQuotationHtml(opts: RenderOptions): string {
     .filter(Boolean)
     .join(" · ");
 
-  const productsBlock = products.length ? itemsTable(products, "Products") : "";
+  const productsBlock = products.length
+    ? itemsTable(products, "Financial Proposal")
+    : "";
   const servicesBlock = services.length ? itemsTable(services, "Services") : "";
+
+  const validUntilDate = quote.validUntil ?? validUntil(quote.date);
+
+  const notesBlock = quote.notes
+    ? `<div class="notes"><strong>Notes:</strong><br>${esc(quote.notes)}</div>`
+    : "";
+
+  const specsBlock = quote.specs
+    ? `
+    <div class="page-break"></div>
+    <h2 class="sec">Product Description</h2>
+    <div class="free-text">${esc(quote.specs)}</div>`
+    : "";
+
+  const termsBlock = quote.terms
+    ? `
+    <div class="page-break"></div>
+    <h2 class="sec">Terms &amp; Conditions</h2>
+    <div class="free-text">${esc(quote.terms)}</div>`
+    : "";
 
   const toolbar = showToolbar
     ? `
@@ -156,66 +478,110 @@ export function renderQuotationHtml(opts: RenderOptions): string {
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
   body {
-    font-family: Arial, Helvetica, sans-serif;
-    color: #1f2937;
+    font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+    color: #2c303c;
     background: ${isPrint ? "#e2e8f0" : "#f4f5f7"};
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
   .sheet {
     width: ${isPrint ? "210mm" : "100%"};
-    max-width: ${isPrint ? "none" : "700px"};
+    max-width: ${isPrint ? "none" : "720px"};
     ${isPrint
-      ? "min-height: 297mm; padding: 0 14mm; margin: 16px auto; box-shadow: 0 4px 24px rgba(15,23,42,.15);"
+      ? "min-height: 297mm; padding: 10mm 14mm 14mm; margin: 16px auto; box-shadow: 0 4px 24px rgba(15,23,42,.15);"
       : "margin: 24px auto; padding: 24px 30px; box-shadow: 0 1px 3px rgba(15,23,42,.08);"}
     background: #fff;
     position: relative;
+    font-size: 12.5pt;
+    line-height: 1.5;
   }
   .letterhead {
-    padding: 18px 0 12px;
-    border-bottom: 3px solid #f06020;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
+    justify-content: space-between;
     gap: 16px;
+    padding: 4px 0 10px;
+    border-bottom: 2px solid #e2e7f0;
   }
-  .letterhead .logo { height: 46px; width: auto; }
-  .letterhead .co { flex: 1; }
-  .letterhead .co .nm { font-size: 19px; font-weight: bold; color: #1f2937; }
-  .letterhead .co .dt { font-size: 10.5px; color: #6b7280; margin-top: 2px; line-height: 1.45; }
-  .sheet h1 {
-    font-size: 18px;
+  .lh-left { display: flex; align-items: center; gap: 14px; min-width: 0; }
+  .lh-left .logo { height: 52px; width: auto; }
+  .lh-left .nm { font-size: 14pt; font-weight: 700; color: #c0141b; }
+  .lh-left .tag { font-size: 12.5pt; color: #2c303c; margin-top: 1px; }
+  .lh-right { text-align: right; flex-shrink: 0; }
+  .lh-right .q-title {
+    font-size: 24pt;
+    font-weight: 700;
+    color: #1c2333;
     letter-spacing: .12em;
-    margin: 22px 0 6px;
-    text-align: center;
-    color: #111827;
+    line-height: 1.1;
   }
-  .ref { text-align: center; font-size: 11px; color: #6b7280; margin-bottom: 18px; }
-  .party-row {
-    display: flex;
-    justify-content: space-between;
-    gap: 20px;
-    margin-bottom: 8px;
+  .lh-right .q-no { font-size: 12.5pt; font-weight: 700; color: #1c2333; margin-top: 3px; }
+  .lh-right .q-meta { font-size: 12.5pt; color: #1c2333; margin-top: 1px; }
+  .to-block { margin-top: 16px; }
+  .party-title { font-weight: 700; }
+  .subject { font-weight: 700; color: #1c2333; margin: 12px 0 4px; }
+  .body-text { margin: 4px 0 10px; }
+  .sec {
+    font-size: 14pt;
+    font-weight: 700;
+    color: #1c2333;
+    margin: 16px 0 6px;
+    letter-spacing: .02em;
   }
-  .party-row > div { max-width: 50%; }
-  .totals { margin: 12px 0 0 auto; width: 260px; font-size: 11.5px; border-collapse: collapse; }
-  .totals td { padding: 4px 10px; }
-  .totals .gt { font-weight: bold; font-size: 13px; border-top: 2px solid #111827; }
-  .sign {
-    margin-top: 42px;
-    display: flex;
-    justify-content: space-between;
-    gap: 24px;
-    font-size: 11px;
-    color: #374151;
+  table.items {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5pt;
   }
-  .sign .blk { width: 45%; }
-  .sign .line { border-top: 1px solid #111827; margin-top: 34px; padding-top: 4px; }
-  .notes { margin-top: 14px; font-size: 11px; color: #374151; white-space: pre-wrap; }
+  table.items th {
+    background: #e2e7f0;
+    color: #1c2333;
+    font-weight: 700;
+    border: 1px solid #999999;
+    padding: 6px 8px;
+    text-align: left;
+  }
+  table.items td {
+    border: 1px solid #999999;
+    padding: 6px 8px;
+    text-align: left;
+    vertical-align: top;
+  }
+  table.items tbody tr:nth-child(even) { background: #f0f2f7; }
+  table.items .c { text-align: center; }
+  table.items .r { text-align: right; white-space: nowrap; }
+  table.totals {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5pt;
+  }
+  table.totals td { border: 0; border-top: 1px solid #999999; padding: 5px 8px; }
+  table.totals .tot-label { width: 70%; padding-left: 0; }
+  table.totals .r { text-align: right; white-space: nowrap; }
+  table.totals tr.gt td { font-weight: 700; border-top: 2px solid #1c2333; }
+  .in-words { margin: 12px 0; font-weight: 700; }
+  .in-words span { font-weight: 400; }
+  .closing { margin-top: 10px; }
+  .sign { margin-top: 22px; line-height: 1.5; }
+  .sign .sigrow { display: flex; align-items: flex-end; gap: 20px; margin: 0 0 6px; }
+  .sign .sig { display: inline-block; height: 120px; width: auto; max-width: 220px; max-height: 130px; object-fit: contain; object-position: left center; }
+  .sign .stamp { display: inline-block; height: 132px; width: auto; max-width: 260px; max-height: 142px; object-fit: contain; object-position: left center; }
+  .sign .for { margin-top: 16px; border-top: 1px solid #1c2333; padding-top: 4px; width: 260px; }
+  .notes {
+    margin-top: 12px;
+    white-space: pre-wrap;
+    background: #f0f2f7;
+    border: 1px solid #e2e7f0;
+    padding: 8px 10px;
+    font-size: 11pt;
+  }
+  .free-text { white-space: pre-wrap; }
+  .page-break { height: 12px; }
   .footer {
-    margin-top: 28px;
+    margin-top: 26px;
     border-top: 1px solid #e5e7eb;
     padding-top: 8px;
-    font-size: 9.5px;
+    font-size: 9.5pt;
     color: #6b7280;
     text-align: center;
   }
@@ -232,7 +598,7 @@ export function renderQuotationHtml(opts: RenderOptions): string {
     font-family: Arial, sans-serif;
   }
   .tb-btn {
-    background: #f06020;
+    background: #c0141b;
     color: #fff;
     border: 0;
     border-radius: 6px;
@@ -241,7 +607,7 @@ export function renderQuotationHtml(opts: RenderOptions): string {
     font-weight: 600;
     cursor: pointer;
   }
-  .tb-btn:hover { background: #e05010; }
+  .tb-btn:hover { background: #a00f15; }
   .no-letterhead .letterhead { display: none; }
   .no-letterhead .footer { display: none; }
   ${isPrint ? `@media print {
@@ -249,7 +615,9 @@ export function renderQuotationHtml(opts: RenderOptions): string {
     body { background: #fff; }
     .sheet { margin: 0; width: auto; min-height: auto; box-shadow: none; padding: 0; }
     .toolbar { display: none; }
-    .party-row, table, .totals, .sign, .notes { page-break-inside: avoid; }
+    .items, table.totals, .sign, .notes, .free-text { page-break-inside: avoid; }
+    .page-break { page-break-before: always; height: 0; }
+    table.items tr, .subject, .sec { page-break-after: avoid; }
   }` : ""}
 </style>
 </head>
@@ -257,42 +625,72 @@ export function renderQuotationHtml(opts: RenderOptions): string {
   ${toolbar}
   <div class="sheet">
     <div class="letterhead">
-      <img class="logo" src="${origin}/images/logo.png" alt="${esc(company.name)}">
-      <div class="co">
-        <div class="nm">${esc(headerCompany)}</div>
-        <div class="dt">${esc(company.email ?? "")} · ${esc(contactLine)}${company.vatNo ? ` · PAN/VAT: ${esc(company.vatNo)}` : ""}</div>
+      <div class="lh-left">
+        <img class="logo" src="${logoSrc}" alt="${esc(company.name)}">
+        <div>
+          <div class="nm">${esc(company.name)}</div>
+          <div class="tag">${esc(tagline)}</div>
+        </div>
+      </div>
+      <div class="lh-right">
+        <div class="q-title">QUOTATION</div>
+        <div class="q-no">${esc(quote.quoteNo)}</div>
+        <div class="q-meta">Date: ${esc(quote.date)}</div>
+        <div class="q-meta">BS ${esc(bsDate(quote.date))}</div>
+        <div class="q-meta">Valid until: ${esc(validUntilDate)}</div>
       </div>
     </div>
 
-    <h1>QUOTATION</h1>
-    <div class="ref">Ref: ${esc(quote.quoteNo)} · Date: ${esc(quote.date)} · Valid for 30 days</div>
+    <div class="to-block">
+      ${partyBlock("To", billTo)}
+    </div>
 
-    <div class="party-row">
-      ${partyBlock("Prepared for:", billTo, "")}
-      ${partyBlock("Prepared by:", preparedBy, "")}
+    <div class="subject">Subject: Quotation ${esc(quote.quoteNo)} for ${esc(billTo.company || billTo.name)}</div>
+    <div class="body-text">
+      Dear Sir/Madam,<br><br>
+      Thank you for the opportunity to submit our offer to ${esc(billTo.company || billTo.name)}.
+      Based on your requirement we are pleased to quote for the goods and services listed below.
+      The financial proposal and the terms on which we would deliver it are set out below.
     </div>
 
     ${productsBlock}
     ${servicesBlock}
 
-    <table class="totals">
-      <tr><td>Subtotal</td><td style="text-align:right">${money(quote.subtotal)}</td></tr>
-      ${
-        quote.discountAmount
-          ? `<tr><td>Discount (${quote.discountPercent}%)</td><td style="text-align:right">−${money(quote.discountAmount)}</td></tr>
-      <tr><td>After discount</td><td style="text-align:right">${money(quote.subtotal - quote.discountAmount)}</td></tr>`
-          : ""
-      }
-      <tr><td>VAT (${quote.vatRate}%)</td><td style="text-align:right">${money(quote.vat)}</td></tr>
-      <tr class="gt"><td>Grand Total</td><td style="text-align:right">${money(quote.total)}</td></tr>
-    </table>
+    ${totalsTable(quote)}
 
-    ${quote.notes ? `<div class="notes"><strong>Notes:</strong>\n${esc(quote.notes)}</div>` : ""}
+    <div class="in-words">In words: <span>${esc(amountInWords(quote.total))}</span></div>
+
+    <div class="body-text">Validity: this quotation is valid until ${esc(validUntilDate)}.</div>
+
+    ${notesBlock}
+
+    <div class="body-text closing">
+      We look forward to working with ${esc(billTo.company || billTo.name)}. Please contact us if you
+      require any clarification regarding this proposal.
+    </div>
 
     <div class="sign">
-      <div class="blk">For ${esc(company.name)}<div class="line">${esc(preparedBy.name || "")}</div></div>
-      <div class="blk" style="text-align:right">Authorised Signature<div class="line"></div></div>
+      Sincerely,<br><br>
+      <div class="sigrow">
+        ${
+          preparedBy.signature
+            ? `<img class="sig" src="${preparedBy.signature}" alt="">`
+            : ""
+        }
+        ${
+          preparedBy.stamp
+            ? `<img class="stamp" src="${preparedBy.stamp}" alt="">`
+            : ""
+        }
+      </div>
+      ${esc(preparedBy.name || "")}<br>
+      ${preparedBy.title ? `${esc(preparedBy.title)}<br>` : ""}
+      ${esc(contactLine)}
+      <div class="for">For ${esc(company.name)}</div>
     </div>
+
+    ${specsBlock}
+    ${termsBlock}
 
     <div class="footer">${esc(footerLine)}</div>
   </div>

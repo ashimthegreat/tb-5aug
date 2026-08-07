@@ -13,6 +13,12 @@ export interface MailMessage {
   text: string;
   html?: string;
   fromName?: string;
+  attachments?: {
+    filename: string;
+    content: Buffer;
+    cid: string;
+    disposition?: "inline";
+  }[];
 }
 
 export interface SmtpConfig {
@@ -117,6 +123,7 @@ export async function sendMailWith(
       subject: message.subject,
       text: message.text,
       html: message.html,
+      attachments: message.attachments,
     });
     return { ok: true };
   } catch (e) {

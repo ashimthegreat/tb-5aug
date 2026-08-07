@@ -4,9 +4,12 @@ import { readJson } from "@/lib/store";
 import {
   renderQuotationHtml,
   quoteDate,
+  signatureName,
   type QuotationLine,
   type QuotationParty,
 } from "@/lib/quotation";
+import { publicUrlAsDataUri } from "@/lib/embed";
+import { stampDataUrl } from "@/lib/stamp";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +28,13 @@ interface Quote {
   vat: number;
   total: number;
   notes: string;
+  specs?: string;
+  terms?: string;
+  validUntil?: string;
   sentBy: string;
+  signatory?: string;
+  designation?: string;
+  signature?: string;
   sentAt: string;
   status: "sent" | "failed";
 }
@@ -100,8 +109,16 @@ export async function GET(req: NextRequest) {
     phone: customer.phone,
   };
   const preparedBy: QuotationParty = {
-    name: quote.sentBy || user.name,
+    name:
+      quote.signatory?.trim() ||
+      quote.sentBy ||
+      signatureName(user.signatory, user.name),
     email: company.email,
+    title: quote.designation || user.designation || undefined,
+    signature: publicUrlAsDataUri(
+      quote.signature || user.signature || undefined
+    ),
+    stamp: await stampDataUrl(),
   };
 
   const html = renderQuotationHtml({
@@ -118,6 +135,9 @@ export async function GET(req: NextRequest) {
       vat: quote.vat,
       total: quote.total,
       notes: quote.notes,
+      specs: quote.specs,
+      terms: quote.terms,
+      validUntil: quote.validUntil,
     },
     preparedBy,
     billTo,

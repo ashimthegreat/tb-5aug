@@ -3,12 +3,23 @@ import { getCurrentUser, type AdminRole } from "@/lib/admin";
 import { readJson, writeJson } from "@/lib/store";
 import { resolveSender, sendMailWith } from "@/lib/mail";
 import {
-  money,
+  moneyNPR,
   quoteDate,
   renderQuotationHtml,
   round2,
+  signatureName,
+  validUntil,
   type QuotationParty,
 } from "@/lib/quotation";
+import { publicAsset } from "@/lib/embed";
+import { stampPngBuffer } from "@/lib/stamp";
+import {
+  MAX_DESCRIPTION,
+  MAX_ITEMS,
+  MAX_MESSAGE,
+  MAX_PRICE,
+  MAX_QTY,
+} from "@/lib/validation";
 
 const ALLOWED_ROLES: AdminRole[] = ["superadmin", "sales"];
 const DEFAULT_VAT = 13;
@@ -33,7 +44,13 @@ interface Quote {
   vat: number;
   total: number;
   notes: string;
+  specs?: string;
+  terms?: string;
+  validUntil?: string;
   sentBy: string;
+  signatory?: string;
+  designation?: string;
+  signature?: string;
   sentAt: string;
   status: "sent" | "failed";
 }
@@ -59,6 +76,8 @@ export async function POST(req: NextRequest) {
     items?: unknown;
     vatRate?: unknown;
     notes?: unknown;
+    specs?: unknown;
+    terms?: unknown;
     discountId?: string;
   };
   try {
@@ -73,10 +92,16 @@ export async function POST(req: NextRequest) {
   }
 
   const rawItems = Array.isArray(body.items) ? body.items : [];
+  if (rawItems.length > MAX_ITEMS) {
+    return NextResponse.json(
+      { error: `Quotes are limited to ${MAX_ITEMS} lines.` },
+      { status: 400 }
+    );
+  }
   const items: QuoteItem[] = [];
   for (const raw of rawItems as Record<string, unknown>[]) {
     const type = raw.type === "service" ? "service" : "item";
-    const description = String(raw.description ?? "").trim();
+    const description = String(raw.description ?? "").trim().slice(0, MAX_DESCRIPTION);
     const qty = Number(raw.qty);
     const price = Number(raw.price);
     if (!description) {
@@ -85,15 +110,15 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-    if (!Number.isFinite(qty) || qty <= 0) {
+    if (!Number.isFinite(qty) || qty <= 0 || qty > MAX_QTY) {
       return NextResponse.json(
-        { error: "Quantities must be greater than zero." },
+        { error: `Quantities must be between 1 and ${MAX_QTY}.` },
         { status: 400 }
       );
     }
-    if (!Number.isFinite(price) || price < 0) {
+    if (!Number.isFinite(price) || price < 0 || price > MAX_PRICE) {
       return NextResponse.json(
-        { error: "Prices must be zero or more." },
+        { error: `Prices must be between 0 and ${MAX_PRICE}.` },
         { status: 400 }
       );
     }
@@ -110,7 +135,9 @@ export async function POST(req: NextRequest) {
   if (!Number.isFinite(vatRate)) vatRate = DEFAULT_VAT;
   vatRate = Math.min(100, Math.max(0, Math.round(vatRate * 100) / 100));
 
-  const notes = String(body.notes ?? "").trim();
+  const notes = String(body.notes ?? "").trim().slice(0, MAX_MESSAGE);
+  const specs = String(body.specs ?? "").trim().slice(0, MAX_MESSAGE);
+  const terms = String(body.terms ?? "").trim().slice(0, MAX_MESSAGE);
 
   const customers = await readJson<Customer[]>("customers.json");
   const customer = customers.find((c) => c.id === customerId);
@@ -125,9 +152,10 @@ export async function POST(req: NextRequest) {
   }
 
   const allQuoteNos = customers.flatMap((c) =>
-    (c.quotes ?? []).map((q) => Number(q.quoteNo?.replace(/\D/g, "")) || 0)
+    (c.quotes ?? []).map((q) => Number(q.quoteNo?.match(/(\d+)$/)?.[1]) || 0)
   );
-  const quoteNo = `QT-${(allQuoteNos.reduce((m, n) => Math.max(m, n), 1000) + 1)}`;
+  const nextNum = allQuoteNos.reduce((m, n) => Math.max(m, n), 0) + 1;
+  const quoteNo = `TTR-QT-${new Date().getFullYear()}-${String(nextNum).padStart(4, "0")}`;
 
   const subtotal = round2(items.reduce((s, it) => s + it.qty * it.price, 0));
 
@@ -213,10 +241,42 @@ export async function POST(req: NextRequest) {
     address: customer.address,
     phone: customer.phone,
   };
-  const preparedBy: QuotationParty = { name: user.name, email: fromEmail };
+  const attachments: {
+    filename: string;
+    content: Buffer;
+    cid: string;
+    disposition: "inline";
+  }[] = [];
+  const logoAsset = publicAsset("/images/logo.png");
+  if (logoAsset) {
+    attachments.push({ ...logoAsset, cid: "logo", disposition: "inline" });
+  }
+  const sigAsset = publicAsset(user.signature);
+  if (sigAsset) {
+    attachments.push({ ...sigAsset, cid: "signature", disposition: "inline" });
+  }
+  const stampBuf = await stampPngBuffer();
+  if (stampBuf) {
+    attachments.push({
+      filename: "stamp.png",
+      content: stampBuf,
+      cid: "stamp",
+      disposition: "inline",
+    });
+  }
+  const stampSrc = stampBuf ? "cid:stamp" : undefined;
+
+  const preparedBy: QuotationParty = {
+    name: signatureName(user.signatory, user.name),
+    email: fromEmail,
+    title: user.designation || undefined,
+    signature: sigAsset ? "cid:signature" : undefined,
+    stamp: stampSrc,
+  };
 
   const html = renderQuotationHtml({
     origin: new URL(req.url).origin,
+    logoSrc: logoAsset ? "cid:logo" : undefined,
     company,
     quote: {
       quoteNo,
@@ -229,6 +289,9 @@ export async function POST(req: NextRequest) {
       vat,
       total,
       notes,
+      specs,
+      terms,
+      validUntil: validUntil(),
     },
     preparedBy,
     billTo,
@@ -238,7 +301,7 @@ export async function POST(req: NextRequest) {
 
   const textLines = [
     `QUOTATION ${quoteNo}`,
-    `Date: ${quoteDate()} · Valid for 30 days`,
+    `Date: ${quoteDate()} · Valid until: ${validUntil()}`,
     "",
     "Prepared for:",
     [
@@ -256,7 +319,7 @@ export async function POST(req: NextRequest) {
           "Products:",
           ...products.map(
             (i) =>
-              `- ${i.qty} x ${i.description} — ${money(i.price)} each = ${money(i.qty * i.price)}`
+              `- ${i.qty} x ${i.description} — ${moneyNPR(i.price)} each = ${moneyNPR(i.qty * i.price)}`
           ),
           "",
         ]
@@ -266,22 +329,24 @@ export async function POST(req: NextRequest) {
           "Services:",
           ...services.map(
             (i) =>
-              `- ${i.qty} x ${i.description} — ${money(i.price)} each = ${money(i.qty * i.price)}`
+              `- ${i.qty} x ${i.description} — ${moneyNPR(i.price)} each = ${moneyNPR(i.qty * i.price)}`
           ),
           "",
         ]
       : []),
-    `Subtotal: ${money(subtotal)}`,
+    `Subtotal: ${moneyNPR(subtotal)}`,
     ...(discountPercent > 0
       ? [
-          `Discount (${discountPercent}%): −${money(discountAmount)}`,
-          `After discount: ${money(net)}`,
+          `Discount (${discountPercent}%): −${moneyNPR(discountAmount)}`,
+          `After discount: ${moneyNPR(net)}`,
         ]
       : []),
-    `VAT (${vatRate}%): ${money(vat)}`,
-    `Grand Total: ${money(total)}`,
+    `VAT (${vatRate}%): ${moneyNPR(vat)}`,
+    `Grand Total: ${moneyNPR(total)}`,
     "",
     notes ? `Notes:\n${notes}\n` : "",
+    specs ? `Product description:\n${specs}\n` : "",
+    terms ? `Terms & Conditions:\n${terms}\n` : "",
     "Regards,",
     user.name,
     fromEmail,
@@ -295,6 +360,7 @@ export async function POST(req: NextRequest) {
     subject,
     text: textLines.join("\n"),
     html,
+    attachments,
   });
 
   const quote: Quote = {
@@ -310,7 +376,13 @@ export async function POST(req: NextRequest) {
     vat,
     total,
     notes,
+    specs: specs || undefined,
+    terms: terms || undefined,
+    validUntil: validUntil(),
     sentBy: user.name,
+    signatory: signatureName(user.signatory, user.name),
+    designation: user.designation || undefined,
+    signature: user.signature || undefined,
     sentAt: new Date().toISOString(),
     status: result.ok ? "sent" : "failed",
   };
