@@ -57,5 +57,19 @@
     "smtpHost": "",
     "smtpPort": null,
     "smtpPassEnc": ""
+  },
+  {
+    "id": "732a25bb00a4f157d97ead8e288ee08d",
+    "name": "Logistics",
+    "username": "logistics",
+    "passwordHash": "4dc88a97f240a46bb6a8cf141ece6973d0756239d6691cd964b8ffed99d266a2d94ab2f889369bcce6e7d5e751bf9533b29d2f8e0eb867be98ca788934be06d8",
+    "salt": "5f4398fb9d1057858e5632bdab93af3e",
+    "role": "logistics",
+    "active": true,
+    "createdAt": "2026-08-07T08:27:33.579Z",
+    "email": "",
+    "smtpHost": "",
+    "smtpPort": null,
+    "smtpPassEnc": ""
   }
 ]
