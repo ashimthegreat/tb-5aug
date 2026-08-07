@@ -41,11 +41,17 @@ export function mailtoForProduct(
   return `mailto:${contactEmail}?subject=${subject}&body=${body}`;
 }
 
-export function whatsappOrderLink(items: { name: string; qty: number }[]) {
+export function whatsappOrderLink(
+  items: { name: string; qty: number; price: number }[],
+  subtotal: number
+) {
   const text = encodeURIComponent(
     `Hello TechBucket,\n\nI would like to place an order:\n${items
-      .map((it) => `- ${it.name} x${it.qty}`)
-      .join("\n")}`
+      .map(
+        (it) =>
+          `- ${it.name} x${it.qty} — ${formatNPR(it.price * it.qty)}`
+      )
+      .join("\n")}\n\nSubtotal: ${formatNPR(subtotal)}`
   );
   return `https://wa.me/${whatsappNumber}?text=${text}`;
 }

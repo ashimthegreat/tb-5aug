@@ -7,12 +7,15 @@ import PageHeader from "@/components/PageHeader";
 import { useCart } from "@/components/shop/CartContext";
 import { Icon } from "@/components/icons";
 import { contactEmail, formatNPR, whatsappOrderLink } from "@/lib/format";
+import { isValidEmail, isValidPhone } from "@/lib/validation";
 
 export default function CheckoutPage() {
   const { items, subtotal, clear } = useCart();
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [note, setNote] = useState("");
+  const [formError, setFormError] = useState("");
 
   const orderLines = items
     .map((it) => `- ${it.name} x${it.qty} (${formatNPR(it.price * it.qty)})`)
@@ -21,7 +24,7 @@ export default function CheckoutPage() {
   const body = encodeURIComponent(
     `Hello TechBucket,\n\nNew product order request:\n\n${orderLines}\n\nSubtotal: ${formatNPR(
       subtotal
-    )}\n\nName: ${name || "—"}\nPhone: ${phone || "—"}\n\n${note ? `Notes:\n${note}\n\n` : ""}Please confirm availability and delivery details.`
+    )}\n\nName: ${name || "—"}\nEmail: ${email || "—"}\nPhone: ${phone || "—"}\n\n${note ? `Notes:\n${note}\n\n` : ""}Please confirm availability and delivery details.`
   );
 
   const mailtoHref = `mailto:${contactEmail}?subject=${encodeURIComponent(
@@ -29,8 +32,52 @@ export default function CheckoutPage() {
   )}&body=${body}`;
 
   const waHref = whatsappOrderLink(
-    items.map((it) => ({ name: it.name, qty: it.qty }))
+    items.map((it) => ({ name: it.name, qty: it.qty, price: it.price })),
+    subtotal
   );
+
+  function logOrder(channel: "email" | "whatsapp") {
+    void fetch("/api/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        channel,
+        name: name.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+        note: note.trim(),
+        subtotal,
+        items: items.map((it) => ({
+          name: it.name,
+          qty: it.qty,
+          price: it.price,
+        })),
+      }),
+    }).catch(() => {});
+  }
+
+  function handleOrderClick(
+    e: React.MouseEvent<HTMLAnchorElement>,
+    channel: "email" | "whatsapp"
+  ) {
+    if (!name.trim() || !email.trim()) {
+      e.preventDefault();
+      setFormError("Please enter your full name and email address.");
+      return;
+    }
+    if (!isValidEmail(email)) {
+      e.preventDefault();
+      setFormError("Please enter a valid email address.");
+      return;
+    }
+    if (phone.trim() && !isValidPhone(phone)) {
+      e.preventDefault();
+      setFormError("Please enter a valid phone number.");
+      return;
+    }
+    setFormError("");
+    logOrder(channel);
+  }
 
   if (items.length === 0) {
     return (
@@ -74,12 +121,26 @@ export default function CheckoutPage() {
               <h2 className="text-xl font-bold text-ink">Your details</h2>
               <div className="mt-4 space-y-4">
                 <label className="block">
-                  <span className="text-sm font-medium text-slate-700">Full name</span>
+                  <span className="text-sm font-medium text-slate-700">Full name *</span>
                   <input
                     type="text"
+                    required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="e.g. Suman Shrestha"
+                    className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 px-4 text-sm text-ink placeholder:text-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-sm font-medium text-slate-700">
+                    Email address *
+                  </span>
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
                     className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 px-4 text-sm text-ink placeholder:text-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
                   />
                 </label>
@@ -110,8 +171,14 @@ export default function CheckoutPage() {
               </div>
 
               <div className="mt-8 space-y-3">
+                {formError && (
+                  <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+                    {formError}
+                  </p>
+                )}
                 <a
                   href={mailtoHref}
+                  onClick={(e) => handleOrderClick(e, "email")}
                   className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-6 text-sm font-semibold text-white shadow-sm hover:bg-brand-700"
                 >
                   <Icon name="mail" className="h-5 w-5" />
@@ -121,6 +188,7 @@ export default function CheckoutPage() {
                   href={waHref}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={(e) => handleOrderClick(e, "whatsapp")}
                   className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700"
                 >
                   <Icon name="phone" className="h-5 w-5" />

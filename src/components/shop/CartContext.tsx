@@ -30,6 +30,8 @@ const CartContext = createContext<CartContextValue | null>(null);
 
 const STORAGE_KEY = "tb_cart";
 
+const EMPTY: CartItem[] = [];
+
 function load(): CartItem[] {
   if (typeof window === "undefined") return [];
   try {
@@ -67,7 +69,7 @@ function persist(items: CartItem[]) {
 }
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const items = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+  const items = useSyncExternalStore(subscribe, getSnapshot, () => EMPTY);
 
   const addItem = useCallback(
     (item: Omit<CartItem, "qty">, qty = 1) => {
