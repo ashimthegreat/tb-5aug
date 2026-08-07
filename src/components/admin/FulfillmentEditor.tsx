@@ -90,7 +90,7 @@ function actionsFor(role: AdminRole, o: FulfillmentOrder): Action[] {
       return [{ to: "preparing", label: "Start preparing", style: "primary" }];
     if (o.status === "preparing")
       return [{ to: "ready", label: "Mark ready", style: "primary" }];
-    if (o.status === "ready" && o.orderType === "delivery")
+    if (o.status === "ready" && o.orderType === "delivery" && o.verifiedAt)
       return [
         { to: "delivered", label: "Delivered to customer", style: "primary" },
       ];
@@ -99,13 +99,19 @@ function actionsFor(role: AdminRole, o: FulfillmentOrder): Action[] {
   if (role === "sales") {
     if (o.status === "new")
       return [{ to: "cancelled", label: "Cancel", style: "danger" }];
-    if (o.status === "ready" && o.orderType === "pickup")
+    if (o.status === "ready" && o.orderType === "pickup" && o.verifiedAt)
       return [
         { to: "delivered", label: "Mark delivered / handed over", style: "primary" },
       ];
     return [];
   }
   return [];
+}
+
+function deliverable(role: AdminRole, o: FulfillmentOrder): boolean {
+  if (role === "logistics") return o.orderType === "delivery";
+  if (role === "sales") return o.orderType === "pickup";
+  return false;
 }
 
 export default function FulfillmentEditor({
@@ -117,6 +123,7 @@ export default function FulfillmentEditor({
   const [filter, setFilter] = useState("active");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  const [verifyNotes, setVerifyNotes] = useState<Record<string, string>>({});
 
   useEffect(() => {
     apiGet<FulfillmentOrder[]>("fulfillment")
@@ -125,6 +132,33 @@ export default function FulfillmentEditor({
         setError(e instanceof Error ? e.message : "Failed to load")
       );
   }, []);
+
+  async function verify(o: FulfillmentOrder) {
+    const note = (verifyNotes[o.id] ?? "").trim();
+    if (!note) {
+      setError("Please add a verification note.");
+      return;
+    }
+    setBusy(o.id);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/fulfillment", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: o.id, action: "verify", note }),
+      });
+      const body = await res.json();
+      if (!res.ok || !body.ok) {
+        setError(body.error || "Could not verify the order.");
+        return;
+      }
+      setOrders(await apiGet<FulfillmentOrder[]>("fulfillment"));
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setBusy(null);
+    }
+  }
 
   async function transition(o: FulfillmentOrder, to: FulfillmentStatus) {
     setBusy(o.id);
@@ -221,6 +255,11 @@ export default function FulfillmentEditor({
                       >
                         {ORDER_TYPE_LABELS[o.orderType]}
                       </span>
+                      {o.verifiedAt && (
+                        <span className="rounded-full bg-teal-50 px-2 py-0.5 text-xs font-semibold text-teal-700 ring-1 ring-inset ring-teal-600/20">
+                          Verified ✓
+                        </span>
+                      )}
                     </div>
                     <p className="mt-1 text-xs text-slate-400">
                       Quote {o.quoteNo} · by {o.createdByName} ·{" "}
@@ -264,6 +303,50 @@ export default function FulfillmentEditor({
                   )}
                 </div>
 
+                {user.role === "support" &&
+                  o.status === "ready" &&
+                  !o.verifiedAt && (
+                    <div className="mt-3 rounded-lg border border-teal-200 bg-teal-50 p-3">
+                      <p className="text-sm font-semibold text-teal-900">
+                        Verify prepared devices
+                      </p>
+                      <p className="mt-0.5 text-xs text-teal-700">
+                        Confirm the devices are correct, then record your
+                        verification. Sales is notified once verified.
+                      </p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <input
+                          type="text"
+                          value={verifyNotes[o.id] ?? ""}
+                          onChange={(e) =>
+                            setVerifyNotes((prev) => ({
+                              ...prev,
+                              [o.id]: e.target.value,
+                            }))
+                          }
+                          placeholder="Verification note (e.g. all 10 laptops tested)"
+                          className="min-w-0 flex-1 rounded-lg border border-teal-300 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-teal-500 focus:outline-none"
+                        />
+                        <PrimaryButton
+                          type="button"
+                          disabled={busy === o.id}
+                          onClick={() => void verify(o)}
+                        >
+                          Verify & notify sales
+                        </PrimaryButton>
+                      </div>
+                    </div>
+                  )}
+
+                {o.status === "ready" &&
+                  !o.verifiedAt &&
+                  deliverable(user.role, o) && (
+                    <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500">
+                      Awaiting support verification before this order can be
+                      marked delivered.
+                    </p>
+                  )}
+
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-slate-800">
@@ -304,6 +387,13 @@ export default function FulfillmentEditor({
                   </p>
                 )}
 
+                {o.verifiedAt && (
+                  <p className="mt-2 rounded-lg bg-teal-50 px-2 py-1.5 text-xs text-teal-700">
+                    Verified by {o.verifiedByName} · {formatDate(o.verifiedAt)}
+                    {o.verifiedNote ? ` — ${o.verifiedNote}` : ""}
+                  </p>
+                )}
+
                 {o.events.length > 0 && (
                   <div className="mt-3 border-t border-slate-100 pt-2">
                     <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
@@ -312,15 +402,27 @@ export default function FulfillmentEditor({
                     <ul className="mt-1 space-y-0.5">
                       {o.events.map((e, i) => (
                         <li key={i} className="text-xs text-slate-500">
-                          <span className="font-medium text-slate-700">
-                            {e.from === "—" ? "Created" : e.from}
-                          </span>{" "}
-                          →{" "}
-                          <span className="font-medium text-slate-700">
-                            {e.to}
-                          </span>{" "}
-                          · {e.by} · {formatDate(e.at)}
-                          {e.note ? ` — ${e.note}` : ""}
+                          {e.action === "verify" ? (
+                            <>
+                              <span className="font-medium text-teal-700">
+                                Verified
+                              </span>{" "}
+                              · {e.by} · {formatDate(e.at)}
+                              {e.note ? ` — ${e.note}` : ""}
+                            </>
+                          ) : (
+                            <>
+                              <span className="font-medium text-slate-700">
+                                {e.from === "—" ? "Created" : e.from}
+                              </span>{" "}
+                              →{" "}
+                              <span className="font-medium text-slate-700">
+                                {e.to}
+                              </span>{" "}
+                              · {e.by} · {formatDate(e.at)}
+                              {e.note ? ` — ${e.note}` : ""}
+                            </>
+                          )}
                         </li>
                       ))}
                     </ul>

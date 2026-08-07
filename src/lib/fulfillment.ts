@@ -25,6 +25,7 @@ export interface FulfillmentEvent {
   from: string;
   to: string;
   note?: string;
+  action?: "verify";
 }
 
 export interface FulfillmentOrder {
@@ -52,6 +53,10 @@ export interface FulfillmentOrder {
   createdAt: string;
   status: FulfillmentStatus;
   updatedAt?: string;
+  verifiedAt?: string;
+  verifiedBy?: string;
+  verifiedByName?: string;
+  verifiedNote?: string;
   events: FulfillmentEvent[];
 }
 
@@ -99,6 +104,10 @@ export async function saveFulfillment(
 
 export function newFulfillmentId(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+}
+
+export function isVerified(order: FulfillmentOrder): boolean {
+  return !!order.verifiedAt;
 }
 
 export async function nextOrderNo(): Promise<string> {

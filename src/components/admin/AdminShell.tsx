@@ -38,7 +38,7 @@ const tabs: { id: string; label: string; roles: AdminRole[] }[] = [
   { id: "careers", label: "Careers", roles: ["superadmin", "content"] },
   { id: "customers", label: "Customers", roles: ["superadmin", "sales"] },
   { id: "orders", label: "Orders & Requests", roles: ["superadmin", "sales"] },
-  { id: "fulfillment", label: "Fulfillment", roles: ["superadmin", "sales", "logistics"] },
+  { id: "fulfillment", label: "Fulfillment", roles: ["superadmin", "sales", "logistics", "support"] },
   { id: "sent-log", label: "Sent Log", roles: ["superadmin"] },
   { id: "support", label: "Support", roles: ["superadmin", "support"] },
   { id: "profile", label: "My Profile", roles: ["superadmin", "content", "sales", "support", "logistics"] },

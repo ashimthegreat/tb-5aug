@@ -8,6 +8,7 @@ import {
   newFulfillmentId,
   nextOrderNo,
   saveFulfillment,
+  isVerified,
   ORDER_TYPE_LABELS,
   type FulfillmentOrder,
   type FulfillmentStatus,
@@ -16,7 +17,8 @@ import {
 
 export const dynamic = "force-dynamic";
 
-const ALLOWED: AdminRole[] = ["superadmin", "sales", "logistics"];
+const ALLOWED: AdminRole[] = ["superadmin", "sales", "logistics", "support"];
+const VERIFIERS: AdminRole[] = ["superadmin", "support"];
 const CREATORS: AdminRole[] = ["superadmin", "sales"];
 const ALL_STATUSES: FulfillmentStatus[] = [
   "new",
@@ -97,25 +99,41 @@ function canTransition(
   if (role === "logistics") {
     if (from === "new" && to === "preparing") return true;
     if (from === "preparing" && to === "ready") return true;
-    if (from === "ready" && to === "delivered" && order.orderType === "delivery")
+    if (
+      from === "ready" &&
+      to === "delivered" &&
+      order.orderType === "delivery" &&
+      isVerified(order)
+    )
       return true;
     return false;
   }
   if (role === "sales") {
     if (from === "new" && to === "cancelled" && order.createdBy === username)
       return true;
-    if (from === "ready" && to === "delivered" && order.orderType === "pickup")
+    if (
+      from === "ready" &&
+      to === "delivered" &&
+      order.orderType === "pickup" &&
+      isVerified(order)
+    )
       return true;
     return false;
   }
   return false;
 }
 
-async function notifySales(order: FulfillmentOrder): Promise<boolean> {
+async function notifyRole(
+  role: AdminRole,
+  order: FulfillmentOrder,
+  subject: string,
+  intro: string,
+  closing: string
+): Promise<boolean> {
   const users = await getUsers();
   const recipients = users
     .filter(
-      (u) => u.role === "sales" && u.active && (u.email ?? "").trim().length > 0
+      (u) => u.role === role && u.active && (u.email ?? "").trim().length > 0
     )
     .map((u) => u.email.trim());
   if (recipients.length === 0) return false;
@@ -130,14 +148,9 @@ async function notifySales(order: FulfillmentOrder): Promise<boolean> {
     pass: sender.pass,
   };
 
-  const delivery =
-    order.orderType === "delivery"
-      ? "Logistics will deliver the devices directly to the customer."
-      : "Please arrange handover to the customer (pickup / delivery from the office).";
   const lines = order.items
     .map((it) => `- ${it.name} x${it.qty} — ${money(it.total)}`)
     .join("\n");
-  const subject = `Devices ready — ${order.orderNo} (${ORDER_TYPE_LABELS[order.orderType]})`;
 
   let sent = 0;
   for (const to of recipients) {
@@ -146,7 +159,7 @@ async function notifySales(order: FulfillmentOrder): Promise<boolean> {
       to,
       subject,
       text: [
-        `Order ${order.orderNo} (from quote ${order.quoteNo}) is ready.`,
+        `${intro} ${order.orderNo} (from quote ${order.quoteNo}).`,
         "",
         `Customer: ${order.customerName} <${order.customerEmail}>`,
         `Order type: ${ORDER_TYPE_LABELS[order.orderType]}`,
@@ -155,13 +168,13 @@ async function notifySales(order: FulfillmentOrder): Promise<boolean> {
         "",
         `Total: ${money(order.total)}`,
         "",
-        delivery,
+        closing,
       ].join("\n"),
       html: `
-        <h2>Devices ready — ${esc(order.orderNo)}</h2>
-        <p>Order <strong>${esc(order.orderNo)}</strong> (from quote ${esc(
-          order.quoteNo
-        )}) has been prepared.</p>
+        <h2>${esc(subject)}</h2>
+        <p>${esc(intro)} <strong>${esc(
+        order.orderNo
+      )}</strong> (from quote ${esc(order.quoteNo)}).</p>
         <table cellpadding="6" cellspacing="0" style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:14px">
           <tr><th align="left" style="border:1px solid #ddd;padding:8px">Item</th><th align="left" style="border:1px solid #ddd;padding:8px">Qty</th><th align="left" style="border:1px solid #ddd;padding:8px">Amount</th></tr>
           ${order.items
@@ -172,19 +185,49 @@ async function notifySales(order: FulfillmentOrder): Promise<boolean> {
             .join("")}
         </table>
         <p><strong>Customer:</strong> ${esc(order.customerName)} &lt;${esc(
-          order.customerEmail
-        )}&gt;${order.customerPhone ? ` · ${esc(order.customerPhone)}` : ""}</p>
+        order.customerEmail
+      )}&gt;${order.customerPhone ? ` · ${esc(order.customerPhone)}` : ""}</p>
         <p><strong>Order type:</strong> ${esc(
           ORDER_TYPE_LABELS[order.orderType]
         )}</p>
         <p><strong>Total:</strong> ${money(order.total)}</p>
-        <p style="color:#555">${esc(delivery)}</p>
+        <p style="color:#555">${esc(closing)}</p>
         <p style="color:#888;font-size:12px">Manage this order in the TechBucket admin panel (Fulfillment tab).</p>
       `,
     });
     if (result.ok) sent += 1;
   }
   return sent > 0;
+}
+
+async function notifySupport(order: FulfillmentOrder): Promise<boolean> {
+  const closing =
+    "Please verify the prepared devices and record your verification in the Fulfillment tab so the order can proceed.";
+  return notifyRole(
+    "support",
+    order,
+    `Devices ready for verification — ${order.orderNo}`,
+    "Order",
+    closing
+  );
+}
+
+async function notifySalesVerified(
+  order: FulfillmentOrder,
+  verifiedByName: string
+): Promise<boolean> {
+  const delivery =
+    order.orderType === "delivery"
+      ? "Logistics will deliver the devices directly to the customer."
+      : "Please arrange handover to the customer (pickup / delivery from the office).";
+  const closing = `Devices were verified by ${verifiedByName}. ${delivery}`;
+  return notifyRole(
+    "sales",
+    order,
+    `Devices verified — ${order.orderNo}`,
+    "Order",
+    closing
+  );
 }
 
 export async function GET() {
@@ -312,7 +355,12 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  let body: { id?: string; status?: string; note?: string };
+  let body: {
+    id?: string;
+    status?: string;
+    action?: string;
+    note?: string;
+  };
   try {
     body = await req.json();
   } catch {
@@ -323,16 +371,78 @@ export async function PATCH(req: NextRequest) {
   if (!id) {
     return NextResponse.json({ error: "Order id is required." }, { status: 400 });
   }
-  const status = (body.status ?? "").trim() as FulfillmentStatus;
-  if (!ALL_STATUSES.includes(status)) {
-    return NextResponse.json({ error: "Invalid status." }, { status: 400 });
-  }
   const note = String(body.note ?? "").trim().slice(0, 500) || undefined;
 
   const order = await getFulfillment(id);
   if (!order) {
     return NextResponse.json({ error: "Order not found." }, { status: 404 });
   }
+
+  if (body.action === "verify") {
+    if (!VERIFIERS.includes(user.role)) {
+      return NextResponse.json(
+        { error: "You are not allowed to verify this order." },
+        { status: 403 }
+      );
+    }
+    if (order.status !== "ready") {
+      return NextResponse.json(
+        { error: "Only orders marked ready can be verified." },
+        { status: 400 }
+      );
+    }
+    if (isVerified(order)) {
+      return NextResponse.json(
+        { error: "This order is already verified." },
+        { status: 400 }
+      );
+    }
+    if (!note) {
+      return NextResponse.json(
+        { error: "A verification note is required." },
+        { status: 400 }
+      );
+    }
+
+    const now = new Date().toISOString();
+    const verified: FulfillmentOrder = {
+      ...order,
+      updatedAt: now,
+      verifiedAt: now,
+      verifiedBy: user.username,
+      verifiedByName: user.name,
+      verifiedNote: note,
+      events: [
+        ...order.events,
+        {
+          at: now,
+          by: user.name,
+          role: user.role,
+          from: "ready",
+          to: "ready",
+          note,
+          action: "verify",
+        },
+      ],
+    };
+
+    const orders = await listFulfillment();
+    const idx = orders.findIndex((o) => o.id === id);
+    if (idx < 0) {
+      return NextResponse.json({ error: "Order not found." }, { status: 404 });
+    }
+    orders[idx] = verified;
+    await saveFulfillment(orders);
+
+    const notified = await notifySalesVerified(verified, user.name);
+    return NextResponse.json({ ok: true, order: verified, notified });
+  }
+
+  const status = (body.status ?? "").trim() as FulfillmentStatus;
+  if (!ALL_STATUSES.includes(status)) {
+    return NextResponse.json({ error: "Invalid status." }, { status: 400 });
+  }
+
   if (order.status === status) {
     return NextResponse.json(
       { error: `Order is already marked ${status}.` },
@@ -375,7 +485,7 @@ export async function PATCH(req: NextRequest) {
 
   let notified = false;
   if (status === "ready") {
-    notified = await notifySales(updated);
+    notified = await notifySupport(updated);
   }
 
   return NextResponse.json({ ok: true, order: updated, notified });

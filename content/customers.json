@@ -9,6 +9,33 @@
     "notes": "",
     "createdBy": "sales",
     "createdAt": "2026-08-05T11:32:24.756Z",
-    "quotes": []
+    "quotes": [
+      {
+        "id": "msioksev-4mmt",
+        "quoteNo": "TTR-QT-2026-0001",
+        "to": "ashim.reno@gmail.com",
+        "subject": "Quotation TTR-QT-2026-0001 for cusctomer 1",
+        "items": [
+          {
+            "type": "item",
+            "description": "Accops HySecure Gateway",
+            "qty": 1,
+            "price": 230088.49557522126
+          }
+        ],
+        "vatRate": 13,
+        "subtotal": 230088.5,
+        "vat": 29911.51,
+        "total": 260000.01,
+        "notes": "",
+        "validUntil": "2026-09-06",
+        "sentBy": "Sales",
+        "signatory": "Hritik",
+        "designation": "Managing Director",
+        "signature": "/uploads/msiccavtn4i5.png",
+        "sentAt": "2026-08-07T08:26:27.415Z",
+        "status": "sent"
+      }
+    ]
   }
 ]
