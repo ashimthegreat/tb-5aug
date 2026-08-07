@@ -133,6 +133,29 @@ export default function FulfillmentEditor({
       );
   }, []);
 
+  async function createBill(o: FulfillmentOrder) {
+    setBusy(o.id);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/bill", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId: o.id }),
+      });
+      const body = await res.json();
+      if (!res.ok || !body.ok) {
+        setError(body.error || "Could not create the bill.");
+        return;
+      }
+      window.open(`/api/admin/bill?id=${o.id}`, "_blank");
+      setOrders(await apiGet<FulfillmentOrder[]>("fulfillment"));
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
   async function verify(o: FulfillmentOrder) {
     const note = (verifyNotes[o.id] ?? "").trim();
     if (!note) {
@@ -266,7 +289,9 @@ export default function FulfillmentEditor({
                       {formatDate(o.createdAt)}
                     </p>
                   </div>
-                  {actions.length > 0 && (
+                  {(actions.length > 0 ||
+                    ((user.role === "superadmin" || user.role === "sales") &&
+                      o.status === "delivered")) && (
                     <div className="flex shrink-0 flex-wrap gap-2">
                       {actions.map((a) =>
                         a.style === "primary" ? (
@@ -299,6 +324,23 @@ export default function FulfillmentEditor({
                           </GhostButton>
                         )
                       )}
+                      {(user.role === "superadmin" || user.role === "sales") &&
+                        o.status === "delivered" && (
+                          <button
+                            type="button"
+                            disabled={busy === o.id}
+                            onClick={() => void createBill(o)}
+                            className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors disabled:opacity-60 ${
+                              o.billNo
+                                ? "border-teal-200 bg-teal-50 text-teal-700 hover:bg-teal-100"
+                                : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                            }`}
+                          >
+                            {o.billNo
+                              ? `Bill ${o.billNo} · Print`
+                              : "Create bill"}
+                          </button>
+                        )}
                     </div>
                   )}
                 </div>

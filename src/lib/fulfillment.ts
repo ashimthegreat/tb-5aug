@@ -57,6 +57,9 @@ export interface FulfillmentOrder {
   verifiedBy?: string;
   verifiedByName?: string;
   verifiedNote?: string;
+  billNo?: string;
+  billedAt?: string;
+  billedBy?: string;
   events: FulfillmentEvent[];
 }
 
@@ -117,4 +120,13 @@ export async function nextOrderNo(): Promise<string> {
   );
   const next = nums.reduce((m, n) => Math.max(m, n), 0) + 1;
   return `TTR-ORD-${new Date().getFullYear()}-${String(next).padStart(4, "0")}`;
+}
+
+export async function nextBillNo(): Promise<string> {
+  const orders = await listFulfillment();
+  const nums = orders.map(
+    (o) => Number(o.billNo?.match(/(\d+)$/)?.[1]) || 0
+  );
+  const next = nums.reduce((m, n) => Math.max(m, n), 0) + 1;
+  return `TTR-BIL-${new Date().getFullYear()}-${String(next).padStart(4, "0")}`;
 }

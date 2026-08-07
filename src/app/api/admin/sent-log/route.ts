@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser, type AdminRole } from "@/lib/admin";
 import { readJson } from "@/lib/store";
+import { listFulfillment } from "@/lib/fulfillment";
 import type { SentLogEntry } from "@/lib/sentLog";
 
 export const dynamic = "force-dynamic";
@@ -83,7 +84,30 @@ export async function GET() {
     }
   }
 
-  entries.sort((a, b) => (a.sentAt < b.sentAt ? 1 : a.sentAt > b.sentAt ? -1 : 0));
+  const fulfillment = await listFulfillment();
+  for (const o of fulfillment) {
+    if (!o.billNo) continue;
+    entries.push({
+      type: "bill",
+      id: o.id,
+      billNo: o.billNo,
+      orderNo: o.orderNo,
+      subject: `Bill ${o.billNo} for ${o.customerName}`,
+      total: o.total,
+      billedBy: o.billedBy ?? "",
+      billedAt: o.billedAt ?? o.updatedAt ?? o.createdAt,
+      status: "issued",
+      customerId: o.customerId,
+      customerName: o.customerName,
+      customerEmail: o.customerEmail,
+    });
+  }
+
+  entries.sort((a, b) => {
+    const ta = a.type === "bill" ? a.billedAt : a.sentAt;
+    const tb = b.type === "bill" ? b.billedAt : b.sentAt;
+    return ta < tb ? 1 : ta > tb ? -1 : 0;
+  });
 
   return NextResponse.json({ data: entries });
 }
