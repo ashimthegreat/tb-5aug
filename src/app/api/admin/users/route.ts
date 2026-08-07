@@ -123,9 +123,22 @@ export async function PUT(req: NextRequest) {
       continue;
     }
     const existing = users.find((x) => x.username === u.username);
-    if (!existing && !(u.password && u.password.length > 0)) {
+    if (!existing && !(u.password && u.password.length >= 8)) {
       return NextResponse.json(
-        { error: `New user "${u.username || "(unnamed)"}" needs a password` },
+        {
+          error: `New user "${u.username || "(unnamed)"}" needs a password of at least 8 characters`,
+        },
+        { status: 400 }
+      );
+    }
+    if (
+      existing &&
+      u.password &&
+      u.password.length > 0 &&
+      u.password.length < 8
+    ) {
+      return NextResponse.json(
+        { error: "Passwords must be at least 8 characters" },
         { status: 400 }
       );
     }

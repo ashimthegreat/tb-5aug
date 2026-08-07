@@ -3,7 +3,23 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { isAuthed } from "@/lib/admin";
 
-const ALLOWED_EXT = new Set([".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg"]);
+const ALLOWED_EXT = new Set([".png", ".jpg", ".jpeg", ".gif", ".webp"]);
+const MAX_BYTES = 2 * 1024 * 1024;
+
+function sniffImage(buf: Buffer, ext: string): boolean {
+  if (ext === ".png") return buf.length > 8 && buf.readUInt32BE(0) === 0x89504e47;
+  if (ext === ".jpg" || ext === ".jpeg")
+    return buf.length > 3 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff;
+  if (ext === ".gif")
+    return buf.length > 6 && buf.toString("ascii", 0, 6) === "GIF89a";
+  if (ext === ".webp")
+    return (
+      buf.length > 12 &&
+      buf.toString("ascii", 0, 4) === "RIFF" &&
+      buf.toString("ascii", 8, 12) === "WEBP"
+    );
+  return false;
+}
 
 export async function POST(req: NextRequest) {
   if (!(await isAuthed())) {
@@ -14,10 +30,23 @@ export async function POST(req: NextRequest) {
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "No file provided" }, { status: 400 });
   }
+  if (file.size > MAX_BYTES) {
+    return NextResponse.json(
+      { error: "File is too large (max 2 MB)." },
+      { status: 400 }
+    );
+  }
   const ext = path.extname(file.name).toLowerCase();
   if (!ALLOWED_EXT.has(ext)) {
     return NextResponse.json(
       { error: "Unsupported file type" },
+      { status: 400 }
+    );
+  }
+  const buf = Buffer.from(await file.arrayBuffer());
+  if (!sniffImage(buf, ext)) {
+    return NextResponse.json(
+      { error: "File content does not match its type." },
       { status: 400 }
     );
   }
@@ -26,7 +55,6 @@ export async function POST(req: NextRequest) {
     .slice(2, 6)}${ext}`;
   const dir = path.join(process.cwd(), "public", "uploads");
   await mkdir(dir, { recursive: true });
-  const buf = Buffer.from(await file.arrayBuffer());
   await writeFile(path.join(dir, name), buf);
   return NextResponse.json({ url: `/uploads/${name}` });
 }

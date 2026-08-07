@@ -2,6 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { sendMail } from "@/lib/mail";
+import {
+  isValidEmail,
+  isValidPhone,
+  MAX_DESCRIPTION,
+  MAX_EMAIL,
+  MAX_MESSAGE,
+  MAX_NAME,
+} from "@/lib/validation";
+import { clientIp, isRateLimited } from "@/lib/rateLimit";
 
 const TICKETS_FILE = path.join(process.cwd(), "content", "tickets.json");
 
@@ -23,7 +32,6 @@ export interface SupportTicket {
 
 const CATEGORIES = ["Technical", "Billing", "Product Enquiry", "Other"];
 const PRIORITIES = ["Low", "Medium", "High", "Urgent"];
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 async function readTickets(): Promise<SupportTicket[]> {
   try {
@@ -43,6 +51,13 @@ function esc(text: string): string {
 }
 
 export async function POST(req: NextRequest) {
+  if (isRateLimited(`support:${clientIp(req)}`, 10, 60 * 1000)) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again later." },
+      { status: 429 }
+    );
+  }
+
   let body: Record<string, unknown>;
   try {
     body = await req.json();
@@ -51,14 +66,14 @@ export async function POST(req: NextRequest) {
   }
 
   const str = (v: unknown) => (typeof v === "string" ? v.trim() : "");
-  const name = str(body.name);
-  const email = str(body.email).toLowerCase();
-  const subject = str(body.subject);
-  const message = str(body.message);
+  const name = str(body.name).slice(0, MAX_NAME);
+  const email = str(body.email).toLowerCase().slice(0, MAX_EMAIL);
+  const subject = str(body.subject).slice(0, MAX_DESCRIPTION);
+  const message = str(body.message).slice(0, MAX_MESSAGE);
   const category = str(body.category) || "Other";
   const priority = str(body.priority) || "Medium";
-  const phone = str(body.phone);
-  const product = str(body.product);
+  const phone = str(body.phone).slice(0, 30);
+  const product = str(body.product).slice(0, MAX_DESCRIPTION);
 
   if (!name || !email || !subject || !message) {
     return NextResponse.json(
@@ -66,8 +81,14 @@ export async function POST(req: NextRequest) {
       { status: 400 }
     );
   }
-  if (!EMAIL_RE.test(email)) {
+  if (!isValidEmail(email)) {
     return NextResponse.json({ error: "Please provide a valid email address." }, { status: 400 });
+  }
+  if (phone && !isValidPhone(phone)) {
+    return NextResponse.json(
+      { error: "Please provide a valid phone number." },
+      { status: 400 }
+    );
   }
   if (!CATEGORIES.includes(category)) {
     return NextResponse.json({ error: "Please choose a valid category." }, { status: 400 });

@@ -37,7 +37,12 @@ export const ROLES: { value: AdminRole; label: string }[] = [
 ];
 
 function adminSecret(): string {
-  return process.env.ADMIN_SECRET || "techbucket-local-admin-secret";
+  const secret = process.env.ADMIN_SECRET;
+  if (secret) return secret;
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("ADMIN_SECRET must be set in production.");
+  }
+  return "techbucket-local-admin-secret";
 }
 
 function mailKey(): Buffer {
@@ -117,6 +122,7 @@ export async function setAuthed(username: string): Promise<void> {
   store.set(ADMIN_COOKIE, sessionToken(username), {
     httpOnly: true,
     sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: 60 * 60 * 24 * 7,
   });

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Icon } from "./icons";
+import { isValidEmail, isValidPhone } from "@/lib/validation";
 
 const inputClasses =
   "w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-ink placeholder:text-slate-400 transition-colors focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200";
@@ -20,17 +21,27 @@ export default function SupportForm() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
-    setSubmitting(true);
     const form = e.currentTarget;
     const data = new FormData(form);
+    const email = String(data.get("email") ?? "").trim();
+    const phone = String(data.get("phone") ?? "").trim();
+    if (!isValidEmail(email)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+    if (phone && !isValidPhone(phone)) {
+      setError("Please enter a valid phone number.");
+      return;
+    }
+    setSubmitting(true);
     try {
       const res = await fetch("/api/support", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: data.get("name"),
-          email: data.get("email"),
-          phone: data.get("phone"),
+          email,
+          phone,
           category: data.get("category"),
           priority: data.get("priority"),
           product: data.get("product"),
