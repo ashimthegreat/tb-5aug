@@ -19,6 +19,9 @@ export default async function AdminPage() {
         email: user.email,
         smtpHost: user.smtpHost,
         smtpPort: user.smtpPort,
+        signatory: user.signatory,
+        designation: user.designation,
+        signature: user.signature,
         role: user.role,
       }}
     />

@@ -25,7 +25,10 @@
     "email": "admin@techbucket.com.np",
     "smtpHost": "",
     "smtpPort": null,
-    "smtpPassEnc": ""
+    "smtpPassEnc": "",
+    "signatory": "Hritik",
+    "designation": "Managing Director",
+    "signature": "/uploads/msiccavtn4i5.png"
   },
   {
     "id": "7e9be86f-c340-4ade-b5ce-e780845e9922",

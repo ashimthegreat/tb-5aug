@@ -15,6 +15,7 @@ interface ServiceInfo {
 
 interface SiteInfo {
   name?: string;
+  signatory?: string;
   contact?: {
     email?: string;
     address?: string;
@@ -82,6 +83,7 @@ export async function GET() {
         .sort((a, b) => a.name.localeCompare(b.name)),
       company: {
         name: site.name ?? "TechBucket",
+        signatory: site.signatory ?? "",
         email: contact.email ?? "",
         address: contact.address ?? "",
         phones: (contact.phones ?? []).map((p) => p.label),

@@ -27,6 +27,9 @@ export interface AdminUser {
   smtpHost: string;
   smtpPort: number | null;
   smtpPassEnc: string;
+  signatory?: string;
+  designation?: string;
+  signature?: string;
 }
 
 export const ROLES: { value: AdminRole; label: string }[] = [

@@ -21,6 +21,9 @@ export async function PUT(req: NextRequest) {
     smtpPort?: number | string;
     smtpPassword?: string;
     password?: string;
+    signatory?: string;
+    designation?: string;
+    signature?: string;
   };
   try {
     body = await req.json();
@@ -41,9 +44,9 @@ export async function PUT(req: NextRequest) {
   const smtpPassword = (body.smtpPassword ?? "").trim();
   const loginPassword = body.password ?? "";
 
-  if (loginPassword && loginPassword.length < 4) {
+  if (loginPassword && loginPassword.length < 8) {
     return NextResponse.json(
-      { error: "Password must be at least 4 characters" },
+      { error: "Password must be at least 8 characters" },
       { status: 400 }
     );
   }
@@ -58,6 +61,9 @@ export async function PUT(req: NextRequest) {
   next.email = email;
   next.smtpHost = smtpHost;
   next.smtpPort = Number.isNaN(smtpPort) ? null : smtpPort;
+  next.signatory = (body.signatory ?? "").trim();
+  next.designation = (body.designation ?? "").trim();
+  next.signature = (body.signature ?? "").trim();
   if (smtpPassword) {
     next.smtpPassEnc = encryptSecret(smtpPassword);
   }

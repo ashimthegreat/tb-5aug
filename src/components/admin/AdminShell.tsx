@@ -20,6 +20,9 @@ export interface ShellUser {
   email?: string;
   smtpHost?: string;
   smtpPort?: number | null;
+  signatory?: string;
+  designation?: string;
+  signature?: string;
   role: AdminRole;
 }
 

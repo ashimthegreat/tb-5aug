@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { GhostButton, Label, PrimaryButton, fieldInput } from "./ui";
+import ImageUpload from "./ImageUpload";
 
 export default function MyProfileEditor({
   user,
@@ -12,6 +13,9 @@ export default function MyProfileEditor({
     email?: string;
     smtpHost?: string;
     smtpPort?: number | null;
+    signatory?: string;
+    designation?: string;
+    signature?: string;
   };
 }) {
   const [email, setEmail] = useState(user.email ?? "");
@@ -19,6 +23,9 @@ export default function MyProfileEditor({
   const [smtpPort, setSmtpPort] = useState(
     user.smtpPort ? String(user.smtpPort) : ""
   );
+  const [signatory, setSignatory] = useState(user.signatory ?? "");
+  const [designation, setDesignation] = useState(user.designation ?? "");
+  const [signature, setSignature] = useState(user.signature ?? "");
   const [smtpPassword, setSmtpPassword] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState("");
@@ -39,6 +46,9 @@ export default function MyProfileEditor({
           smtpPort: smtpPort === "" ? null : Number(smtpPort),
           smtpPassword: smtpPassword || undefined,
           password: password || undefined,
+          signatory: signatory.trim() || undefined,
+          designation: designation.trim() || undefined,
+          signature: signature.trim() || undefined,
         }),
       });
       const body = await res.json();
@@ -84,6 +94,7 @@ export default function MyProfileEditor({
         customers. Quotes are sent from your own email address. SMTP host/port
         default to your provider (Gmail, Outlook, Zoho, Yahoo…) when left blank.
         Gmail/Outlook need an App Password, not your normal login password.
+        Leave &quot;Signatory name&quot; blank to sign letters with your login name.
       </p>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -116,26 +127,42 @@ export default function MyProfileEditor({
             placeholder="(auto)"
           />
         </div>
-        <div>
-          <Label>SMTP password</Label>
-          <input
-            className={fieldInput}
-            type="password"
-            value={smtpPassword}
-            onChange={(e) => setSmtpPassword(e.target.value)}
-            placeholder="Blank = keep"
-            autoComplete="new-password"
-          />
-        </div>
-        <div className="sm:col-span-2">
+<div>
           <Label>Login password</Label>
           <input
             className={fieldInput}
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Blank = keep"
+            placeholder="Blank = keep (min 8 chars)"
             autoComplete="new-password"
+          />
+        </div>
+        <div className="sm:col-span-2">
+          <Label>Signatory name (used on quotations and suchidarta)</Label>
+          <input
+            className={fieldInput}
+            type="text"
+            value={signatory}
+            onChange={(e) => setSignatory(e.target.value)}
+            placeholder={user.name}
+          />
+        </div>
+        <div className="sm:col-span-2">
+          <Label>Designation / पद (used on quotations and suchidarta)</Label>
+          <input
+            className={fieldInput}
+            type="text"
+            value={designation}
+            onChange={(e) => setDesignation(e.target.value)}
+            placeholder="Managing Director"
+          />
+        </div>
+        <div className="sm:col-span-2">
+          <ImageUpload
+            label="Signature image · दस्तखत (PNG)"
+            value={signature}
+            onChange={(url) => setSignature(url)}
           />
         </div>
       </div>
