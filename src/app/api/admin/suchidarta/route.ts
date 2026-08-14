@@ -8,7 +8,7 @@ import { stampDataUrl } from "@/lib/stamp";
 
 export const dynamic = "force-dynamic";
 
-const ALLOWED_ROLES: AdminRole[] = ["superadmin", "sales"];
+const ALLOWED_ROLES: AdminRole[] = ["superadmin", "sales", "saleshead"];
 
 interface SuchidartaRecord {
   id: string;
@@ -18,6 +18,7 @@ interface SuchidartaRecord {
   signatory: string;
   designation?: string;
   signature?: string;
+  date?: string;
   sentTo: string;
   sentBy: string;
   sentAt: string;
@@ -107,6 +108,7 @@ export async function GET(req: NextRequest) {
       companyName: company.name,
       contactLine: letterContactLine(company.phones),
       tagline,
+      date: record.date,
     },
     letterhead,
   });

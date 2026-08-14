@@ -175,6 +175,7 @@ export async function PUT(req: NextRequest) {
         smtpHost,
         smtpPort: Number.isNaN(smtpPort) ? null : smtpPort,
         smtpPassEnc,
+        passwordChangedAt: new Date().toISOString(),
       };
     }
     return {
@@ -190,6 +191,7 @@ export async function PUT(req: NextRequest) {
       smtpHost,
       smtpPort: Number.isNaN(smtpPort) ? null : smtpPort,
       smtpPassEnc,
+      passwordChangedAt: existing?.passwordChangedAt ?? "",
     };
   });
 

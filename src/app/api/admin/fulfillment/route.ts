@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser, getUsers, type AdminRole } from "@/lib/admin";
 import { readJson } from "@/lib/store";
 import { resolveSender, sendMailWith } from "@/lib/mail";
+import { updateOrder } from "@/lib/orders";
 import {
   getFulfillment,
   listFulfillment,
@@ -25,10 +26,10 @@ import {
 
 export const dynamic = "force-dynamic";
 
-const ALLOWED: AdminRole[] = ["superadmin", "sales", "logistics", "support"];
+const ALLOWED: AdminRole[] = ["superadmin", "sales", "saleshead", "logistics", "support"];
 const VERIFIERS: AdminRole[] = ["superadmin", "support"];
 const PAYMENT_TAKERS: AdminRole[] = ["superadmin", "logistics"];
-const CREATORS: AdminRole[] = ["superadmin", "sales"];
+const CREATORS: AdminRole[] = ["superadmin", "sales", "saleshead"];
 const ALL_STATUSES: FulfillmentStatus[] = [
   "new",
   "preparing",
@@ -56,6 +57,7 @@ interface Quote {
   vat?: number;
   total?: number;
   status?: string;
+  orderId?: string;
 }
 
 interface Customer {
@@ -117,7 +119,7 @@ function canTransition(
       return true;
     return false;
   }
-  if (role === "sales") {
+  if (role === "sales" || role === "saleshead") {
     if (from === "new" && to === "cancelled" && order.createdBy === username)
       return true;
     if (
@@ -133,7 +135,7 @@ function canTransition(
 }
 
 async function notifyRole(
-  role: AdminRole,
+  roles: AdminRole[],
   order: FulfillmentOrder,
   subject: string,
   intro: string,
@@ -142,7 +144,7 @@ async function notifyRole(
   const users = await getUsers();
   const recipients = users
     .filter(
-      (u) => u.role === role && u.active && (u.email ?? "").trim().length > 0
+      (u) => roles.includes(u.role) && u.active && (u.email ?? "").trim().length > 0
     )
     .map((u) => u.email.trim());
   if (recipients.length === 0) return false;
@@ -213,7 +215,7 @@ async function notifySupport(order: FulfillmentOrder): Promise<boolean> {
   const closing =
     "Please verify the prepared devices and record your verification in the Fulfillment tab so the order can proceed.";
   return notifyRole(
-    "support",
+    ["support"],
     order,
     `Devices ready for verification — ${order.orderNo}`,
     "Order",
@@ -231,7 +233,7 @@ async function notifySalesVerified(
       : "Please arrange handover to the customer (pickup / delivery from the office).";
   const closing = `Devices were verified by ${verifiedByName}. ${delivery}`;
   return notifyRole(
-    "sales",
+    ["sales", "saleshead"],
     order,
     `Devices verified — ${order.orderNo}`,
     "Order",
@@ -355,6 +357,14 @@ export async function POST(req: NextRequest) {
 
   orders.push(order);
   await saveFulfillment(orders);
+
+  if (found.quote.orderId) {
+    await updateOrder(found.quote.orderId, {
+      fulfillmentOrderId: order.id,
+      convertedAt: now,
+    });
+  }
+
   return NextResponse.json({ ok: true, order });
 }
 

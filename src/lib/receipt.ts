@@ -86,7 +86,7 @@ export function renderReceiptHtml(opts: ReceiptRenderOptions): string {
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
   body { font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif; color: #2c303c; background: #e2e8f0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .sheet { width: 210mm; max-width: none; min-height: 297mm; padding: 10mm 14mm 14mm; margin: 16px auto; box-shadow: 0 4px 24px rgba(15,23,42,.15); background: #fff; position: relative; font-size: 12.5pt; line-height: 1.5; }
+  .sheet { width: 210mm; max-width: none; min-height: 297mm; padding: 10mm 14mm 14mm; margin: 16px auto; box-shadow: 0 4px 24px rgba(15,23,42,.15); background: #fff; position: relative; display: flex; flex-direction: column; font-size: 12.5pt; line-height: 1.5; }
   .letterhead { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 4px 0 10px; border-bottom: 2px solid #e2e7f0; }
   .lh-left { display: flex; align-items: center; gap: 14px; min-width: 0; }
   .lh-left .logo { height: 52px; width: auto; }
@@ -114,12 +114,13 @@ export function renderReceiptHtml(opts: ReceiptRenderOptions): string {
   .closing { margin-top: 10px; }
   .sign { margin-top: 22px; line-height: 1.5; }
   .sign .sigrow { display: flex; align-items: flex-end; gap: 20px; margin: 0 0 6px; }
-  .sign .sig { display: inline-block; height: 120px; width: auto; max-width: 220px; max-height: 130px; object-fit: contain; object-position: left center; }
-  .sign .stamp { display: inline-block; height: 132px; width: auto; max-width: 260px; max-height: 142px; object-fit: contain; object-position: left center; }
+  .sign .sig { display: inline-block; height: 150px; width: auto; max-width: 300px; max-height: 160px; object-fit: contain; object-position: left center; }
+  .sign .stamp { display: inline-block; height: 170px; width: auto; max-width: 340px; max-height: 180px; object-fit: contain; object-position: left center; }
   .sign .for { margin-top: 16px; border-top: 1px solid #1c2333; padding-top: 4px; width: 260px; }
   .notes { margin-top: 12px; white-space: pre-wrap; background: #f0f2f7; border: 1px solid #e2e7f0; padding: 8px 10px; font-size: 11pt; }
-  .footer { margin-top: 26px; border-top: 1px solid #e5e7eb; padding-top: 8px; font-size: 9.5pt; color: #6b7280; text-align: center; }
-  @media print { @page { size: A4; margin: 12mm 14mm; } body { background: #fff; } .sheet { margin: 0; width: auto; min-height: auto; box-shadow: none; padding: 0; } .items, table.totals, .sign, .notes { page-break-inside: avoid; } }
+  .spacer { flex: 1 1 auto; min-height: 26px; }
+  .footer { margin-top: auto; border-top: 1px solid #e5e7eb; padding-top: 8px; font-size: 9.5pt; color: #6b7280; text-align: center; }
+  @media print { @page { size: A4; margin: 12mm 14mm; } body { background: #fff; } .sheet { margin: 0; width: auto; min-height: calc(297mm - 24mm); box-shadow: none; padding: 0; } .items, table.totals, .sign, .notes { page-break-inside: avoid; } }
 </style>
 </head>
 <body>
@@ -185,6 +186,7 @@ export function renderReceiptHtml(opts: ReceiptRenderOptions): string {
       <div class="for">For ${esc(company.name)}</div>
     </div>
 
+    <div class="spacer"></div>
     <div class="footer">${esc(footerLine)}</div>
   </div>
 </body>

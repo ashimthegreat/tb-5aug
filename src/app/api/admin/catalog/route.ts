@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser, type AdminRole } from "@/lib/admin";
 import { readJson } from "@/lib/store";
 
-const ALLOWED_ROLES: AdminRole[] = ["superadmin", "sales"];
+const ALLOWED_ROLES: AdminRole[] = ["superadmin", "saleshead"];
 
 interface ProductInfo {
   name: string;

@@ -1,15 +1,15 @@
 [
   {
     "id": "hms",
-    "categoryId": "healthcare",
+    "categoryId": "software",
     "icon": "building",
-    "title": "Healthcare Management Systems",
-    "description": "End-to-end hospital and clinic management software covering patient registration, OPD/IPD workflows, billing, pharmacy, and laboratory integration.",
+    "title": "Hospital Management Systems",
+    "description": "End-to-end hospital management software covering patient registration, OPD/IPD workflows, billing, pharmacy, and laboratory integration.",
     "order": 1
   },
   {
     "id": "lis",
-    "categoryId": "healthcare",
+    "categoryId": "software",
     "icon": "flask",
     "title": "Laboratory Information Systems",
     "description": "Streamlined LIS solutions for pathology labs — from sample collection and test ordering to result reporting and quality control dashboards.",
@@ -17,34 +17,210 @@
   },
   {
     "id": "custom-software",
-    "categoryId": "healthcare",
+    "categoryId": "software",
     "icon": "code",
-    "title": "Custom Software Development",
-    "description": "Bespoke web and desktop applications built for your specific clinical or administrative workflows, using modern frameworks and agile delivery.",
+    "title": "Custom Healthcare Software",
+    "description": "Bespoke web and desktop applications built for hospitals and healthcare providers — tailored to your clinical, administrative and operational workflows.",
     "order": 3
   },
   {
-    "id": "data-security",
-    "categoryId": "healthcare",
-    "icon": "shield",
-    "title": "Health Data Security",
-    "description": "Comprehensive security audits, encrypted storage, role-based access controls, and compliance reviews to protect sensitive patient data.",
-    "order": 4
-  },
-  {
-    "id": "analytics",
-    "categoryId": "healthcare",
-    "icon": "chart",
-    "title": "Healthcare Analytics",
-    "description": "Interactive dashboards and reports that transform clinical and operational data into actionable insights for better decision-making.",
-    "order": 5
-  },
-  {
     "id": "mobile-health",
-    "categoryId": "healthcare",
+    "categoryId": "software",
     "icon": "mobile",
     "title": "Mobile Health Applications",
     "description": "Patient-facing and provider-facing mobile apps for appointment booking, teleconsultation, medication reminders, and health tracking.",
-    "order": 6
+    "order": 4
+  },
+  {
+    "id": "enterprise-networks",
+    "categoryId": "networking",
+    "icon": "network",
+    "title": "Enterprise Network Design & Deployment",
+    "description": "End-to-end design, deployment and optimisation of enterprise networks with industry-leading vendors for reliable, high-performance connectivity.",
+    "order": 1
+  },
+  {
+    "id": "wireless-solutions",
+    "categoryId": "networking",
+    "icon": "mobile",
+    "title": "Wireless Solutions",
+    "description": "Enterprise-grade Wi-Fi design, deployment and optimisation for offices, hospitals, campuses and public spaces.",
+    "order": 2
+  },
+  {
+    "id": "structured-cabling",
+    "categoryId": "networking",
+    "icon": "layers",
+    "title": "Structured Cabling",
+    "description": "Future-proof structured cabling infrastructure built to certified standards for reliable, expandable network performance.",
+    "order": 3
+  },
+  {
+    "id": "wan-optimization",
+    "categoryId": "networking",
+    "icon": "spark",
+    "title": "WAN Optimization",
+    "description": "WAN optimisation and internet load-balancing solutions that improve throughput, reduce latency and ensure uptime across links.",
+    "order": 4
+  },
+  {
+    "id": "data-security",
+    "categoryId": "cybersecurity",
+    "icon": "shield",
+    "title": "Health & Enterprise Data Security",
+    "description": "Comprehensive security audits, encrypted storage, role-based access controls, and compliance reviews to protect sensitive data.",
+    "order": 1
+  },
+  {
+    "id": "nextgen-firewall",
+    "categoryId": "cybersecurity",
+    "icon": "shield",
+    "title": "Next-Gen Firewall & Intrusion Prevention",
+    "description": "Next-generation firewalls, IPS/IDS and WAF solutions that protect your network from advanced threats at the perimeter.",
+    "order": 2
+  },
+  {
+    "id": "endpoint-security",
+    "categoryId": "cybersecurity",
+    "icon": "users",
+    "title": "Endpoint Security",
+    "description": "Endpoint protection, EDR and antivirus solutions to secure every device in your organisation against malware and ransomware.",
+    "order": 3
+  },
+  {
+    "id": "soc",
+    "categoryId": "cybersecurity",
+    "icon": "shield",
+    "title": "Security Operations Center (SOC)",
+    "description": "24/7 threat monitoring, detection and response services with continuous visibility into your security posture.",
+    "order": 4
+  },
+  {
+    "id": "cloud-data-center",
+    "categoryId": "cloud",
+    "icon": "server",
+    "title": "Cloud & Data Center Design",
+    "description": "Design and implementation of private and public cloud environments, from architecture to deployment and migration.",
+    "order": 1
+  },
+  {
+    "id": "virtualization",
+    "categoryId": "cloud",
+    "icon": "cpu",
+    "title": "Virtualization & VDI",
+    "description": "Server and desktop virtualization with high-availability setups, empowering secure remote and virtual desktop access.",
+    "order": 2
+  },
+  {
+    "id": "storage-backup",
+    "categoryId": "cloud",
+    "icon": "database",
+    "title": "Storage & Backup Solutions",
+    "description": "SAN, NAS and backup appliances that keep your data safe, available and easily recoverable.",
+    "order": 3
+  },
+  {
+    "id": "analytics",
+    "categoryId": "data",
+    "icon": "chart",
+    "title": "Healthcare & Enterprise Analytics",
+    "description": "Interactive dashboards and reports that transform clinical, financial and operational data into actionable insights.",
+    "order": 1
+  },
+  {
+    "id": "data-migration",
+    "categoryId": "data",
+    "icon": "database",
+    "title": "Data Migration & Integrity",
+    "description": "Flawless data migrations and integrity engineering to move your systems safely without loss or downtime.",
+    "order": 2
+  },
+  {
+    "id": "it-consulting",
+    "categoryId": "consulting",
+    "icon": "briefcase",
+    "title": "IT Consulting & Advisory",
+    "description": "Strategic IT advisory, project planning and technology assessments to help you make confident infrastructure decisions.",
+    "order": 1
+  },
+  {
+    "id": "digital-transformation",
+    "categoryId": "consulting",
+    "icon": "spark",
+    "title": "Digital Transformation Strategy",
+    "description": "Technology roadmaps and end-to-end transformation strategy — from blueprints to build — to drive long-term growth.",
+    "order": 2
+  },
+  {
+    "id": "enterprise-ai",
+    "categoryId": "consulting",
+    "icon": "spark",
+    "title": "Enterprise AI Enablement",
+    "description": "Operationalise AI with robust governance, scalable architecture and practical integration into your business workflows.",
+    "order": 3
+  },
+  {
+    "id": "managed-it",
+    "categoryId": "managed-it",
+    "icon": "cpu",
+    "title": "Managed IT Services",
+    "description": "Proactive IT monitoring, 24/7 helpdesk support, patch management and maintenance to keep your systems running.",
+    "order": 1
+  },
+  {
+    "id": "helpdesk-support",
+    "categoryId": "managed-it",
+    "icon": "mobile",
+    "title": "24/7 Helpdesk & Support",
+    "description": "Around-the-clock helpdesk and technical support, ensuring your team always has access to expert assistance.",
+    "order": 2
+  },
+  {
+    "id": "network-monitoring",
+    "categoryId": "managed-it",
+    "icon": "chart",
+    "title": "Network Monitoring & Maintenance",
+    "description": "Continuous infrastructure monitoring, preventive maintenance and performance tuning for reliable, healthy systems.",
+    "order": 3
+  },
+  {
+    "id": "disaster-recovery",
+    "categoryId": "continuity",
+    "icon": "database",
+    "title": "Disaster Recovery",
+    "description": "Disaster recovery planning and solutions that restore critical systems quickly and safely after an outage or incident.",
+    "order": 1
+  },
+  {
+    "id": "business-continuity",
+    "categoryId": "continuity",
+    "icon": "shield",
+    "title": "Business Continuity Planning",
+    "description": "Business continuity planning that keeps operations running smoothly in the face of disruption — small or large.",
+    "order": 2
+  },
+  {
+    "id": "backup-automation",
+    "categoryId": "continuity",
+    "icon": "database",
+    "title": "Backup Automation",
+    "description": "Automated backup solutions with scheduled, verified snapshots so your data is always protected and recoverable.",
+    "order": 3
+  },
+  {
+    "id": "it-training",
+    "categoryId": "training",
+    "icon": "book",
+    "title": "IT Training & Workshops",
+    "description": "Hands-on training for IT teams on networking, security, wireless and cloud technologies, delivered by seasoned professionals.",
+    "order": 1
+  },
+  {
+    "id": "cybersecurity-training",
+    "categoryId": "training",
+    "icon": "shield",
+    "title": "Cybersecurity Awareness Training",
+    "description": "Practical security training and workshops that build awareness and equip your team to recognise and respond to threats.",
+    "order": 2
   }
 ]

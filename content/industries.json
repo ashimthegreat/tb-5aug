@@ -1,0 +1,55 @@
+[
+  {
+    "id": "healthcare",
+    "name": "Healthcare",
+    "icon": "hospital",
+    "description": "Purpose-built software for hospitals, clinics, labs and health startups — from clinical workflows to patient-facing apps.",
+    "services": ["hms", "lis", "mobile-health", "custom-software"],
+    "order": 1
+  },
+  {
+    "id": "education",
+    "name": "Education",
+    "icon": "book",
+    "description": "IT infrastructure products for schools, colleges, training institutes and universities — reliable hardware supplied and supported.",
+    "services": [],
+    "productsOnly": true,
+    "order": 2
+  },
+  {
+    "id": "finance",
+    "name": "Finance & Banking",
+    "icon": "balance",
+    "description": "Infrastructure hardware for banks, cooperatives, fintech and accounting firms — from servers to secure networking equipment.",
+    "services": [],
+    "productsOnly": true,
+    "order": 3
+  },
+  {
+    "id": "hospitality",
+    "name": "Hospitality",
+    "icon": "briefcase",
+    "description": "Hardware and IT products for hotels, resorts, restaurants and travel companies — built to keep operations connected.",
+    "services": [],
+    "productsOnly": true,
+    "order": 4
+  },
+  {
+    "id": "manufacturing",
+    "name": "Manufacturing & Logistics",
+    "icon": "factory",
+    "description": "Servers, networking, storage and power protection for manufacturing and logistics operations that never want to stop.",
+    "services": [],
+    "productsOnly": true,
+    "order": 5
+  },
+  {
+    "id": "retail",
+    "name": "Retail & E-commerce",
+    "icon": "globe",
+    "description": "IT infrastructure products for retailers and online sellers — POS hardware, servers, networking and peripherals.",
+    "services": [],
+    "productsOnly": true,
+    "order": 6
+  }
+]

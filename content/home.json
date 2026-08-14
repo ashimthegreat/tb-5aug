@@ -1,0 +1,147 @@
+{
+  "statsSubline": "Backing Nepal's organisations with reliable technology since 2019",
+  "process": {
+    "eyebrow": "How We Work",
+    "title": "From Idea to Impact",
+    "description": "A transparent, milestone-driven process that keeps you in control at every step.",
+    "steps": [
+      {
+        "id": "step-consult",
+        "icon": "users",
+        "title": "Consult",
+        "description": "We understand your goals, workflows and constraints to shape the right solution."
+      },
+      {
+        "id": "step-design",
+        "icon": "layers",
+        "title": "Design",
+        "description": "We architect the solution with clear roadmaps, milestones and transparent planning."
+      },
+      {
+        "id": "step-build",
+        "icon": "code",
+        "title": "Build",
+        "description": "Our engineers deliver with modern frameworks, rigorous testing and continuous feedback."
+      },
+      {
+        "id": "step-support",
+        "icon": "shield",
+        "title": "Support",
+        "description": "We stand by our work with managed support, monitoring and long-term partnership."
+      }
+    ]
+  },
+  "testimonials": {
+    "eyebrow": "Testimonials",
+    "title": "Trusted by Organisations Across Nepal",
+    "description": "Here's what clients say about working with our team.",
+    "items": [
+      {
+        "id": "testimonial-1",
+        "quote": "TechBucket delivered our hospital management system on time and on budget. The team understood our clinical workflows better than anyone we'd spoken with.",
+        "name": "Operations Director",
+        "org": "Private Hospital, Kathmandu"
+      },
+      {
+        "id": "testimonial-2",
+        "quote": "Their cybersecurity and networking team secured our entire branch network. Reliable, professional and always available when we needed them.",
+        "name": "IT Manager",
+        "org": "Financial Institution"
+      },
+      {
+        "id": "testimonial-3",
+        "quote": "TechBucket supplied and deployed our servers and networking on schedule. Honest pricing, genuine products and dependable support throughout.",
+        "name": "IT Lead",
+        "org": "Education Institute"
+      }
+    ]
+  },
+  "faq": {
+    "eyebrow": "FAQ",
+    "title": "Frequently Asked Questions",
+    "description": "Quick answers to the questions we hear most often. Can't find yours? Get in touch.",
+    "items": [
+      {
+        "id": "faq-1",
+        "question": "Which industries do you serve?",
+        "answer": "We build hospital management software for healthcare providers, and supply IT infrastructure products to organisations in every industry — education, finance, hospitality, manufacturing, retail and more."
+      },
+      {
+        "id": "faq-2",
+        "question": "Do you offer managed IT services?",
+        "answer": "Yes. Our managed IT services cover proactive monitoring, 24/7 helpdesk, patch management, network monitoring and preventive maintenance."
+      },
+      {
+        "id": "faq-3",
+        "question": "Can you build custom software for our organisation?",
+        "answer": "Yes, for healthcare organisations. Custom software development is one of our core services for hospitals — from hospital management systems to bespoke clinical applications, delivered with modern frameworks and agile practice."
+      },
+      {
+        "id": "faq-4",
+        "question": "Do you provide cybersecurity solutions?",
+        "answer": "Yes. We deliver next-generation firewalls, endpoint security, SOC services and data security to protect your organisation from evolving threats."
+      },
+      {
+        "id": "faq-5",
+        "question": "Where is TechBucket based?",
+        "answer": "We are a Nepal-based company with our headquarters in Kathmandu, serving clients across the country and beyond."
+      }
+    ]
+  },
+  "insights": {
+    "eyebrow": "Insights",
+    "title": "Latest from TechBucket",
+    "description": "Practical guidance on technology for organisations in Nepal and beyond.",
+    "items": [
+      {
+        "id": "insight-1",
+        "eyebrow": "Healthcare IT",
+        "title": "Choosing the right hospital management system",
+        "excerpt": "What to look for when evaluating HMIS for your clinic or hospital — from workflows to support.",
+        "href": "/industries#healthcare"
+      },
+      {
+        "id": "insight-2",
+        "eyebrow": "Cybersecurity",
+        "title": "5 signs your business needs stronger security",
+        "excerpt": "Recognising when it's time to move beyond baseline protection and invest in layered defence.",
+        "href": "/services#cybersecurity"
+      },
+      {
+        "id": "insight-3",
+        "eyebrow": "Cloud & Data",
+        "title": "Getting started with cloud for your organisation",
+        "excerpt": "A practical introduction to cloud and data centre adoption for growing teams.",
+        "href": "/services#cloud"
+      }
+    ]
+  },
+  "cases": {
+    "eyebrow": "Featured Work",
+    "title": "Solutions We're Proud Of",
+    "description": "A look at how we help organisations across different industries succeed.",
+    "items": [
+      {
+        "id": "case-1",
+        "icon": "hospital",
+        "title": "Hospital Digital Transformation",
+        "summary": "End-to-end HMIS rollout for a private hospital, digitising patient records and clinical workflows.",
+        "href": "/industries#healthcare"
+      },
+      {
+        "id": "case-2",
+        "icon": "balance",
+        "title": "Secure Branch Networking",
+        "summary": "Network and cybersecurity hardening for a multi-branch financial institution with 24/7 support.",
+        "href": "/industries#finance"
+      },
+      {
+        "id": "case-3",
+        "icon": "server",
+        "title": "Enterprise Infrastructure Supply",
+        "summary": "Servers, networking and storage supplied and deployed for a growing enterprise across its sites.",
+        "href": "/products"
+      }
+    ]
+  }
+}

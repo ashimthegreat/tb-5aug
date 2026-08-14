@@ -32,7 +32,7 @@ export default function ProductCard({ product }: { product: Product }) {
         <p className="mt-1 line-clamp-2 flex-1 text-sm leading-relaxed text-slate-600">
           {product.summary}
         </p>
-        <div className="mt-4 flex items-end justify-between">
+        <div className="mt-4 flex flex-wrap items-end justify-between gap-3">
           {product.purchaseType === "quote" ? (
             <p className="text-lg font-bold text-brand-700">Price on request</p>
           ) : (

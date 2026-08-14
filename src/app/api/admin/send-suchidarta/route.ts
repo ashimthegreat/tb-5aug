@@ -7,11 +7,11 @@ import {
   renderSuchidartaHtml,
   SUCHIDARTA_SUBJECT,
 } from "@/lib/suchidarta";
-import { signatureName } from "@/lib/quotation";
+import { bsDateNepali, signatureName } from "@/lib/quotation";
 import { publicAsset } from "@/lib/embed";
 import { stampPngBuffer } from "@/lib/stamp";
 
-const ALLOWED_ROLES: AdminRole[] = ["superadmin", "sales"];
+const ALLOWED_ROLES: AdminRole[] = ["superadmin", "sales", "saleshead"];
 
 interface SuchidartaRecord {
   id: string;
@@ -21,6 +21,7 @@ interface SuchidartaRecord {
   signatory: string;
   designation?: string;
   signature?: string;
+  date?: string;
   sentTo: string;
   sentBy: string;
   sentAt: string;
@@ -59,6 +60,7 @@ export async function POST(req: NextRequest) {
     recipient?: unknown;
     body?: unknown;
     signatory?: unknown;
+    date?: unknown;
   };
   try {
     body = await req.json();
@@ -89,6 +91,7 @@ export async function POST(req: NextRequest) {
     String(body.signatory ?? ""),
     signatureName(user.signatory, user.name)
   );
+  const letterDate = String(body.date ?? "").trim() || bsDateNepali();
 
   const customers = await readJson<Customer[]>("customers.json");
   const customer = customers.find((c) => c.id === customerId);
@@ -162,6 +165,7 @@ export async function POST(req: NextRequest) {
       companyName,
       contactLine,
       tagline,
+      date: letterDate,
     },
     letterhead: true,
     variant: "email",
@@ -171,7 +175,7 @@ export async function POST(req: NextRequest) {
   const subject = `${SUCHIDARTA_SUBJECT.replace(/^विषय:\s*/, "")} – ${customer.name}`;
 
   const textLines = [
-    `मिति:`,
+    `मिति:${letterDate}`,
     "",
     "श्री,",
     recipient,
@@ -229,6 +233,7 @@ export async function POST(req: NextRequest) {
     signatory,
     designation: user.designation || undefined,
     signature: user.signature || undefined,
+    date: letterDate,
     sentTo: customer.email,
     sentBy: user.name,
     sentAt: new Date().toISOString(),

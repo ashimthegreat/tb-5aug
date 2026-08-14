@@ -215,6 +215,8 @@ export function renderBillHtml(opts: BillRenderOptions): string {
     box-shadow: 0 4px 24px rgba(15,23,42,.15);
     background: #fff;
     position: relative;
+    display: flex;
+    flex-direction: column;
     font-size: 12.5pt;
     line-height: 1.5;
   }
@@ -294,8 +296,8 @@ export function renderBillHtml(opts: BillRenderOptions): string {
   .closing { margin-top: 10px; }
   .sign { margin-top: 22px; line-height: 1.5; }
   .sign .sigrow { display: flex; align-items: flex-end; gap: 20px; margin: 0 0 6px; }
-  .sign .sig { display: inline-block; height: 120px; width: auto; max-width: 220px; max-height: 130px; object-fit: contain; object-position: left center; }
-  .sign .stamp { display: inline-block; height: 132px; width: auto; max-width: 260px; max-height: 142px; object-fit: contain; object-position: left center; }
+  .sign .sig { display: inline-block; height: 150px; width: auto; max-width: 300px; max-height: 160px; object-fit: contain; object-position: left center; }
+  .sign .stamp { display: inline-block; height: 170px; width: auto; max-width: 340px; max-height: 180px; object-fit: contain; object-position: left center; }
   .sign .for { margin-top: 16px; border-top: 1px solid #1c2333; padding-top: 4px; width: 260px; }
   .notes {
     margin-top: 12px;
@@ -305,8 +307,9 @@ export function renderBillHtml(opts: BillRenderOptions): string {
     padding: 8px 10px;
     font-size: 11pt;
   }
+  .spacer { flex: 1 1 auto; min-height: 26px; }
   .footer {
-    margin-top: 26px;
+    margin-top: auto;
     border-top: 1px solid #e5e7eb;
     padding-top: 8px;
     font-size: 9.5pt;
@@ -343,7 +346,7 @@ export function renderBillHtml(opts: BillRenderOptions): string {
   @media print {
     @page { size: A4; margin: 12mm 14mm; }
     body { background: #fff; }
-    .sheet { margin: 0; width: auto; min-height: auto; box-shadow: none; padding: 0; }
+    .sheet { margin: 0; width: auto; min-height: calc(297mm - 24mm); box-shadow: none; padding: 0; }
     .toolbar { display: none; }
     .items, table.totals, .sign, .notes { page-break-inside: avoid; }
     table.items tr, .subject, .sec { page-break-after: avoid; }
@@ -413,6 +416,7 @@ export function renderBillHtml(opts: BillRenderOptions): string {
       <div class="for">For ${esc(company.name)}</div>
     </div>
 
+    <div class="spacer"></div>
     <div class="footer">${esc(footerLine)}</div>
   </div>
 </body>

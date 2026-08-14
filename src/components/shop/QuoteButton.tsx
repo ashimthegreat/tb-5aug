@@ -116,9 +116,11 @@ export default function QuoteButton({ product }: { product: Product }) {
             <Icon name="plus" className="h-4 w-4" />
           </button>
         </div>
-        <span className="text-xs text-slate-500">
-          {formatNPR(price * qty)} incl. VAT
-        </span>
+        {product.purchaseType !== "quote" && (
+          <span className="text-xs text-slate-500">
+            {formatNPR(price * qty)} incl. VAT
+          </span>
+        )}
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">

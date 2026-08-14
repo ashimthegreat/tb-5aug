@@ -37,20 +37,54 @@ Open [http://localhost:3000](http://localhost:3000).
 Everything on the site is editable from **`/admin`**:
 
 - **Content** — hero, about, stats, mission/vision, values, contact details
+- **Home** — homepage sections (hero, solutions, services, stats, CTA)
 - **Services** — service categories (industries) and the services inside them
-- **Products** — the products portfolio
-- **Brands / Partners / Careers** — logos, links and copy
+- **Products / Categories / Brands / Partners / Careers** — the portfolios
+- **Customers / Orders / Fulfillment / Ledger / Reports / Sent Log / Discounts / Bank Accounts / Users / My Profile** — sales, billing and fulfilment workflow
 
 Changes are saved to JSON files in `content/` via API routes and appear on the
 site immediately.
 
-**Password:** set `ADMIN_PASSWORD` in `.env.local` (default `techbucket-admin`).
-The admin password gates `/admin` and all `/api/admin/*` routes.
+**Authentication:** `/admin` uses multi-user logins (credentials stored in
+`content/users.json`). Roles: `superadmin`, `content`, `sales`, `saleshead`,
+`support`, `logistics`. Sessions are an httpOnly `tb_admin` cookie signed with
+`ADMIN_SECRET`.
+
+**Required environment variables in production:**
+
+| Variable | Purpose |
+| -------- | ------- |
+| `ADMIN_SECRET` | Signs admin sessions (REQUIRED — the app refuses to boot without it in production) and encrypts per-admin SMTP passwords |
+| `CRON_SECRET` | Protects `/api/admin/overdue/auto` (Bearer token) for the daily overdue cron |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` | Sends public order/quote/support notifications |
+| `SUPPORT_TO` / `QUOTES_TO` | Fallback recipients for tickets and order/quote requests |
+
+See `.env.example` for a full template.
 
 **Image uploads:** the admin panel uploads images to `public/uploads/`.
 
-> Note: admin edits are written to files on the server at runtime, so the app
-> should run on a Node server (`next start`) rather than a fully static export.
+### Deployment notes (cPanel, persistent Node server)
+
+> Admin edits are written to files on the server at runtime, so the app must run
+> on a persistent Node server (`next start`) — it cannot be a static export.
+
+1. **Node ≥ 20.9** is required (Next.js 16 requirement).
+2. Run a production build on the server: `npm ci && npm run build`
+   (requires a fresh `node_modules`; build artifacts are not committed).
+3. Entry point for the cPanel Node.js App Manager: `server.js` (starts
+   `next start` in-process). Then serve `npm run start` / `server.js` with
+   `NODE_ENV=production`.
+4. `content/` must be writable by the Node process. Copy the committed seed
+   files (`home.json`, `industries.json`, `bank-accounts.json` and the tracked
+   catalogue files) into `content/`. PII state
+   (`users.json`, `customers.json`, `orders.json`, `fulfillment.json`,
+   `tickets.json`, `sent-log.json`) is gitignored — it starts empty and is
+   managed through the admin panel.
+5. Set `ADMIN_SECRET`, `CRON_SECRET` and the SMTP variables in the cPanel
+   environment or `.env.production`.
+6. Schedule a daily cron job that curls the overdue reminder:
+   `curl -H "Authorization: Bearer $CRON_SECRET" https://yourdomain.com/api/admin/overdue/auto`.
+7. Serve over HTTPS so the admin session cookie's `secure` flag works.
 
 ## Structure
 

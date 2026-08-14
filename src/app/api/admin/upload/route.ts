@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
+import sharp from "sharp";
 import { isAuthed } from "@/lib/admin";
 
 const ALLOWED_EXT = new Set([".png", ".jpg", ".jpeg", ".gif", ".webp"]);
@@ -50,11 +51,31 @@ export async function POST(req: NextRequest) {
       { status: 400 }
     );
   }
-  const name = `${Date.now().toString(36)}${Math.random()
+  const meta = await sharp(buf, { failOn: "none" }).metadata();
+  let name = `${Date.now().toString(36)}${Math.random()
     .toString(36)
     .slice(2, 6)}${ext}`;
+  let out = buf;
+  if (meta.hasAlpha) {
+    if ((meta.width ?? 0) < 3 || (meta.height ?? 0) < 3) {
+      out = await sharp(buf, { failOn: "none" }).png().toBuffer();
+    } else {
+      out = await sharp(buf, { failOn: "none" })
+        .trim({ threshold: 25 })
+        .extend({
+          top: 12,
+          bottom: 12,
+          left: 12,
+          right: 12,
+          background: { r: 0, g: 0, b: 0, alpha: 0 },
+        })
+        .png()
+        .toBuffer();
+    }
+    name = name.replace(/\.[^.]*$/, ".png");
+  }
   const dir = path.join(process.cwd(), "public", "uploads");
   await mkdir(dir, { recursive: true });
-  await writeFile(path.join(dir, name), buf);
+  await writeFile(path.join(dir, name), out);
   return NextResponse.json({ url: `/uploads/${name}` });
 }

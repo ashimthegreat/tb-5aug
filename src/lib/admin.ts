@@ -15,6 +15,7 @@ export const ADMIN_COOKIE = "tb_admin";
 export type AdminRole =
   | "superadmin"
   | "sales"
+  | "saleshead"
   | "support"
   | "content"
   | "logistics";
@@ -32,6 +33,7 @@ export interface AdminUser {
   smtpHost: string;
   smtpPort: number | null;
   smtpPassEnc: string;
+  passwordChangedAt?: string;
   signatory?: string;
   designation?: string;
   signature?: string;
@@ -40,6 +42,7 @@ export interface AdminUser {
 export const ROLES: { value: AdminRole; label: string }[] = [
   { value: "superadmin", label: "Superadmin" },
   { value: "content", label: "Content" },
+  { value: "saleshead", label: "Sales Head" },
   { value: "sales", label: "Sales" },
   { value: "support", label: "Support" },
   { value: "logistics", label: "Logistics" },
@@ -119,21 +122,26 @@ export async function verifyCredentials(
   return user;
 }
 
-function sessionToken(username: string): string {
+const SESSION_TTL_MS = 60 * 60 * 24 * 7 * 1000;
+
+function sessionToken(username: string, passwordChangedAt: string): string {
+  const issuedAt = Date.now().toString();
   const sig = createHash("sha256")
-    .update(`${adminSecret()}:${username}`)
+    .update(`${adminSecret()}:${username}:${issuedAt}:${passwordChangedAt}`)
     .digest("hex");
-  return `${username}:${sig}`;
+  return `${username}:${issuedAt}:${sig}`;
 }
 
 export async function setAuthed(username: string): Promise<void> {
+  const user = await findUser(username);
+  if (!user) return;
   const store = await cookies();
-  store.set(ADMIN_COOKIE, sessionToken(username), {
+  store.set(ADMIN_COOKIE, sessionToken(username, user.passwordChangedAt ?? ""), {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: 60 * 60 * 24 * 7,
+    maxAge: SESSION_TTL_MS / 1000,
   });
 }
 
@@ -146,15 +154,27 @@ export async function getCurrentUser(): Promise<AdminUser | null> {
   const store = await cookies();
   const token = store.get(ADMIN_COOKIE)?.value;
   if (!token) return null;
-  const sep = token.lastIndexOf(":");
-  if (sep < 0) return null;
-  const username = token.slice(0, sep);
-  const sig = token.slice(sep + 1);
+  const sep1 = token.indexOf(":");
+  if (sep1 < 0) return null;
+  const sep2 = token.indexOf(":", sep1 + 1);
+  if (sep2 < 0) return null;
+  const username = token.slice(0, sep1);
+  const issuedAt = token.slice(sep1 + 1, sep2);
+  const sig = token.slice(sep2 + 1);
+  if (!/^\d+$/.test(issuedAt)) return null;
+  const age = Date.now() - Number(issuedAt);
+  if (Number.isNaN(age) || age < 0 || age > SESSION_TTL_MS) return null;
+  const user = await findUser(username);
+  if (!user) return null;
   const expected = createHash("sha256")
-    .update(`${adminSecret()}:${username}`)
+    .update(
+      `${adminSecret()}:${username}:${issuedAt}:${user.passwordChangedAt ?? ""}`
+    )
     .digest("hex");
-  if (sig !== expected) return null;
-  return findUser(username);
+  const a = Buffer.from(sig, "hex");
+  const b = Buffer.from(expected, "hex");
+  if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
+  return user;
 }
 
 export async function isAuthed(): Promise<boolean> {

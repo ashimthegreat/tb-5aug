@@ -36,11 +36,11 @@ export default function CartView() {
         {items.map((item) => (
           <div
             key={item.slug}
-            className="flex items-center gap-4 border-b border-slate-100 bg-white p-4 last:border-0"
+            className="grid grid-cols-[4.5rem_1fr] items-center gap-x-4 gap-y-3 border-b border-slate-100 bg-white p-4 last:border-0 sm:flex sm:items-center sm:gap-4"
           >
             <Link
               href={`/products/${item.slug}`}
-              className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl bg-brand-50/40 p-2"
+              className="flex h-18 w-18 items-center justify-center rounded-xl bg-brand-50/40 p-2"
             >
               {item.image ? (
                 <Image
@@ -96,7 +96,7 @@ export default function CartView() {
                 </button>
               </div>
             </div>
-            <p className="shrink-0 text-right text-base font-bold text-ink">
+            <p className="col-span-2 shrink-0 text-right text-base font-bold text-ink sm:col-span-1">
               {formatNPR(item.price * item.qty)}
             </p>
           </div>

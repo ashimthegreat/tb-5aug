@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
     const recipients = users
       .filter(
         (u) =>
-          (u.role === "superadmin" || u.role === "sales") &&
+          (u.role === "superadmin" || u.role === "sales" || u.role === "saleshead") &&
           u.active &&
           (u.email ?? "").trim().length > 0
       )

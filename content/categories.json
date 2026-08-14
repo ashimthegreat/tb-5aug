@@ -1,9 +1,65 @@
 [
   {
-    "id": "healthcare",
-    "name": "Healthcare",
-    "icon": "hospital",
-    "description": "Software and digital solutions purpose-built for hospitals, clinics, labs and health startups — from clinical workflows to patient-facing apps.",
+    "id": "software",
+    "name": "Software Development",
+    "icon": "code",
+    "description": "Hospital management, laboratory information and mobile health applications built with modern frameworks and agile delivery — for healthcare organisations.",
     "order": 1
+  },
+  {
+    "id": "networking",
+    "name": "Networking & Infrastructure",
+    "icon": "network",
+    "description": "Enterprise networks, wireless solutions, structured cabling and WAN optimisation that keep your organisation reliably connected.",
+    "order": 2
+  },
+  {
+    "id": "cybersecurity",
+    "name": "Cybersecurity",
+    "icon": "shield",
+    "description": "Next-generation firewalls, endpoint protection, SOC and security audits that safeguard your data and systems.",
+    "order": 3
+  },
+  {
+    "id": "cloud",
+    "name": "Cloud & Data Center",
+    "icon": "server",
+    "description": "Private and public cloud, virtualization, storage and backup solutions designed for performance and resilience.",
+    "order": 4
+  },
+  {
+    "id": "data",
+    "name": "Data & Analytics",
+    "icon": "chart",
+    "description": "Data platforms, dashboards, migrations and analytics that turn your information into actionable insight.",
+    "order": 5
+  },
+  {
+    "id": "consulting",
+    "name": "IT Consulting",
+    "icon": "briefcase",
+    "description": "Strategic IT advisory, technology roadmaps and digital transformation guidance to plan for the future with confidence.",
+    "order": 6
+  },
+  {
+    "id": "managed-it",
+    "name": "Managed IT Services",
+    "icon": "cpu",
+    "description": "Proactive monitoring, 24/7 helpdesk, patch management and maintenance so you can focus on your business.",
+    "order": 7
+  },
+  {
+    "id": "continuity",
+    "name": "Business Continuity & Disaster Recovery",
+    "icon": "layers",
+    "description": "Disaster recovery, business continuity planning and backup automation to keep operations running no matter what.",
+    "order": 8
+  },
+  {
+    "id": "training",
+    "name": "Training & Workshops",
+    "icon": "book",
+    "description": "Hands-on training for your IT teams on networking, security, cloud and software technologies.",
+    "order": 9
   }
 ]

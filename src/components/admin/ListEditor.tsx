@@ -231,8 +231,13 @@ export default function ListEditor({
   const labelOf = (item: Record<string, unknown>) =>
     String(item[labelKey ?? fields[0]?.key ?? "name"] ?? "Untitled");
 
-  function beginEdit(item: Record<string, unknown>) {
-    setEditingId(String(item.id));
+  const keyOf = (item: Record<string, unknown>, index: number) =>
+    item.id != null ? String(item.id) : `i${index}`;
+
+  function beginEdit(index: number) {
+    const item = items[index];
+    if (!item) return;
+    setEditingId(keyOf(item, index));
     setDraft({ ...item });
     setShowNew(false);
   }
@@ -249,16 +254,16 @@ export default function ListEditor({
     if (showNew) {
       onChange([...items, draft]);
     } else {
-      onChange(items.map((it) => (it.id === draft.id ? draft : it)));
+      onChange(items.map((it, i) => (keyOf(it, i) === editingId ? draft : it)));
     }
     setEditingId(null);
     setDraft(null);
     setShowNew(false);
   }
 
-  function remove(id: string) {
-    onChange(items.filter((it) => it.id !== id));
-    if (editingId === id) {
+  function remove(index: number) {
+    onChange(items.filter((_, i) => i !== index));
+    if (editingId === keyOf(items[index], index)) {
       setEditingId(null);
       setDraft(null);
     }
@@ -330,10 +335,10 @@ export default function ListEditor({
           </li>
         )}
         {items.map((item, index) => {
-          const editing = editingId === String(item.id);
+          const editing = editingId === keyOf(item, index);
           return (
             <li
-              key={String(item.id)}
+              key={keyOf(item, index)}
               className="rounded-xl border border-slate-200 bg-white"
             >
               {editing && draft ? (
@@ -400,14 +405,14 @@ export default function ListEditor({
                       <p className="text-sm font-medium text-slate-900">
                         {labelOf(item)}
                       </p>
-                      <p className="text-xs text-slate-400">{String(item.id)}</p>
+                      <p className="text-xs text-slate-400">{item.id != null ? String(item.id) : "—"}</p>
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <GhostButton type="button" onClick={() => beginEdit(item)}>
+                    <GhostButton type="button" onClick={() => beginEdit(index)}>
                       Edit
                     </GhostButton>
-                    <DangerButton type="button" onClick={() => remove(String(item.id))}>
+                    <DangerButton type="button" onClick={() => remove(index)}>
                       Delete
                     </DangerButton>
                   </div>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendMail } from "@/lib/mail";
 import { appendOrder, newOrderId, type OrderItem } from "@/lib/orders";
+import { getUsers } from "@/lib/admin";
 import {
   clampInt,
   clampNumber,
@@ -14,12 +15,29 @@ import {
   MAX_QTY,
 } from "@/lib/validation";
 import { clientIp, isRateLimited } from "@/lib/rateLimit";
+import { findCustomer, listCustomers } from "@/lib/customers";
 
 function esc(text: string): string {
   return text
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
+}
+
+async function adminRecipients(): Promise<string[]> {
+  const users = await getUsers();
+  const addresses = users
+    .filter(
+      (u) =>
+        (u.role === "superadmin" || u.role === "sales" || u.role === "saleshead") &&
+        u.active &&
+        (u.email ?? "").trim().length > 0
+    )
+    .map((u) => u.email.trim());
+  const fallback =
+    process.env.QUOTES_TO || process.env.SUPPORT_TO || "info@techbucket.com.np";
+  const unique = [...new Set(addresses)];
+  return unique.length > 0 ? unique : [fallback];
 }
 
 export async function POST(req: NextRequest) {
@@ -86,10 +104,10 @@ export async function POST(req: NextRequest) {
     phone: phone || undefined,
     note: note || undefined,
     createdAt: new Date().toISOString(),
+    customerId: findCustomer(await listCustomers(), phone, email)?.id,
   });
 
-  const adminTo =
-    process.env.QUOTES_TO || process.env.SUPPORT_TO || "info@techbucket.com.np";
+  const adminTo = (await adminRecipients()).join(", ");
 
   const adminSent = await sendMail({
     to: adminTo,

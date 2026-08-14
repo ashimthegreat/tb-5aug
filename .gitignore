@@ -43,3 +43,12 @@ next-env.d.ts
 
 # uploaded admin images (signatures, stamps)
 /public/uploads/
+
+# runtime data — sensitive (user credentials, customer/order/ticket PII).
+# These live on the server (cPanel content/ dir) and must NOT be committed.
+/content/users.json
+/content/customers.json
+/content/orders.json
+/content/fulfillment.json
+/content/tickets.json
+/content/sent-log.json

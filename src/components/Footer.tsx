@@ -7,8 +7,9 @@ const quickLinks = [
   { label: "Home", href: "/" },
   { label: "About Us", href: "/#about" },
   { label: "Services", href: "/services" },
+  { label: "Industries", href: "/industries" },
   { label: "Products", href: "/products" },
-  { label: "Technology Partners", href: "/brands" },
+  { label: "Technology", href: "/brands" },
   { label: "Partners", href: "/partners" },
   { label: "Careers", href: "/careers" },
   { label: "Support", href: "/support" },
@@ -21,7 +22,7 @@ export default async function Footer() {
 
   return (
     <footer className="bg-slate-900 text-slate-300">
-      <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-14 lg:px-8">
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-4">
           <div>
             <Logo className="brightness-0 invert" />
@@ -39,7 +40,7 @@ export default async function Footer() {
             <h3 className="text-sm font-semibold uppercase tracking-wider text-white">
               Quick Links
             </h3>
-            <ul className="mt-4 space-y-2.5">
+            <ul className="mt-4 grid grid-cols-2 gap-x-6 gap-y-2.5 sm:block sm:space-y-2.5">
               {quickLinks.map((link) => (
                 <li key={link.label}>
                   <Link

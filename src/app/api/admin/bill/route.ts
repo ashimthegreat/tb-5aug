@@ -12,13 +12,14 @@ import {
   type FulfillmentOrder,
 } from "@/lib/fulfillment";
 import { paidTotal, paymentStatus } from "@/lib/payment";
+import { listOrders, updateOrder } from "@/lib/orders";
 import { signatureName } from "@/lib/quotation";
 import { publicUrlAsDataUri } from "@/lib/embed";
 import { stampDataUrl } from "@/lib/stamp";
 
 export const dynamic = "force-dynamic";
 
-const ALLOWED_ROLES: AdminRole[] = ["superadmin", "sales"];
+const ALLOWED_ROLES: AdminRole[] = ["superadmin", "sales", "saleshead"];
 
 interface SiteInfo {
   name?: string;
@@ -115,6 +116,13 @@ export async function POST(req: NextRequest) {
   }
   orders[idx] = updated;
   await saveFulfillment(orders);
+
+  const linked = (await listOrders()).find(
+    (o) => o.fulfillmentOrderId === orderId
+  );
+  if (linked) {
+    await updateOrder(linked.id, { billNo: updated.billNo });
+  }
 
   return NextResponse.json({ ok: true, order: updated });
 }

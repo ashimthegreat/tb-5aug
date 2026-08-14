@@ -1,0 +1,62 @@
+flowchart TD
+  subgraph STORE["Public Storefront"]
+    V[Visitor]
+    V --> BROWSE[Browse / search / filter products]
+    BROWSE --> DETAIL[Product detail]
+    DETAIL -- buyable --> AC[Add to cart]
+    DETAIL -- quote type --> QF[Quote request form]
+    AC --> CART[Cart - localStorage]
+    CART --> CO[Checkout]
+    CO --> ORDAPI[POST /api/orders]
+    QF --> QRAPI[POST /api/quote-request]
+    SUP[Support form] --> SUPAPI[POST /api/support]
+  end
+
+  subgraph INBOUND["Inbound Intake"]
+    ORDAPI --> OREC[(orders.json - type: order)]
+    QRAPI --> QREC[(orders.json - type: quote-request)]
+    SUPAPI --> TICKET[(tickets.json)]
+    ORDAPI & QRAPI --> MAIL1[Email admins + customer confirmation]
+  end
+
+  subgraph ADMIN["Admin Panel - role-based"]
+    LOGIN[Login - session cookie] --> SHELL[AdminShell gated tabs]
+  end
+
+  subgraph SALES["Sales Pipeline - Orders & Requests"]
+    SHELL --> ORDERS[Orders & Requests]
+    ORDERS -->|mark quoted / unquoted| PATCHO[PATCH /api/admin/orders]
+    ORDERS -->|link or create customer| CUST
+    ORDERS -->|create order & bill direct| DIR[POST /api/admin/orders/direct]
+  end
+
+  subgraph CUSTFLOW["Customers & Quotations"]
+    CUST[Customers tab] --> NEWC[Create / edit customer]
+    CUST --> QUOTE[Compose quotation from catalog]
+    QUOTE --> SENDQ[POST /api/admin/send-quote]
+    SENDQ --> QLOG[(quotation: sent / failed)]
+    CUST --> SENDSUCH[POST /api/admin/send-suchidarta]
+    CUST --> CONVERT[Convert sent quote]
+    CONVERT --> FAPI[POST /api/admin/fulfillment]
+  end
+
+  subgraph FULFILL["Fulfillment"]
+    FAPI --> NEW[(status: new)]
+    NEW --> PREP[preparing]
+    PREP --> READY[ready]
+    READY -->|support verifies| VERIFY[verified]
+    VERIFY --> DEL[delivered / cancelled]
+    PREP --> CAN[cancelled]
+  end
+
+  subgraph BILL["Billing & Payments"]
+    DEL --> BILLC[Create bill - billNo TTR-BIL + PDF]
+    BILLC --> PAY[Record payment - receipt TTR-RCP]
+    PAY --> PSTAT{payment status}
+    PSTAT -->|received| DONE[Order complete]
+    PSTAT -->|partial / pending / overdue| OVER[Overdue reminders - admin email]
+    BILLC --> BHUK[Bill bhuktani - send via email]
+  end
+
+  MAIL1 -.-> ORDERS
+  DIR -.-> FULFILL

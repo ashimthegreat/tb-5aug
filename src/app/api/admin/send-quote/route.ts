@@ -13,6 +13,7 @@ import {
 } from "@/lib/quotation";
 import { publicAsset } from "@/lib/embed";
 import { stampPngBuffer } from "@/lib/stamp";
+import { updateOrder } from "@/lib/orders";
 import {
   MAX_DESCRIPTION,
   MAX_ITEMS,
@@ -21,7 +22,7 @@ import {
   MAX_QTY,
 } from "@/lib/validation";
 
-const ALLOWED_ROLES: AdminRole[] = ["superadmin", "sales"];
+const ALLOWED_ROLES: AdminRole[] = ["superadmin", "saleshead"];
 const DEFAULT_VAT = 13;
 
 interface QuoteItem {
@@ -53,6 +54,7 @@ interface Quote {
   signature?: string;
   sentAt: string;
   status: "sent" | "failed";
+  orderId?: string;
 }
 
 interface Customer {
@@ -79,6 +81,7 @@ export async function POST(req: NextRequest) {
     specs?: unknown;
     terms?: unknown;
     discountId?: string;
+    orderId?: string;
   };
   try {
     body = await req.json();
@@ -363,6 +366,8 @@ export async function POST(req: NextRequest) {
     attachments,
   });
 
+  const orderId = (body.orderId ?? "").trim();
+
   const quote: Quote = {
     id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
     quoteNo,
@@ -385,10 +390,20 @@ export async function POST(req: NextRequest) {
     signature: user.signature || undefined,
     sentAt: new Date().toISOString(),
     status: result.ok ? "sent" : "failed",
+    orderId: orderId || undefined,
   };
   customer.quotes = customer.quotes ?? [];
   customer.quotes.push(quote);
   await writeJson("customers.json", customers);
+
+  if (orderId && result.ok) {
+    await updateOrder(orderId, {
+      quoteStatus: "quoted",
+      quotedAt: new Date().toISOString(),
+      quotedBy: user.name,
+      customerId: customer.id,
+    });
+  }
 
   return NextResponse.json(
     result.ok

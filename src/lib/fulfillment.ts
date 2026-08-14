@@ -44,6 +44,26 @@ export {
   PAYMENT_METHODS,
 } from "./payment";
 
+export interface BillBhuktaniRecord {
+  id: string;
+  recipient: string;
+  subject: string;
+  body: string;
+  signatory: string;
+  designation?: string;
+  signature?: string;
+  bank: {
+    accountName: string;
+    accountNumber: string;
+    bankName: string;
+    branch?: string;
+  };
+  sentTo: string;
+  sentBy: string;
+  sentAt: string;
+  status: "sent" | "failed";
+}
+
 export interface FulfillmentOrder {
   id: string;
   orderNo: string;
@@ -80,6 +100,7 @@ export interface FulfillmentOrder {
   paymentDueDate?: string;
   paidAt?: string;
   paidBy?: string;
+  billBhuktani?: BillBhuktaniRecord[];
   events: FulfillmentEvent[];
 }
 

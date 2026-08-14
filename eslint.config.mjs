@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // cPanel Node.js App Manager entry point (CommonJS by design).
+    "server.js",
   ]),
 ]);
 

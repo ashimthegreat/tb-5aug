@@ -29,14 +29,157 @@
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 5rem;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
+  overflow-x: clip;
   background: var(--background);
   color: var(--foreground);
+}
+
+/* Scale display headings down fluidly on small phones so they never crowd or overflow. */
+@media (max-width: 480px) {
+  h1.text-4xl,
+  h2.text-3xl {
+    font-size: clamp(1.75rem, 8.5vw, 2.25rem);
+    line-height: 1.15;
+  }
 }
 
 ::selection {
   background-color: var(--color-brand-200);
   color: var(--color-ink);
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes gradient-pan {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes orbit {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(12px, -16px) scale(1.05);
+  }
+  50% {
+    transform: translate(-8px, -20px) scale(0.97);
+  }
+  75% {
+    transform: translate(-14px, 6px) scale(1.04);
+  }
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-marquee {
+  animation: marquee 34s linear infinite;
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient-pan 8s ease infinite;
+}
+
+.animate-orbit {
+  animation: orbit 14s ease-in-out infinite;
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  animation: reveal-up 0.8s ease-out forwards;
+}
+
+@keyframes reveal-up {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes grow-bar {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes ripple {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(6px);
+  }
+}
+
+.grow-bar {
+  transform-origin: bottom;
+  animation: grow-bar 1.1s ease-out both;
+}
+
+details.accordion summary::-webkit-details-marker {
+  display: none;
+}
+
+details.accordion[open] .accordion-icon {
+  transform: rotate(45deg);
+}
+
+.accordion-icon {
+  transition: transform 0.2s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float,
+  .animate-marquee,
+  .animate-gradient,
+  .animate-orbit {
+    animation: none;
+  }
+  .reveal {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .grow-bar {
+    animation: none;
+  }
 }

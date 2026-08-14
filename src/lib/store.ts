@@ -10,9 +10,10 @@ export async function readJson<T>(file: string): Promise<T> {
 }
 
 export async function writeJson(file: string, data: unknown): Promise<void> {
-  await fs.writeFile(
-    path.join(CONTENT_DIR, file),
-    JSON.stringify(data, null, 2),
-    "utf-8"
-  );
+  const target = path.join(CONTENT_DIR, file);
+  const tmp = `${target}.${process.pid}.${Date.now()}.${Math.random()
+    .toString(36)
+    .slice(2, 6)}.tmp`;
+  await fs.writeFile(tmp, JSON.stringify(data, null, 2), "utf-8");
+  await fs.rename(tmp, target);
 }

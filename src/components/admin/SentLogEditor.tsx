@@ -38,6 +38,7 @@ export default function SentLogEditor() {
   const quotes = (entries ?? []).filter((e) => e.type === "quote");
   const suchidarta = (entries ?? []).filter((e) => e.type === "suchidarta");
   const bills = (entries ?? []).filter((e) => e.type === "bill");
+  const billbhuktani = (entries ?? []).filter((e) => e.type === "billbhuktani");
 
   function renderRow(e: SentLogEntry) {
     const printUrl =
@@ -45,7 +46,9 @@ export default function SentLogEditor() {
         ? `/api/admin/quotation?id=${e.id}`
         : e.type === "suchidarta"
           ? `/api/admin/suchidarta?id=${e.id}`
-          : `/api/admin/bill?id=${e.id}`;
+          : e.type === "bill"
+            ? `/api/admin/bill?id=${e.id}`
+            : `/api/admin/bill-bhuktani?id=${e.id}`;
     const title =
       e.type === "quote"
         ? e.quoteNo
@@ -53,16 +56,31 @@ export default function SentLogEditor() {
           : e.subject
         : e.type === "suchidarta"
           ? `सुची दर्ता निवेदन — ${e.recipient.split("\n")[0]}`
-          : `Bill ${e.billNo}${e.orderNo ? ` (${e.orderNo})` : ""}`;
-    const to = e.type === "quote" ? e.to : e.type === "suchidarta" ? e.sentTo : e.customerEmail;
+          : e.type === "bill"
+            ? `Bill ${e.billNo}${e.orderNo ? ` (${e.orderNo})` : ""}`
+            : `बिल भुक्तानी निवेदन — ${e.recipient.split("\n")[0]}`;
+    const to =
+      e.type === "quote"
+        ? e.to
+        : e.type === "suchidarta" || e.type === "billbhuktani"
+          ? e.sentTo
+          : e.customerEmail;
     const badgeColor =
       e.type === "quote"
         ? "bg-blue-50 text-blue-700 ring-blue-600/20"
         : e.type === "suchidarta"
           ? "bg-violet-50 text-violet-700 ring-violet-600/20"
-          : "bg-teal-50 text-teal-700 ring-teal-600/20";
+          : e.type === "bill"
+            ? "bg-teal-50 text-teal-700 ring-teal-600/20"
+            : "bg-indigo-50 text-indigo-700 ring-indigo-600/20";
     const typeLabel =
-      e.type === "quote" ? "Quote" : e.type === "suchidarta" ? "Suchidarta" : "Bill";
+      e.type === "quote"
+        ? "Quote"
+        : e.type === "suchidarta"
+          ? "Suchidarta"
+          : e.type === "bill"
+            ? "Bill"
+            : "Bill Bhuktani";
     return (
       <li
         key={`${e.type}-${e.id}`}
@@ -114,7 +132,7 @@ export default function SentLogEditor() {
         <p className="text-xs text-slate-500">
           {entries === null
             ? "Loading…"
-            : `${quotes.length} quotes · ${suchidarta.length} suchidarta · ${bills.length} bills`}
+            : `${quotes.length} quotes · ${suchidarta.length} suchidarta · ${bills.length} bills · ${billbhuktani.length} bill bhuktani`}
         </p>
       </div>
 
@@ -122,7 +140,8 @@ export default function SentLogEditor() {
         <p className="mt-4 text-sm text-slate-500">Loading sent records…</p>
       ) : entries.length === 0 ? (
         <p className="mt-4 text-sm text-slate-500">
-          No quotes, suchidarta, or bills have been issued yet.
+          No quotes, suchidarta, bills, or bill bhuktani letters have been sent
+          yet.
         </p>
       ) : (
         <div className="mt-4 grid gap-6 lg:grid-cols-2">
@@ -146,13 +165,23 @@ export default function SentLogEditor() {
               )}
             </ul>
           </div>
-          <div className="lg:col-span-2">
+          <div>
             <Label>Issued bills</Label>
             <ul className="mt-2 rounded-xl border border-slate-200 px-3 py-1">
               {bills.length === 0 ? (
                 <li className="py-2 text-xs text-slate-400">None</li>
               ) : (
                 bills.map(renderRow)
+              )}
+            </ul>
+          </div>
+          <div>
+            <Label>Sent bill bhuktani</Label>
+            <ul className="mt-2 rounded-xl border border-slate-200 px-3 py-1">
+              {billbhuktani.length === 0 ? (
+                <li className="py-2 text-xs text-slate-400">None</li>
+              ) : (
+                billbhuktani.map(renderRow)
               )}
             </ul>
           </div>

@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { apiGet, apiPut } from "@/lib/adminApi";
 import {
+  bsDateNepali,
   renderQuotationHtml,
   quoteDate,
   signatureName,
@@ -24,7 +25,17 @@ import {
   Textarea,
 } from "./ui";
 import SearchablePicker from "./SearchablePicker";
+import CustomerDetail from "./CustomerDetail";
 import type { FulfillmentOrder, OrderType } from "@/lib/fulfillment";
+import type { QuotePrefill, PrefillQuoteItem } from "@/lib/customerMatch";
+
+interface CustomerDraftLike {
+  name: string;
+  email: string;
+  phone?: string;
+  note?: string;
+  orderId?: string;
+}
 
 interface Catalog {
   products: { name: string; price: number }[];
@@ -94,6 +105,17 @@ function blankQuoteLine(type: "item" | "service"): QuoteLine {
   return { id: crypto.randomUUID(), type, description: "", qty: 1, price: 0 };
 }
 
+function prefillQuoteLines(items: PrefillQuoteItem[]): QuoteLine[] {
+  return items.map((it) => ({
+    id: crypto.randomUUID(),
+    type: "item",
+    description: it.description.trim(),
+    qty: Math.max(1, Number(it.qty) || 1),
+    price:
+      Number(it.price) > 0 ? round2(Number(it.price) / 1.13) : 0,
+  }));
+}
+
 function money(n: number): string {
   return `NPR ${(Number.isFinite(n) ? n : 0).toLocaleString("en-IN", {
     minimumFractionDigits: 2,
@@ -134,8 +156,18 @@ function formatDate(iso: string): string {
 
 export default function CustomersEditor({
   user,
+  initialDraft,
+  onDraftHandled,
+  quotePrefill,
+  onQuotePrefillHandled,
+  onJumpTo,
 }: {
   user: { name: string; username: string; email?: string; signatory?: string; designation?: string; signature?: string };
+  initialDraft?: CustomerDraftLike | null;
+  onDraftHandled?: () => void;
+  quotePrefill?: QuotePrefill | null;
+  onQuotePrefillHandled?: () => void;
+  onJumpTo?: (tab: "fulfillment" | "orders", id: string) => void;
 }) {
   const [customers, setCustomers] = useState<Customer[] | null>(null);
   const [status, setStatus] = useState("");
@@ -152,12 +184,16 @@ export default function CustomersEditor({
   const [quoteStatus, setQuoteStatus] = useState("");
   const [sending, setSending] = useState(false);
   const [catalog, setCatalog] = useState<Catalog | null>(null);
+  const [quoteOrderId, setQuoteOrderId] = useState<string | null>(null);
 
   const [suchiTarget, setSuchiTarget] = useState<Customer | null>(null);
   const [suchiRecipient, setSuchiRecipient] = useState("");
   const [suchiBody, setSuchiBody] = useState("");
+  const [suchiDate, setSuchiDate] = useState("");
   const [suchiStatus, setSuchiStatus] = useState("");
   const [suchiSending, setSuchiSending] = useState(false);
+
+  const [detailId, setDetailId] = useState<string | null>(null);
 
   const [converted, setConverted] = useState<Record<string, string>>({});
   const [orderTarget, setOrderTarget] = useState<{
@@ -169,9 +205,58 @@ export default function CustomersEditor({
   const [orderStatus, setOrderStatus] = useState("");
   const [orderSending, setOrderSending] = useState(false);
 
+  const draftRef = useRef(initialDraft);
+  const onDraftHandledRef = useRef(onDraftHandled);
+  const usernameRef = useRef(user.username);
+  const fetchedOnceRef = useRef(false);
+  const quotePrefillRef = useRef(quotePrefill);
+  const onQuotePrefillHandledRef = useRef(onQuotePrefillHandled);
+  const pendingOrderRef = useRef<{
+    orderId: string;
+    items: PrefillQuoteItem[];
+    draftId: string;
+  } | null>(null);
   useEffect(() => {
+    onDraftHandledRef.current = onDraftHandled;
+    onQuotePrefillHandledRef.current = onQuotePrefillHandled;
+    usernameRef.current = user.username;
+    if (quotePrefill) quotePrefillRef.current = quotePrefill;
+  }, [onDraftHandled, onQuotePrefillHandled, user.username, quotePrefill]);
+
+  useEffect(() => {
+    if (fetchedOnceRef.current) return;
+    fetchedOnceRef.current = true;
     apiGet<Customer[]>("customers")
-      .then(setCustomers)
+      .then((list) => {
+        const draft = draftRef.current;
+        let blankId: string | null = null;
+        if (draft) {
+          draftRef.current = null;
+          const blank = blankCustomer(usernameRef.current);
+          blank.name = draft.name ?? "";
+          blank.email = draft.email ?? "";
+          blank.phone = draft.phone ?? "";
+          blank.notes = draft.note ?? "";
+          blankId = blank.id;
+          setCustomers([blank, ...list]);
+          setEditingId(blank.id);
+          setShowNew(true);
+          setStatus("New customer pre-filled from request — review and save.");
+          onDraftHandledRef.current?.();
+        } else {
+          setCustomers(list);
+        }
+        const prefill = quotePrefillRef.current;
+        if (prefill?.orderId && blankId) {
+          quotePrefillRef.current = null;
+          onQuotePrefillHandledRef.current?.();
+          pendingOrderRef.current = {
+            orderId: prefill.orderId,
+            items: prefill.items,
+            draftId: blankId,
+          };
+        }
+      })
       .catch((e) => setStatus(`Error: ${e.message}`));
     apiGet<Catalog>("catalog")
       .then(setCatalog)
@@ -218,14 +303,34 @@ export default function CustomersEditor({
     try {
       await apiPut("customers", cleaned);
       setStatus("Saved");
+      await completePendingOrder();
     } catch (e) {
       setStatus(`Error: ${(e as Error).message}`);
     }
   }
 
+  async function completePendingOrder() {
+    const pending = pendingOrderRef.current;
+    if (!pending) return;
+    pendingOrderRef.current = null;
+    const customer = customers?.find((c) => c.id === pending.draftId);
+    if (!customer) return;
+    try {
+      await fetch("/api/admin/orders", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: pending.orderId, customerId: pending.draftId }),
+      });
+    } catch {
+      // Linking is best-effort; quoting can continue regardless.
+    }
+    openQuoteWithItems(customer, pending.orderId, pending.items);
+  }
+
   function openQuote(c: Customer) {
     setQuoteTarget(c);
     setQuoteLines([blankQuoteLine("item")]);
+    setQuoteOrderId(null);
     setQuoteVatRate("13");
     setQuoteDiscountId("");
     setQuoteNotes("");
@@ -233,6 +338,27 @@ export default function CustomersEditor({
     setQuoteTerms("");
     setQuoteStatus("");
   }
+
+  function openQuoteWithItems(
+    c: Customer,
+    orderId: string | undefined,
+    items: PrefillQuoteItem[]
+  ) {
+    openQuote(c);
+    setQuoteOrderId(orderId || null);
+    if (items.length > 0) setQuoteLines(prefillQuoteLines(items));
+  }
+
+  useEffect(() => {
+    if (!quotePrefill || !customers) return;
+    if (!quotePrefill.customerId) return;
+    const existing = customers.find((c) => c.id === quotePrefill.customerId);
+    onQuotePrefillHandledRef.current?.();
+    if (existing) {
+      openQuoteWithItems(existing, quotePrefill.orderId, quotePrefill.items);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quotePrefill, customers]);
 
   function addLine(type: "item" | "service") {
     setQuoteLines((prev) => [...prev, blankQuoteLine(type)]);
@@ -315,6 +441,7 @@ export default function CustomersEditor({
           specs: quoteSpecs.trim(),
           terms: quoteTerms.trim(),
           discountId: quoteDiscountId || undefined,
+          orderId: quoteOrderId || undefined,
         }),
       });
       const body = await res.json();
@@ -396,9 +523,12 @@ export default function CustomersEditor({
   function openSuchidarta(c: Customer) {
     setSuchiTarget(c);
     setSuchiRecipient(
-      [c.name, c.company, c.address].filter(Boolean).join("\n")
+      ["श्री कार्यालय प्रमुख ज्यू,", c.name, c.company, c.address]
+        .filter(Boolean)
+        .join("\n")
     );
     setSuchiBody(defaultSuchidartaBody());
+    setSuchiDate(bsDateNepali());
     setSuchiStatus("");
   }
 
@@ -418,7 +548,15 @@ export default function CustomersEditor({
           : undefined,
         stampSrc: `${window.location.origin}/api/admin/stamp`,
         companyName,
+        tagline: [
+          co?.address ?? "",
+          [co?.email ?? "", ...(co?.phones ?? [])].filter(Boolean).join(" · "),
+          co?.vatNo ? `PAN/VAT: ${co.vatNo}` : "",
+        ]
+          .filter(Boolean)
+          .join(" · "),
         contactLine: letterContactLine(co?.phones ?? []),
+        date: suchiDate.trim(),
       },
       letterhead: true,
     });
@@ -457,6 +595,7 @@ export default function CustomersEditor({
           customerId: suchiTarget.id,
           recipient: suchiRecipient.trim(),
           body: suchiBody.trim(),
+          date: suchiDate.trim(),
         }),
       });
       const body = await res.json();
@@ -622,9 +761,14 @@ export default function CustomersEditor({
                   <div className="p-4">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold text-slate-900">
+                        <button
+                          type="button"
+                          onClick={() => setDetailId(c.id)}
+                          className="text-left text-sm font-semibold text-slate-900 transition-colors hover:text-brand-700"
+                          title="View full customer activity"
+                        >
                           {c.name || "Untitled customer"}
-                        </p>
+                        </button>
                         <p className="text-xs text-slate-500">
                           {c.email}
                           {c.phone ? ` · ${c.phone}` : ""}
@@ -644,6 +788,12 @@ export default function CustomersEditor({
                         )}
                       </div>
                       <div className="flex shrink-0 flex-wrap gap-2">
+                        <GhostButton
+                          type="button"
+                          onClick={() => setDetailId(c.id)}
+                        >
+                          View / Track
+                        </GhostButton>
                         <GhostButton
                           type="button"
                           onClick={() => {
@@ -996,6 +1146,15 @@ export default function CustomersEditor({
 
             <div className="mt-4 space-y-4">
               <div>
+                <Input
+                  label="Date (मिति)"
+                  value={suchiDate}
+                  onChange={(e) => setSuchiDate(e.target.value)}
+                  placeholder="Auto-filled with today's B.S. date"
+                />
+              </div>
+
+              <div>
                 <Textarea
                   label="Recipient (श्री, …)"
                   rows={4}
@@ -1123,6 +1282,15 @@ export default function CustomersEditor({
             </div>
           </div>
         </div>
+      )}
+
+      {detailId && (
+        <CustomerDetail
+          key={detailId}
+          customerId={detailId}
+          onClose={() => setDetailId(null)}
+          onJumpTo={onJumpTo ?? (() => {})}
+        />
       )}
     </div>
   );

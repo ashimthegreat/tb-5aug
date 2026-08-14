@@ -38,4 +38,17 @@ export type SentLogEntry =
       customerId: string;
       customerName: string;
       customerEmail: string;
+    }
+  | {
+      type: "billbhuktani";
+      id: string;
+      billNo?: string;
+      recipient: string;
+      sentTo: string;
+      sentBy: string;
+      sentAt: string;
+      status: "sent" | "failed";
+      customerId: string;
+      customerName: string;
+      customerEmail: string;
     };

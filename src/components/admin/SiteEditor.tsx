@@ -207,21 +207,6 @@ export default function SiteEditor() {
 
       <fieldset className="rounded-xl border border-slate-200 bg-slate-50 p-4">
         <legend className="px-2 text-sm font-semibold text-slate-900">
-          Trust points
-        </legend>
-        <SimpleList
-          label="Trust points"
-          value={site.trustPoints}
-          onChange={(next) => set(["trustPoints"], next)}
-          keys={[
-            { key: "title", label: "Title" },
-            { key: "description", label: "Description", textarea: true },
-          ]}
-        />
-      </fieldset>
-
-      <fieldset className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-        <legend className="px-2 text-sm font-semibold text-slate-900">
           Mission & Vision
         </legend>
         <div className="space-y-4">

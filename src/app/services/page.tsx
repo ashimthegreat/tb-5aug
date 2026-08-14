@@ -8,7 +8,7 @@ import { Icon } from "@/components/icons";
 export const metadata: Metadata = {
   title: "Services",
   description:
-    "Software and infrastructure services organised by industry — healthcare, infrastructure and more. Built by TechBucket in Nepal.",
+    "Hospital management software for healthcare, plus networking, cybersecurity, cloud, data, consulting, managed IT and more for every industry from TechBucket.",
 };
 
 export default async function ServicesPage() {
@@ -17,20 +17,23 @@ export default async function ServicesPage() {
     getServices(),
   ]);
 
+  const sortedCategories = [...categories].sort((a, b) => a.order - b.order);
+
   return (
     <>
       <PageHeader
         eyebrow="Services"
-        title="Solutions by Industry"
-        description="From hospital management systems to IT infrastructure — our services are organised by industry so you can find the right solution fast."
+        title="Everything We Do"
+        description="Hospital management software for healthcare providers, plus networking, cybersecurity, cloud, managed IT and more for every industry — organised by discipline so you can find the right solution fast."
         breadcrumb="Services"
       />
       <section className="bg-white py-16 sm:py-20">
         <div className="mx-auto max-w-6xl space-y-16 px-4 sm:px-6 lg:px-8">
-          {categories.map((category) => {
+          {sortedCategories.map((category) => {
             const items = services
               .filter((s) => s.categoryId === category.id)
               .sort((a, b) => a.order - b.order);
+            if (items.length === 0) return null;
             return (
               <div key={category.id} id={category.id} className="scroll-mt-24">
                 <div className="flex items-start gap-4">
@@ -41,40 +44,34 @@ export default async function ServicesPage() {
                     <h2 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">
                       {category.name}
                     </h2>
-                    <p className="mt-2 max-w-2xl text-slate-600">
+                    <p className="mt-1 max-w-2xl text-slate-600">
                       {category.description}
                     </p>
                   </div>
                 </div>
-                {items.length > 0 ? (
-                  <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                    {items.map((service) => (
-                      <ServiceCard
-                        key={service.id}
-                        icon={service.icon}
-                        title={service.title}
-                        description={service.description}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <p className="mt-8 text-sm text-slate-500">
-                    More services in this category are on the way.
-                  </p>
-                )}
+                <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                  {items.map((service) => (
+                    <ServiceCard
+                      key={service.id}
+                      icon={service.icon}
+                      title={service.title}
+                      description={service.description}
+                    />
+                  ))}
+                </div>
               </div>
             );
           })}
           {categories.length === 0 && (
             <p className="text-center text-slate-500">
-              No service categories yet.
+              No services yet. Check back soon.
             </p>
           )}
         </div>
       </section>
       <CTABanner
         title="Need a solution not listed here?"
-        description="We build custom software and infrastructure for any industry. Tell us what you need."
+        description="For healthcare we build custom software; for every other industry we supply IT infrastructure products. Tell us what you want to achieve."
         cta="Get in Touch"
       />
     </>

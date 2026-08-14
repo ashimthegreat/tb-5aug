@@ -4,7 +4,8 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { CartProvider } from "@/components/shop/CartContext";
-import { siteName, siteUrl } from "@/lib/data";
+import { getCurrentUser } from "@/lib/admin";
+import { siteName, siteUrl, getSite } from "@/lib/data";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,44 +20,99 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "TechBucket | Healthcare IT Solutions in Nepal",
+    default: "TechBucket | IT Services & Software Solutions in Nepal",
     template: "%s — TechBucket",
   },
   description:
-    "TechBucket is a Nepal-based software and IT company building modern software and infrastructure for healthcare providers and other industries — hospital management systems, LIS, mobile health apps and more.",
+    "TechBucket is a Nepal-based software and IT company delivering custom software development, cybersecurity, networking, cloud & data centre, managed IT and IT consulting solutions to healthcare, education, finance and enterprises across Nepal since 2019.",
   keywords: [
-    "healthcare IT Nepal",
+    "IT services Nepal",
+    "software development Nepal",
     "hospital management system Nepal",
+    "cybersecurity Nepal",
+    "networking solutions Nepal",
+    "cloud services Nepal",
+    "managed IT services Nepal",
     "TechBucket",
     "health software Nepal",
+    "IT company Kathmandu",
   ],
+  alternates: {
+    canonical: "/",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
   openGraph: {
-    title: "TechBucket | Healthcare IT Solutions in Nepal",
+    title: "TechBucket | IT Services & Software Solutions in Nepal",
     description:
-      "Powering healthcare through technology. Modern, reliable software for healthcare providers in Nepal.",
+      "Custom software, cybersecurity, networking, cloud and managed IT services for healthcare, education, finance and enterprises in Nepal since 2019.",
     url: siteUrl,
     siteName,
     locale: "en_US",
     type: "website",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "TechBucket | IT Services & Software Solutions in Nepal",
+    description:
+      "Custom software, cybersecurity, networking, cloud and managed IT services in Nepal.",
+  },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const user = await getCurrentUser();
+  const site = await getSite();
+  const hideSiteChrome =
+    !!user && ["sales", "saleshead", "logistics", "support"].includes(user.role);
+
   return (
     <html
       lang="en"
+      data-scroll-behavior="smooth"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              name: siteName,
+              url: siteUrl,
+              description: site.tagline,
+              telephone: site.contact.phones[0]?.label,
+              email: site.contact.email,
+              address: {
+                "@type": "PostalAddress",
+                streetAddress: site.contact.address,
+                addressCountry: "NP",
+              },
+              vatID: site.contact.vatNo,
+              foundingDate: "2019",
+              areaServed: "Nepal",
+            }).replace(/</g, "\\u003c"),
+          }}
+        />
+      </head>
       <body className="flex min-h-full flex-col">
-        <CartProvider>
-          <Navbar />
-          <main className="flex-1">{children}</main>
-          <Footer />
-        </CartProvider>
+        {hideSiteChrome ? (
+          <CartProvider>
+            <main className="flex-1">{children}</main>
+          </CartProvider>
+        ) : (
+          <CartProvider>
+            <Navbar />
+            <main className="flex-1">{children}</main>
+            <Footer />
+          </CartProvider>
+        )}
       </body>
     </html>
   );

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { timingSafeEqual } from "node:crypto";
 import { getUsers } from "@/lib/admin";
 import { resolveSender, sendMailWith } from "@/lib/mail";
 import { listFulfillment } from "@/lib/fulfillment";
@@ -7,13 +8,9 @@ import type { FulfillmentOrder } from "@/lib/fulfillment";
 
 export const dynamic = "force-dynamic";
 
-function adminSecret(): string {
-  const secret = process.env.ADMIN_SECRET;
-  if (secret) return secret;
-  if (process.env.NODE_ENV === "production") {
-    throw new Error("ADMIN_SECRET must be set in production.");
-  }
-  return "techbucket-local-admin-secret";
+function safeEqual(a: Buffer, b: Buffer): boolean {
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(a, b);
 }
 
 function money(n: number): string {
@@ -28,16 +25,21 @@ function outstanding(o: FulfillmentOrder): number {
 }
 
 export async function GET(req: NextRequest) {
-  const token = req.nextUrl.searchParams.get("token") ?? "";
-  const auth = req.headers.get("authorization") ?? "";
-  const bearer = auth.startsWith("Bearer ")
-    ? auth.slice("Bearer ".length)
-    : "";
   const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("CRON_SECRET must be set in production.");
+    }
+    return NextResponse.json(
+      { error: "CRON_SECRET is not configured." },
+      { status: 500 }
+    );
+  }
+  const auth = req.headers.get("authorization") ?? "";
+  const bearer = auth.startsWith("Bearer ") ? auth.slice("Bearer ".length) : "";
   const authorized =
-    token === adminSecret() ||
-    (!!cronSecret && bearer === cronSecret) ||
-    (bearer && bearer === adminSecret());
+    bearer.length > 0 &&
+    safeEqual(Buffer.from(bearer), Buffer.from(cronSecret));
   if (!authorized) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
@@ -75,7 +77,7 @@ export async function GET(req: NextRequest) {
   const recipients = users
     .filter(
       (u) =>
-        (u.role === "superadmin" || u.role === "sales") &&
+        (u.role === "superadmin" || u.role === "sales" || u.role === "saleshead") &&
         u.active &&
         (u.email ?? "").trim().length > 0
     )

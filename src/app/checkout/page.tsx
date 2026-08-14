@@ -16,6 +16,8 @@ export default function CheckoutPage() {
   const [phone, setPhone] = useState("");
   const [note, setNote] = useState("");
   const [formError, setFormError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   const orderLines = items
     .map((it) => `- ${it.name} x${it.qty} (${formatNPR(it.price * it.qty)})`)
@@ -56,27 +58,100 @@ export default function CheckoutPage() {
     }).catch(() => {});
   }
 
+  function validateForm(): boolean {
+    if (!name.trim() || !email.trim()) {
+      setFormError("Please enter your full name and email address.");
+      return false;
+    }
+    if (!isValidEmail(email)) {
+      setFormError("Please enter a valid email address.");
+      return false;
+    }
+    if (phone.trim() && !isValidPhone(phone)) {
+      setFormError("Please enter a valid phone number.");
+      return false;
+    }
+    setFormError("");
+    return true;
+  }
+
   function handleOrderClick(
     e: React.MouseEvent<HTMLAnchorElement>,
     channel: "email" | "whatsapp"
   ) {
-    if (!name.trim() || !email.trim()) {
+    if (!validateForm()) {
       e.preventDefault();
-      setFormError("Please enter your full name and email address.");
       return;
     }
-    if (!isValidEmail(email)) {
-      e.preventDefault();
-      setFormError("Please enter a valid email address.");
-      return;
-    }
-    if (phone.trim() && !isValidPhone(phone)) {
-      e.preventDefault();
-      setFormError("Please enter a valid phone number.");
-      return;
-    }
-    setFormError("");
     logOrder(channel);
+  }
+
+  async function submitOrder() {
+    if (!validateForm()) return;
+    setSubmitting(true);
+    setFormError("");
+    try {
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          channel: "web",
+          name: name.trim(),
+          email: email.trim(),
+          phone: phone.trim(),
+          note: note.trim(),
+          subtotal,
+          items: items.map((it) => ({
+            name: it.name,
+            qty: it.qty,
+            price: it.price,
+          })),
+        }),
+      });
+      const body = await res.json();
+      if (!res.ok || !body.ok) {
+        setFormError(body.error || "Could not submit your order. Please try again.");
+        return;
+      }
+      setSubmitted(true);
+      clear();
+    } catch {
+      setFormError("Network error. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  if (submitted) {
+    return (
+      <>
+        <PageHeader
+          eyebrow="Checkout"
+          title="Order Received"
+          description="Thank you — your order request has been sent to our team."
+          breadcrumb="Checkout"
+        />
+        <section className="bg-white py-16 sm:py-20">
+          <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8">
+            <div className="rounded-3xl border border-emerald-200 bg-emerald-50 p-16 text-center">
+              <p className="text-lg font-semibold text-emerald-800">
+                Your order request was submitted successfully.
+              </p>
+              <p className="mt-2 text-sm text-emerald-700">
+                We received your order and will confirm availability, delivery
+                and installation with you shortly.
+              </p>
+              <Link
+                href="/products"
+                className="mt-6 inline-flex items-center gap-2 rounded-full bg-brand-600 px-6 py-3 text-sm font-semibold text-white hover:bg-brand-700"
+              >
+                Continue shopping
+              </Link>
+            </div>
+          </div>
+        </section>
+      </>
+    );
   }
 
   if (items.length === 0) {
@@ -176,6 +251,22 @@ export default function CheckoutPage() {
                     {formError}
                   </p>
                 )}
+                <button
+                  type="button"
+                  onClick={() => void submitOrder()}
+                  disabled={submitting}
+                  className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 disabled:opacity-60"
+                >
+                  <Icon name="check" className="h-5 w-5" />
+                  {submitting ? "Submitting…" : "Submit order request"}
+                </button>
+                <div className="flex items-center gap-3 py-1">
+                  <span className="h-px flex-1 bg-slate-200" />
+                  <span className="text-xs text-slate-400">
+                    or send via
+                  </span>
+                  <span className="h-px flex-1 bg-slate-200" />
+                </div>
                 <a
                   href={mailtoHref}
                   onClick={(e) => handleOrderClick(e, "email")}
@@ -204,7 +295,7 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            <aside className="h-fit rounded-2xl border border-slate-100 bg-slate-50 p-5">
+            <aside className="h-fit rounded-2xl border border-slate-100 bg-slate-50 p-5 lg:sticky lg:top-24">
               <h2 className="text-lg font-bold text-ink">Order summary</h2>
               <ul className="mt-4 space-y-3">
                 {items.map((item) => (

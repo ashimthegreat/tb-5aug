@@ -14,12 +14,13 @@ export interface SuchidartaData {
   companyName: string;
   contactLine: string;
   tagline?: string;
+  date?: string;
 }
 
 export function defaultSuchidartaBody(): string {
-  return `उपरोक्त विषयमा यस कार्यालयमा आवश्यक सूचना व्यवस्थापन प्रणाली (Information Management System), सोसम्बन्धी उपकरणहरू तथा सम्पूर्ण आइ.सी.टी. हार्डवेयर (ICT Hardware, Kiosk Machines) हरूको जडान तथा वितरण कार्यको लागि हाम्रो कम्पनीलाई सूचिकृत गरिदिनुहोस् यो निवेदन पेश गरेका छौँ।
+  return `उपरोक्त विषयमा यस कार्यालयका लागि आवश्यक सूचना व्यवस्थापन प्रणाली (Information Management System), सोसँग सम्बन्धित उपकरणहरू तथा सम्पूर्ण आइ.सी.टी. हार्डवेयर (ICT Hardware) हरूको आपूर्ति, जडान तथा वितरण कार्यका लागि हाम्रो कम्पनीलाई सूचिकृत गरिदिनुहुन यो निवेदन पेश गरेका छौँ।
 
-कम्पनी दर्ता प्रमाणपत्र, करचुक्ता प्रमाणपत्र तथा स्थायी लेखा नम्बर (PAN/VAT) दर्ता प्रमाणपत्र लगायतका सम्पूर्ण कागजातहरू यसै निवेदनसाथ संलग्न गरिएको व्यहोरा समेत अनुरोध गर्दछौँ।`;
+हाम्रो कम्पनी दर्ता प्रमाणपत्र, कर चुक्ता प्रमाणपत्र तथा स्थायी लेखा नम्बर (PAN/VAT) दर्ता प्रमाणपत्र लगायतका आवश्यक सम्पूर्ण कानुनी कागजातहरू यसै निवेदनसाथ संलग्न राखिएको व्यहोरा अनुरोध गर्दछौँ।`;
 }
 
 export function letterContactLine(phones: string[]): string {
@@ -85,7 +86,7 @@ export function renderSuchidartaHtml(opts: RenderOptions): string {
     width: ${isPrint ? "210mm" : "100%"};
     max-width: ${isPrint ? "none" : "720px"};
     ${isPrint
-      ? "min-height: 297mm; margin: 16px auto; box-shadow: 0 4px 24px rgba(15,23,42,.15); background: #fff;"
+      ? "display: flex; flex-direction: column; min-height: 297mm; margin: 16px auto; box-shadow: 0 4px 24px rgba(15,23,42,.15); background: #fff;"
       : "margin: 24px auto; padding: 24px 30px; box-shadow: 0 1px 3px rgba(15,23,42,.08); background: #fff;"}
     position: relative;
   }
@@ -95,13 +96,14 @@ export function renderSuchidartaHtml(opts: RenderOptions): string {
     justify-content: space-between;
     gap: 16px;
     padding: ${isPrint ? "10pt 25mm 8px" : "4px 0 10px"};
-    border-bottom: 2px solid #e2e7f0;
+    border-bottom: 2px solid #f06020;
   }
   .lh-left { display: flex; align-items: center; gap: 14px; min-width: 0; }
-  .lh-left .logo { height: 44px; width: auto; }
-  .lh-left .tag { font-size: 11pt; color: #2c303c; margin-top: 1px; }
+  .lh-left .logo { height: 52px; width: auto; }
+  .lh-left .tag { font-size: 12.5pt; color: #2c303c; margin-top: 1px; }
   .content {
     padding: ${isPrint ? "0 25mm 12mm" : "16px 0 0"};
+    flex: 1;
     font-size: ${isPrint ? "13.5pt" : "16pt"};
     line-height: ${isPrint ? "1.5" : "1.7"};
   }
@@ -147,12 +149,21 @@ export function renderSuchidartaHtml(opts: RenderOptions): string {
   }
   .sign .auto { font-weight: 700; }
   .sign .sigrow { display: flex; align-items: flex-end; gap: 20px; }
-  .sign .sig { display: inline-block; height: 120px; width: auto; max-width: 220px; max-height: 130px; object-fit: contain; object-position: left center; }
-  .sign .stamp { display: inline-block; height: 132px; width: auto; max-width: 260px; max-height: 142px; object-fit: contain; object-position: left center; }
+  .sign .sig { display: inline-block; height: 150px; width: auto; max-width: 300px; max-height: 160px; object-fit: contain; object-position: left center; }
+  .sign .stamp { display: inline-block; height: 170px; width: auto; max-width: 340px; max-height: 180px; object-fit: contain; object-position: left center; }
   .contact {
     margin-top: 0;
   }
+  .footer {
+    margin-top: 26px;
+    border-top: 2px solid #f06020;
+    padding-top: 8px;
+    font-size: 9.5pt;
+    color: #6b7280;
+    text-align: center;
+  }
   .no-letterhead .letterhead { display: none; }
+  .no-letterhead .footer { display: none; }
   .no-letterhead .content { padding-top: 15pt; }
   .toolbar {
     position: fixed;
@@ -180,7 +191,7 @@ export function renderSuchidartaHtml(opts: RenderOptions): string {
   ${isPrint ? `@media print {
     @page { size: A4; margin: 0; }
     body { background: #fff; }
-    .sheet { margin: 0; width: auto; min-height: auto; box-shadow: none; }
+    .sheet { margin: 0; width: auto; min-height: 297mm; box-shadow: none; }
     .toolbar { display: none; }
     .letterhead, .sign, .contact { page-break-inside: avoid; }
     .body, .recipient, .subject { page-break-inside: avoid; }
@@ -197,7 +208,7 @@ export function renderSuchidartaHtml(opts: RenderOptions): string {
       </div>
     </div>
     <div class="content">
-      <div class="date">मिति:${bsDateNepali()}</div>
+      <div class="date">मिति:${esc(data.date?.trim() || bsDateNepali())}</div>
       <div class="shree">श्री,</div>
       <div class="recipient">${recipientHtml}</div>
       <div class="subject">${esc(subject)}</div>
@@ -228,6 +239,11 @@ export function renderSuchidartaHtml(opts: RenderOptions): string {
       </div>
       <div class="contact">सम्पर्क: ${esc(data.contactLine)}</div>
     </div>
+    <div class="footer">${esc(
+      [data.companyName, data.tagline || data.contactLine]
+        .filter(Boolean)
+        .join(" · ")
+    )}</div>
   </div>
 </body>
 </html>`;

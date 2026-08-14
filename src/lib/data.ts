@@ -4,6 +4,120 @@ import { readJson } from "./store";
 export const siteName = "TechBucket";
 export const siteUrl = "https://techbucket.com.np";
 
+async function safeReadJson<T>(file: string, fallback: T): Promise<T> {
+  try {
+    return await readJson<T>(file);
+  } catch {
+    return fallback;
+  }
+}
+
+const EMPTY_SITE: SiteContent = {
+  name: siteName,
+  url: siteUrl,
+  tagline: "",
+  hero: { eyebrow: "", title: "", subtitle: "" },
+  about: { title: "", paragraphs: [] },
+  stats: [],
+  mission: { title: "", body: "" },
+  vision: { title: "", body: "" },
+  values: [],
+  contact: {
+    email: "",
+    phones: [],
+    address: "",
+    vatNo: "",
+    heading: "",
+    subheading: "",
+  },
+  footer: { blurb: "" },
+};
+
+const EMPTY_CAREERS: CareersContent = {
+  perks: [],
+  positionsTitle: "",
+  emptyTitle: "",
+  emptyMessage: "",
+  emptyCta: "",
+  speculativeTitle: "",
+  speculativeMessage: "",
+  speculativeCta: "",
+};
+
+export interface ProcessStep {
+  icon: string;
+  title: string;
+  description: string;
+}
+
+export interface Testimonial {
+  quote: string;
+  name: string;
+  org: string;
+}
+
+export interface FaqItem {
+  question: string;
+  answer: string;
+}
+
+export interface Insight {
+  eyebrow: string;
+  title: string;
+  excerpt: string;
+  href: string;
+}
+
+export interface CaseItem {
+  icon: string;
+  title: string;
+  summary: string;
+  href: string;
+}
+
+export interface HomeContent {
+  statsSubline: string;
+  process: {
+    eyebrow: string;
+    title: string;
+    description: string;
+    steps: ProcessStep[];
+  };
+  testimonials: {
+    eyebrow: string;
+    title: string;
+    description: string;
+    items: Testimonial[];
+  };
+  faq: {
+    eyebrow: string;
+    title: string;
+    description: string;
+    items: FaqItem[];
+  };
+  insights: {
+    eyebrow: string;
+    title: string;
+    description: string;
+    items: Insight[];
+  };
+  cases: {
+    eyebrow: string;
+    title: string;
+    description: string;
+    items: CaseItem[];
+  };
+}
+
+const EMPTY_HOME: HomeContent = {
+  statsSubline: "",
+  process: { eyebrow: "", title: "", description: "", steps: [] },
+  testimonials: { eyebrow: "", title: "", description: "", items: [] },
+  faq: { eyebrow: "", title: "", description: "", items: [] },
+  insights: { eyebrow: "", title: "", description: "", items: [] },
+  cases: { eyebrow: "", title: "", description: "", items: [] },
+};
+
 export interface ContactInfo {
   email: string;
   phones: { label: string; href: string }[];
@@ -13,6 +127,13 @@ export interface ContactInfo {
   subheading: string;
 }
 
+export interface BankDetails {
+  accountName: string;
+  accountNumber: string;
+  bankName: string;
+  branch?: string;
+}
+
 export interface SiteContent {
   name: string;
   url: string;
@@ -20,11 +141,11 @@ export interface SiteContent {
   hero: { eyebrow: string; title: string; subtitle: string };
   about: { title: string; paragraphs: string[] };
   stats: { value: string; label: string }[];
-  trustPoints: { title: string; description: string }[];
   mission: { title: string; body: string };
   vision: { title: string; body: string };
   values: { title: string; body: string }[];
   contact: ContactInfo;
+  bank?: BankDetails;
   footer: { blurb: string };
 }
 
@@ -42,6 +163,16 @@ export interface Service {
   icon: string;
   title: string;
   description: string;
+  order: number;
+}
+
+export interface Industry {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  services: string[];
+  productsOnly?: boolean;
   order: number;
 }
 
@@ -113,33 +244,41 @@ export interface CareersContent {
 }
 
 export async function getSite(): Promise<SiteContent> {
-  return readJson<SiteContent>("site.json");
+  return safeReadJson<SiteContent>("site.json", EMPTY_SITE);
 }
 
 export async function getCategories(): Promise<ServiceCategory[]> {
-  return readJson<ServiceCategory[]>("categories.json");
+  return safeReadJson<ServiceCategory[]>("categories.json", []);
 }
 
 export async function getServices(): Promise<Service[]> {
-  return readJson<Service[]>("services.json");
+  return safeReadJson<Service[]>("services.json", []);
+}
+
+export async function getIndustries(): Promise<Industry[]> {
+  return safeReadJson<Industry[]>("industries.json", []);
+}
+
+export async function getHome(): Promise<HomeContent> {
+  return safeReadJson<HomeContent>("home.json", EMPTY_HOME);
 }
 
 export async function getProducts(): Promise<Product[]> {
-  return readJson<Product[]>("products.json");
+  return safeReadJson<Product[]>("products.json", []);
 }
 
 export async function getProductCategories(): Promise<ProductCategory[]> {
-  return readJson<ProductCategory[]>("product-categories.json");
+  return safeReadJson<ProductCategory[]>("product-categories.json", []);
 }
 
 export async function getBrands(): Promise<Brand[]> {
-  return readJson<Brand[]>("brands.json");
+  return safeReadJson<Brand[]>("brands.json", []);
 }
 
 export async function getPartners(): Promise<Partner[]> {
-  return readJson<Partner[]>("partners.json");
+  return safeReadJson<Partner[]>("partners.json", []);
 }
 
 export async function getCareers(): Promise<CareersContent> {
-  return readJson<CareersContent>("careers.json");
+  return safeReadJson<CareersContent>("careers.json", EMPTY_CAREERS);
 }

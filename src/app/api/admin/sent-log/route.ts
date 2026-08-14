@@ -101,6 +101,21 @@ export async function GET() {
       customerName: o.customerName,
       customerEmail: o.customerEmail,
     });
+    for (const r of o.billBhuktani ?? []) {
+      entries.push({
+        type: "billbhuktani",
+        id: r.id,
+        billNo: o.billNo,
+        recipient: r.recipient,
+        sentTo: r.sentTo,
+        sentBy: r.sentBy,
+        sentAt: r.sentAt,
+        status: r.status,
+        customerId: o.customerId,
+        customerName: o.customerName,
+        customerEmail: o.customerEmail,
+      });
+    }
   }
 
   entries.sort((a, b) => {

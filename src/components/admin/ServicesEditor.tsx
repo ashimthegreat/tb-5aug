@@ -59,7 +59,7 @@ export default function ServicesEditor() {
     <div className="space-y-10">
       <div className="space-y-3">
         <ListEditor
-          title="Service categories (industries)"
+          title="Service categories"
           fields={categoryFields}
           items={categories as unknown as Record<string, unknown>[]}
           onChange={(items) => setCategories(items as unknown as ServiceCategory[])}

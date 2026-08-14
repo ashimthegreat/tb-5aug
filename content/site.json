@@ -2,17 +2,17 @@
   "name": "TechBucket",
   "signatory": "रञ्जन दाहाल",
   "url": "https://techbucket.com.np",
-  "tagline": "A Nepal-based software company building modern, reliable technology for healthcare and beyond since 2019.",
+  "tagline": "A Nepal-based company delivering hospital software and IT infrastructure products since 2019.",
   "hero": {
     "eyebrow": "Trusted technology partner since 2019",
-    "title": "Powering Healthcare Through Technology",
-    "subtitle": "We build modern, reliable software and infrastructure solutions for healthcare providers and other industries across Nepal. Trusted by clinics, hospitals and health organisations across the Kathmandu Valley."
+    "title": "Technology That Moves Your Business Forward",
+    "subtitle": "We build hospital management software for healthcare providers, and supply genuine IT infrastructure products to every industry across Nepal — from education, finance and hospitality to manufacturing and retail. Trusted by organisations across the Kathmandu Valley and beyond."
   },
   "about": {
-    "title": "Software That Transforms How You Work",
+    "title": "Hospital Software, Infrastructure for Everyone",
     "paragraphs": [
-      "TechBucket Pvt. Ltd. is a Nepal-based software and IT company. We design, build, and maintain digital solutions that improve patient outcomes, streamline clinical workflows, and empower organisations to deliver better care and services.",
-      "Founded in 2019, we started in healthcare IT and have expanded into infrastructure and other industries — growing from a small startup to a trusted partner for hospitals, clinics, health startups and enterprises across Nepal."
+      "TechBucket Pvt. Ltd. is a Nepal-based software and IT company. We design, build, and maintain hospital management software that improves patient outcomes and streamlines clinical workflows — and we supply genuine IT hardware products to organisations in every industry.",
+      "Founded in 2019, we started in healthcare IT and grew into infrastructure — providing hospitals with purpose-built software and supplying servers, networking, storage and power protection across Nepal."
     ]
   },
   "stats": [
@@ -20,12 +20,6 @@
     { "value": "50+", "label": "Projects Delivered" },
     { "value": "20+", "label": "Team Members" },
     { "value": "99%", "label": "Client Satisfaction" }
-  ],
-  "trustPoints": [
-    { "title": "Healthcare Focused", "description": "Every solution is built around real clinical workflows." },
-    { "title": "Nepal Based", "description": "A local team that understands the local health system." },
-    { "title": "Data Privacy Secure", "description": "Encrypted storage and strict access controls by default." },
-    { "title": "Milestone-Based Projects", "description": "Transparent delivery with clearly defined milestones." }
   ],
   "mission": {
     "title": "Our Mission",
@@ -58,9 +52,15 @@
     "address": "Kathmandu, Balaju-16, Bagmati Province, Nepal",
     "vatNo": "609605497",
     "heading": "Let's Build Something Great Together",
-    "subheading": "Looking to build better software for your healthcare organisation? Write to us and our team will respond within 24 hours."
+    "subheading": "Looking to build better software for your healthcare organisation or need IT infrastructure products? Write to us and our team will respond within 24 hours."
+  },
+  "bank": {
+    "accountName": "Tech Bucket PVT. LTD",
+    "accountNumber": "11801010000303",
+    "bankName": "Global IME Bank Limited",
+    "branch": "Gyaneshwor"
   },
   "footer": {
-    "blurb": "Serving Nepal's healthcare sector with modern, reliable software since 2019."
+    "blurb": "Hospital software and IT infrastructure products for Nepal since 2019."
   }
 }

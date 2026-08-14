@@ -88,7 +88,20 @@ function senderFor(user: AdminUser): ResolvedSender | null {
 
 export async function resolveSender(): Promise<ResolvedSender | null> {
   const current = await getCurrentUser();
-  if (!current) return null;
+  if (!current) {
+    const user = process.env.SMTP_USER || "";
+    const pass = process.env.SMTP_PASS || "";
+    if (!user || !pass) return null;
+    const port = Number(process.env.SMTP_PORT || 465);
+    return {
+      fromName: process.env.SUPPORT_FROM || "TechBucket Support",
+      email: user,
+      host: process.env.SMTP_HOST || "smtp.zoho.com",
+      port,
+      secure: port === 465,
+      pass,
+    };
+  }
   const own = senderFor(current);
   if (own) return own;
   const users = await getUsers();

@@ -5,6 +5,7 @@ import { readJson, writeJson } from "@/lib/store";
 
 const RESOURCES: Record<string, string> = {
   site: "site.json",
+  home: "home.json",
   categories: "categories.json",
   services: "services.json",
   products: "products.json",
@@ -19,21 +20,27 @@ const RESOURCES: Record<string, string> = {
 
 const RESOURCE_ROLES: Record<string, AdminRole[]> = {
   site: ["superadmin", "content"],
+  home: ["superadmin", "content"],
   categories: ["superadmin", "content"],
   services: ["superadmin", "content"],
-  products: ["superadmin", "content", "sales"],
-  "product-categories": ["superadmin", "content", "sales"],
-  brands: ["superadmin", "content", "sales"],
-  partners: ["superadmin", "content", "sales"],
+  products: ["superadmin", "content", "saleshead"],
+  "product-categories": ["superadmin", "content", "saleshead"],
+  brands: ["superadmin", "content", "saleshead"],
+  partners: ["superadmin", "content", "saleshead"],
   careers: ["superadmin", "content"],
-  customers: ["superadmin", "sales"],
+  customers: ["superadmin", "saleshead"],
   support: ["superadmin", "support"],
   discounts: ["superadmin"],
+};
+
+const RESOURCE_READ_ROLES: Record<string, AdminRole[]> = {
+  site: ["superadmin", "content", "sales", "saleshead", "logistics", "support"],
 };
 
 const PUBLIC_PATHS = [
   "/",
   "/services",
+  "/industries",
   "/products",
   "/products/[slug]",
   "/cart",
@@ -44,12 +51,17 @@ const PUBLIC_PATHS = [
   "/support",
 ];
 
-const OBJECT_RESOURCES = new Set(["site", "careers"]);
+const OBJECT_RESOURCES = new Set(["site", "careers", "home"]);
 
-async function requireAccess(resource: string): Promise<boolean> {
+async function requireAccess(
+  resource: string,
+  isWrite: boolean
+): Promise<boolean> {
   const user = await getCurrentUser();
   if (!user || !user.active) return false;
-  const allowed = RESOURCE_ROLES[resource];
+  const allowed = isWrite
+    ? RESOURCE_ROLES[resource]
+    : RESOURCE_READ_ROLES[resource] ?? RESOURCE_ROLES[resource];
   return !!allowed && allowed.includes(user.role);
 }
 
@@ -58,7 +70,7 @@ export async function GET(
   { params }: { params: Promise<{ resource: string }> }
 ) {
   const { resource } = await params;
-  if (!(await requireAccess(resource))) {
+  if (!(await requireAccess(resource, false))) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
   const file = RESOURCES[resource];
@@ -74,7 +86,7 @@ export async function PUT(
   { params }: { params: Promise<{ resource: string }> }
 ) {
   const { resource } = await params;
-  if (!(await requireAccess(resource))) {
+  if (!(await requireAccess(resource, true))) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
   const file = RESOURCES[resource];

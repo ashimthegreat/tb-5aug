@@ -61,7 +61,9 @@ export function esc(text: string): string {
   return text
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 export function signatureName(signatory?: string, fallback?: string): string {
@@ -241,6 +243,11 @@ export function bsDateParts(iso?: string): BsDateParts {
 export function bsDate(iso?: string): string {
   const p = bsDateParts(iso);
   return `${p.day} ${BS_MONTHS[p.month - 1]} ${p.year}`;
+}
+
+export function bsDateNumeric(iso?: string): string {
+  const p = bsDateParts(iso);
+  return `${p.year}-${pad2(p.month)}-${pad2(p.day)}`;
 }
 
 const NEPALI_DIGITS = ["०", "१", "२", "३", "४", "५", "६", "७", "८", "९"];
@@ -488,7 +495,7 @@ export function renderQuotationHtml(opts: RenderOptions): string {
     width: ${isPrint ? "210mm" : "100%"};
     max-width: ${isPrint ? "none" : "720px"};
     ${isPrint
-      ? "min-height: 297mm; padding: 10mm 14mm 14mm; margin: 16px auto; box-shadow: 0 4px 24px rgba(15,23,42,.15);"
+      ? "min-height: 297mm; padding: 10mm 14mm 14mm; margin: 16px auto; box-shadow: 0 4px 24px rgba(15,23,42,.15); display: flex; flex-direction: column;"
       : "margin: 24px auto; padding: 24px 30px; box-shadow: 0 1px 3px rgba(15,23,42,.08);"}
     background: #fff;
     position: relative;
@@ -501,11 +508,10 @@ export function renderQuotationHtml(opts: RenderOptions): string {
     justify-content: space-between;
     gap: 16px;
     padding: 4px 0 10px;
-    border-bottom: 2px solid #e2e7f0;
+    border-bottom: 2px solid #f06020;
   }
   .lh-left { display: flex; align-items: center; gap: 14px; min-width: 0; }
   .lh-left .logo { height: 52px; width: auto; }
-  .lh-left .nm { font-size: 14pt; font-weight: 700; color: #c0141b; }
   .lh-left .tag { font-size: 12.5pt; color: #2c303c; margin-top: 1px; }
   .lh-right { text-align: right; flex-shrink: 0; }
   .lh-right .q-title {
@@ -564,8 +570,8 @@ export function renderQuotationHtml(opts: RenderOptions): string {
   .closing { margin-top: 10px; }
   .sign { margin-top: 22px; line-height: 1.5; }
   .sign .sigrow { display: flex; align-items: flex-end; gap: 20px; margin: 0 0 6px; }
-  .sign .sig { display: inline-block; height: 120px; width: auto; max-width: 220px; max-height: 130px; object-fit: contain; object-position: left center; }
-  .sign .stamp { display: inline-block; height: 132px; width: auto; max-width: 260px; max-height: 142px; object-fit: contain; object-position: left center; }
+  .sign .sig { display: inline-block; height: 150px; width: auto; max-width: 300px; max-height: 160px; object-fit: contain; object-position: left center; }
+  .sign .stamp { display: inline-block; height: 170px; width: auto; max-width: 340px; max-height: 180px; object-fit: contain; object-position: left center; }
   .sign .for { margin-top: 16px; border-top: 1px solid #1c2333; padding-top: 4px; width: 260px; }
   .notes {
     margin-top: 12px;
@@ -577,9 +583,10 @@ export function renderQuotationHtml(opts: RenderOptions): string {
   }
   .free-text { white-space: pre-wrap; }
   .page-break { height: 12px; }
+  .spacer { flex: 1 1 auto; min-height: 26px; }
   .footer {
-    margin-top: 26px;
-    border-top: 1px solid #e5e7eb;
+    margin-top: auto;
+    border-top: 2px solid #f06020;
     padding-top: 8px;
     font-size: 9.5pt;
     color: #6b7280;
@@ -613,7 +620,7 @@ export function renderQuotationHtml(opts: RenderOptions): string {
   ${isPrint ? `@media print {
     @page { size: A4; margin: 12mm 14mm; }
     body { background: #fff; }
-    .sheet { margin: 0; width: auto; min-height: auto; box-shadow: none; padding: 0; }
+    .sheet { margin: 0; width: auto; min-height: calc(297mm - 24mm); box-shadow: none; padding: 0; }
     .toolbar { display: none; }
     .items, table.totals, .sign, .notes, .free-text { page-break-inside: avoid; }
     .page-break { page-break-before: always; height: 0; }
@@ -628,16 +635,14 @@ export function renderQuotationHtml(opts: RenderOptions): string {
       <div class="lh-left">
         <img class="logo" src="${logoSrc}" alt="${esc(company.name)}">
         <div>
-          <div class="nm">${esc(company.name)}</div>
           <div class="tag">${esc(tagline)}</div>
         </div>
       </div>
       <div class="lh-right">
         <div class="q-title">QUOTATION</div>
         <div class="q-no">${esc(quote.quoteNo)}</div>
-        <div class="q-meta">Date: ${esc(quote.date)}</div>
-        <div class="q-meta">BS ${esc(bsDate(quote.date))}</div>
-        <div class="q-meta">Valid until: ${esc(validUntilDate)}</div>
+        <div class="q-meta">Date: ${esc(quote.date)} / ${esc(bsDateNumeric(quote.date))}</div>
+        <div class="q-meta">Valid until: ${esc(validUntilDate)} / ${esc(bsDateNumeric(validUntilDate))}</div>
       </div>
     </div>
 
@@ -692,6 +697,7 @@ export function renderQuotationHtml(opts: RenderOptions): string {
     ${specsBlock}
     ${termsBlock}
 
+    <div class="spacer"></div>
     <div class="footer">${esc(footerLine)}</div>
   </div>
 </body>

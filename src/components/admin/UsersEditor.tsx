@@ -11,10 +11,11 @@ import {
   fieldInput,
 } from "./ui";
 
-type Role = "superadmin" | "sales" | "support" | "content" | "logistics";
+type Role = "superadmin" | "sales" | "saleshead" | "support" | "content" | "logistics";
 
 const ROLE_OPTIONS: { value: Role; label: string }[] = [
   { value: "superadmin", label: "Superadmin" },
+  { value: "saleshead", label: "Sales Head" },
   { value: "sales", label: "Sales" },
   { value: "support", label: "Support" },
   { value: "content", label: "Content" },

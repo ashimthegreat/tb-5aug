@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { apiGet } from "@/lib/adminApi";
 import type { AdminRole } from "@/lib/admin";
 import type {
@@ -10,7 +10,14 @@ import type {
 } from "@/lib/fulfillment";
 import type { PaymentStatus } from "@/lib/payment";
 import { paidTotal, paymentStatus, remaining } from "@/lib/payment";
-import { GhostButton, PrimaryButton } from "./ui";
+import {
+  defaultBillBhuktaniBody,
+  renderBillBhuktaniHtml,
+  type BankDetails,
+} from "@/lib/billBhuktani";
+import { bsDateNepali, signatureName } from "@/lib/quotation";
+import type { SiteContent } from "@/lib/data";
+import { GhostButton, Input, Label, PrimaryButton, Textarea } from "./ui";
 
 const STATUS_LABELS: Record<FulfillmentStatus, string> = {
   new: "New",
@@ -107,7 +114,11 @@ interface Action {
   style: "primary" | "ghost" | "danger";
 }
 
-function actionsFor(role: AdminRole, o: FulfillmentOrder): Action[] {
+function actionsFor(
+  role: AdminRole,
+  username: string,
+  o: FulfillmentOrder
+): Action[] {
   if (role === "superadmin") {
     if (o.status === "new")
       return [
@@ -140,8 +151,8 @@ function actionsFor(role: AdminRole, o: FulfillmentOrder): Action[] {
       ];
     return [];
   }
-  if (role === "sales") {
-    if (o.status === "new")
+  if (role === "sales" || role === "saleshead") {
+    if (o.status === "new" && o.createdBy === username)
       return [{ to: "cancelled", label: "Cancel", style: "danger" }];
     if (o.status === "ready" && o.orderType === "pickup" && o.verifiedAt)
       return [
@@ -154,14 +165,25 @@ function actionsFor(role: AdminRole, o: FulfillmentOrder): Action[] {
 
 function deliverable(role: AdminRole, o: FulfillmentOrder): boolean {
   if (role === "logistics") return o.orderType === "delivery";
-  if (role === "sales") return o.orderType === "pickup";
+  if (role === "sales" || role === "saleshead") return o.orderType === "pickup";
   return false;
 }
 
 export default function FulfillmentEditor({
   user,
+  focusOrderId,
+  onFocusHandled,
 }: {
-  user: { role: AdminRole };
+  user: {
+    role: AdminRole;
+    name?: string;
+    username?: string;
+    signatory?: string;
+    designation?: string;
+    signature?: string;
+  };
+  focusOrderId?: string | null;
+  onFocusHandled?: () => void;
 }) {
   const [orders, setOrders] = useState<FulfillmentOrder[] | null>(null);
   const [filter, setFilter] = useState("active");
@@ -181,6 +203,44 @@ export default function FulfillmentEditor({
     null
   );
   const [voidBillReason, setVoidBillReason] = useState("");
+  const [siteInfo, setSiteInfo] = useState<SiteContent | null>(null);
+
+  const [highlightId, setHighlightId] = useState<string | null>(null);
+  const focusHandledRef = useRef(false);
+
+  useEffect(() => {
+    if (!focusOrderId) return;
+    if (focusHandledRef.current) return;
+    focusHandledRef.current = true;
+    setFilter("all");
+    setHighlightId(focusOrderId);
+    onFocusHandled?.();
+  }, [focusOrderId, onFocusHandled]);
+
+  useEffect(() => {
+    if (!highlightId) return;
+    const el = document.getElementById(`order-${highlightId}`);
+    el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    const t = setTimeout(() => setHighlightId(null), 3000);
+    return () => clearTimeout(t);
+  }, [highlightId, orders]);
+
+  const [bhuktiTarget, setBhuktiTarget] = useState<FulfillmentOrder | null>(
+    null
+  );
+  const [bhuktiRecipient, setBhuktiRecipient] = useState("");
+  const [bhuktiBody, setBhuktiBody] = useState("");
+  const [bhuktiDate, setBhuktiDate] = useState("");
+  const [bhuktiBank, setBhuktiBank] = useState<BankDetails>({
+    accountName: "",
+    accountNumber: "",
+    bankName: "",
+    branch: "",
+  });
+  const [bhuktiStatus, setBhuktiStatus] = useState("");
+  const [bhuktiSending, setBhuktiSending] = useState(false);
+  const [bankAccounts, setBankAccounts] = useState<BankDetails[]>([]);
+  const [bhuktiBankSel, setBhuktiBankSel] = useState("-1");
 
   useEffect(() => {
     apiGet<FulfillmentOrder[]>("fulfillment")
@@ -188,6 +248,12 @@ export default function FulfillmentEditor({
       .catch((e) =>
         setError(e instanceof Error ? e.message : "Failed to load")
       );
+    apiGet<SiteContent>("site")
+      .then(setSiteInfo)
+      .catch(() => setSiteInfo(null));
+    apiGet<BankDetails[]>("bank-accounts")
+      .then(setBankAccounts)
+      .catch(() => setBankAccounts([]));
   }, []);
 
   async function createBill(o: FulfillmentOrder) {
@@ -210,6 +276,131 @@ export default function FulfillmentEditor({
       setError("Network error. Please try again.");
     } finally {
       setBusy(null);
+    }
+  }
+
+  function openBillBhuktani(o: FulfillmentOrder) {
+    const initial = bankOptions[0];
+    setBhuktiTarget(o);
+    setBhuktiRecipient(
+      [
+        "श्री कार्यालय प्रमुख ज्यू,",
+        o.customerName,
+        o.customerCompany,
+        o.customerAddress,
+      ]
+        .filter(Boolean)
+        .join("\n")
+    );
+    setBhuktiBankSel(initial?.value ?? "-1");
+    setBhuktiBank({
+      accountName: initial?.bank.accountName ?? "",
+      accountNumber: initial?.bank.accountNumber ?? "",
+      bankName: initial?.bank.bankName ?? "",
+      branch: initial?.bank.branch ?? "",
+    });
+    setBhuktiBody(
+      defaultBillBhuktaniBody({
+        companyName: siteInfo?.name ?? "TechBucket",
+        customerName: o.customerName,
+        customerOrganization: o.customerCompany,
+        billNo: o.billNo ?? "",
+        billDate: o.billedAt ? bsDateNepali(o.billedAt.slice(0, 10)) : undefined,
+      })
+    );
+    setBhuktiDate(bsDateNepali());
+    setBhuktiStatus("");
+  }
+
+  function previewBillBhuktani() {
+    if (!bhuktiTarget) return;
+    const companyName = siteInfo?.name ?? "TechBucket";
+    const phones = siteInfo?.contact?.phones ?? [];
+    const html = renderBillBhuktaniHtml({
+      origin: window.location.origin,
+      data: {
+        recipient: bhuktiRecipient.trim(),
+        body: bhuktiBody.trim(),
+        signatory: signatureName(user.signatory, user.name),
+        designation: user.designation,
+        signatureSrc: user.signature
+          ? `${window.location.origin}${user.signature}`
+          : undefined,
+        stampSrc: `${window.location.origin}/api/admin/stamp`,
+        companyName,
+        tagline: [
+          siteInfo?.contact?.address ?? "",
+          [
+            siteInfo?.contact?.email ?? "",
+            ...(siteInfo?.contact?.phones ?? []).map((p) => p.label),
+          ]
+            .filter(Boolean)
+            .join(" · "),
+          siteInfo?.contact?.vatNo
+            ? `PAN/VAT: ${siteInfo.contact.vatNo}`
+            : "",
+        ]
+          .filter(Boolean)
+          .join(" · "),
+        contactLine: phones.map((p) => p.label).join(" | "),
+        date: bhuktiDate.trim(),
+        bank: bhuktiBank,
+      },
+      letterhead: true,
+    });
+    const w = window.open("", "_blank");
+    if (w) {
+      w.document.write(html);
+      w.document.close();
+    } else {
+      setBhuktiStatus("Allow pop-ups to preview the letter.");
+    }
+  }
+
+  async function sendBillBhuktani() {
+    if (!bhuktiTarget) return;
+    if (!bhuktiTarget.customerEmail.trim()) {
+      setBhuktiStatus("Failed: this customer has no email on the order.");
+      return;
+    }
+    if (!bhuktiRecipient.trim()) {
+      setBhuktiStatus("Failed: add the recipient address.");
+      return;
+    }
+    if (!bhuktiBody.trim()) {
+      setBhuktiStatus("Failed: letter body cannot be empty.");
+      return;
+    }
+    if (!bhuktiBank.accountNumber.trim() || !bhuktiBank.bankName.trim()) {
+      setBhuktiStatus("Failed: select a bank account first.");
+      return;
+    }
+    setBhuktiSending(true);
+    setBhuktiStatus("");
+    try {
+      const res = await fetch("/api/admin/send-bill-bhuktani", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId: bhuktiTarget.id,
+          recipient: bhuktiRecipient.trim(),
+          body: bhuktiBody.trim(),
+          date: bhuktiDate.trim(),
+          bank: bhuktiBank,
+        }),
+      });
+      const body = await res.json();
+      if (res.ok && body.ok) {
+        setBhuktiStatus("Letter sent to " + bhuktiTarget.customerEmail);
+        setOrders(await apiGet<FulfillmentOrder[]>("fulfillment"));
+        setTimeout(() => setBhuktiTarget(null), 1200);
+      } else {
+        setBhuktiStatus(`Failed: ${body.error || "could not send"}`);
+      }
+    } catch (e) {
+      setBhuktiStatus(`Failed: ${(e as Error).message}`);
+    } finally {
+      setBhuktiSending(false);
     }
   }
 
@@ -382,6 +573,14 @@ export default function FulfillmentEditor({
   const activeFilter = FILTERS.find((f) => f.id === filter) ?? FILTERS[0];
   const visible = (orders ?? []).filter((o) => activeFilter.match(o));
 
+  const bankOptions: { value: string; bank: BankDetails }[] = (() => {
+    const opts = bankAccounts.map((bank, i) => ({ value: `a${i}`, bank }));
+    if (opts.length === 0 && siteInfo?.bank) {
+      opts.push({ value: "default", bank: siteInfo.bank });
+    }
+    return opts;
+  })();
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -418,17 +617,22 @@ export default function FulfillmentEditor({
       ) : visible.length === 0 ? (
         <div className="rounded-xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
           {filter === "active"
-            ? "No fulfillment orders yet. When sales converts a sent quote to an order it will appear here."
+            ? "No fulfillment orders yet. Sales can convert a sent quote or bill a priced product order directly here."
             : "No orders in this view."}
         </div>
       ) : (
         <ul className="space-y-3">
           {visible.map((o) => {
-            const actions = actionsFor(user.role, o);
+            const actions = actionsFor(user.role, user.username ?? "", o);
             return (
               <li
                 key={o.id}
-                className="rounded-xl border border-slate-200 bg-white p-4"
+                id={`order-${o.id}`}
+                className={`rounded-xl border bg-white p-4 ${
+                  highlightId === o.id
+                    ? "border-brand-400 ring-2 ring-brand-300"
+                    : "border-slate-200"
+                }`}
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
@@ -460,13 +664,15 @@ export default function FulfillmentEditor({
                       )}
                     </div>
                     <p className="mt-1 text-xs text-slate-400">
-                      Quote {o.quoteNo} · by {o.createdByName} ·{" "}
-                      {formatDate(o.createdAt)}
+                      {o.quoteNo
+                        ? `Quote ${o.quoteNo} · by `
+                        : "Direct order · by "}
+                      {o.createdByName} · {formatDate(o.createdAt)}
                     </p>
                   </div>
                   {(actions.length > 0 ||
-                    ((user.role === "superadmin" || user.role === "sales") &&
-                      o.status === "delivered")) && (
+                    ((user.role === "superadmin" || user.role === "sales" || user.role === "saleshead") &&
+                      (o.billNo || o.status === "delivered"))) && (
                     <div className="flex shrink-0 flex-wrap gap-2">
                       {actions.map((a) =>
                         a.style === "primary" ? (
@@ -499,8 +705,8 @@ export default function FulfillmentEditor({
                           </GhostButton>
                         )
                       )}
-                      {(user.role === "superadmin" || user.role === "sales") &&
-                        o.status === "delivered" && (
+                      {(user.role === "superadmin" || user.role === "sales" || user.role === "saleshead") &&
+                        (o.billNo || o.status === "delivered") && (
                           <button
                             type="button"
                             disabled={busy === o.id}
@@ -514,6 +720,17 @@ export default function FulfillmentEditor({
                             {o.billNo
                               ? `Bill ${o.billNo} · Print`
                               : "Create bill"}
+                          </button>
+                        )}
+                      {(user.role === "superadmin" || user.role === "sales" || user.role === "saleshead") &&
+                        o.billNo && (
+                          <button
+                            type="button"
+                            disabled={busy === o.id}
+                            onClick={() => openBillBhuktani(o)}
+                            className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-medium text-indigo-700 transition-colors hover:bg-indigo-100 disabled:opacity-60"
+                          >
+                            Bill Bhuktani
                           </button>
                         )}
                       {user.role === "superadmin" && o.billNo && (
@@ -653,7 +870,7 @@ export default function FulfillmentEditor({
                             {p.note ? ` — ${p.note}` : ""}
                             {p.receiptNo && !p.voided &&
                               (user.role === "superadmin" ||
-                                user.role === "logistics" || user.role === "sales")  && (
+                                user.role === "logistics" || user.role === "sales" || user.role === "saleshead")  && (
                                 <button
                                   type="button"
                                   className="ml-2 font-medium text-brand-600 hover:text-brand-700"
@@ -780,6 +997,50 @@ export default function FulfillmentEditor({
                           </PrimaryButton>
                         </div>
                       )}
+
+                    {o.billBhuktani && o.billBhuktani.length > 0 && (
+                      <div className="mt-2 border-t border-slate-200 pt-2">
+                        <Label>Bill bhuktani letters</Label>
+                        <ul className="mt-1 space-y-1">
+                          {o.billBhuktani.map((r) => (
+                            <li
+                              key={r.id}
+                              className="flex flex-wrap items-center gap-2 text-xs"
+                            >
+                              <span
+                                className={`rounded-full px-2 py-0.5 font-semibold ring-1 ring-inset ${
+                                  r.status === "sent"
+                                    ? "bg-emerald-50 text-emerald-700 ring-emerald-600/20"
+                                    : "bg-red-50 text-red-700 ring-red-600/20"
+                                }`}
+                              >
+                                {r.status}
+                              </span>
+                              <span className="text-slate-700">
+                                बिल भुक्तानी निवेदन —{" "}
+                                {r.recipient.split("\n")[0]}
+                              </span>
+                              <span className="text-slate-400">
+                                to {r.sentTo} · by {r.sentBy} ·{" "}
+                                {formatDate(r.sentAt)}
+                              </span>
+                              <button
+                                type="button"
+                                className="rounded-lg border border-slate-200 bg-white px-2 py-0.5 font-medium text-slate-600 transition-colors hover:bg-slate-50"
+                                onClick={() =>
+                                  window.open(
+                                    `/api/admin/bill-bhuktani?id=${r.id}`,
+                                    "_blank"
+                                  )
+                                }
+                              >
+                                Print
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -924,6 +1185,110 @@ export default function FulfillmentEditor({
               >
                 Void bill
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {bhuktiTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+          <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
+            <h3 className="text-base font-semibold text-slate-900">
+              Bill bhuktani letter — Bill {bhuktiTarget.billNo} for{" "}
+              {bhuktiTarget.customerName}
+            </h3>
+            <p className="mt-1 text-xs text-slate-500">
+              बिल भुक्तानी निवेदन — formal Nepali letter requesting payment of
+              the issued bill. Date, subject, bill number, company name and
+              contact are filled automatically. Signature comes from your
+              profile; the bank account is selected below.
+            </p>
+
+            <div className="mt-4 space-y-4">
+              <div>
+                <Label>Bank account</Label>
+                <select
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
+                  value={bhuktiBankSel}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setBhuktiBankSel(value);
+                    const opt = bankOptions.find((o) => o.value === value);
+                    setBhuktiBank({
+                      accountName: opt?.bank.accountName ?? "",
+                      accountNumber: opt?.bank.accountNumber ?? "",
+                      bankName: opt?.bank.bankName ?? "",
+                      branch: opt?.bank.branch ?? "",
+                    });
+                  }}
+                >
+                  <option value="-1" disabled>
+                    — Select bank account —
+                  </option>
+                  {bankOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.bank.bankName} — {opt.bank.accountNumber}
+                      {opt.bank.branch ? ` (${opt.bank.branch})` : ""}
+                      {opt.bank.accountName ? ` · ${opt.bank.accountName}` : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <Textarea
+                  label="Recipient (श्री, …)"
+                  rows={4}
+                  value={bhuktiRecipient}
+                  onChange={(e) => setBhuktiRecipient(e.target.value)}
+                  placeholder={"नेपाल सरकार\n… विभाग\nकाठमाडौँ, नेपाल ।"}
+                />
+              </div>
+
+              <div>
+                <Input
+                  label="Date (मिति)"
+                  value={bhuktiDate}
+                  onChange={(e) => setBhuktiDate(e.target.value)}
+                  placeholder="Auto-filled with today's B.S. date"
+                />
+              </div>
+
+              <div>
+                <Textarea
+                  label="Letter body (निवेदन)"
+                  rows={8}
+                  value={bhuktiBody}
+                  onChange={(e) => setBhuktiBody(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {bhuktiStatus && (
+              <p className="mt-3 text-sm text-slate-600">{bhuktiStatus}</p>
+            )}
+            <div className="mt-4 flex justify-end gap-2">
+              <GhostButton
+                type="button"
+                onClick={() => setBhuktiTarget(null)}
+                disabled={bhuktiSending}
+              >
+                Cancel
+              </GhostButton>
+              <GhostButton
+                type="button"
+                onClick={previewBillBhuktani}
+                disabled={bhuktiSending}
+              >
+                Preview / Print
+              </GhostButton>
+              <PrimaryButton
+                type="button"
+                onClick={sendBillBhuktani}
+                disabled={bhuktiSending}
+              >
+                {bhuktiSending ? "Sending…" : "Send as email"}
+              </PrimaryButton>
             </div>
           </div>
         </div>

@@ -12,7 +12,7 @@ import { stampDataUrl } from "@/lib/stamp";
 
 export const dynamic = "force-dynamic";
 
-const ALLOWED_ROLES: AdminRole[] = ["superadmin", "sales", "logistics"];
+const ALLOWED_ROLES: AdminRole[] = ["superadmin", "sales", "saleshead", "logistics"];
 
 interface SiteInfo {
   name?: string;
