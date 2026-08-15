@@ -4,7 +4,7 @@
     "categoryId": "software",
     "icon": "building",
     "title": "Hospital Management Systems",
-    "description": "End-to-end hospital management software covering patient registration, OPD/IPD workflows, billing, pharmacy, and laboratory integration.",
+    "description": "End-to-end hospital management software covering patient registration, OPD/IPD workflows, billing, pharmacy, and laboratory integration — our flagship product line, built on a foundation that adapts to any clinical or enterprise setting.",
     "order": 1
   },
   {
@@ -20,7 +20,7 @@
     "categoryId": "software",
     "icon": "code",
     "title": "Custom Healthcare Software",
-    "description": "Bespoke web and desktop applications built for hospitals and healthcare providers — tailored to your clinical, administrative and operational workflows.",
+    "description": "Bespoke web and desktop applications built for hospitals, clinics and healthcare providers — plus custom platforms for organisations in every industry — tailored to your clinical, administrative and operational workflows.",
     "order": 3
   },
   {
@@ -28,7 +28,7 @@
     "categoryId": "software",
     "icon": "mobile",
     "title": "Mobile Health Applications",
-    "description": "Patient-facing and provider-facing mobile apps for appointment booking, teleconsultation, medication reminders, and health tracking.",
+    "description": "Patient-facing and provider-facing mobile apps for appointment booking, teleconsultation, medication reminders, and health tracking — with the same mobile-first craftsmanship applied to apps for any industry.",
     "order": 4
   },
   {
@@ -67,8 +67,8 @@
     "id": "data-security",
     "categoryId": "cybersecurity",
     "icon": "shield",
-    "title": "Health & Enterprise Data Security",
-    "description": "Comprehensive security audits, encrypted storage, role-based access controls, and compliance reviews to protect sensitive data.",
+    "title": "Enterprise & Healthcare Data Security",
+    "description": "Comprehensive security audits, encrypted storage, role-based access controls, and compliance reviews to protect sensitive data — from patient records to enterprise systems.",
     "order": 1
   },
   {
@@ -123,7 +123,7 @@
     "id": "analytics",
     "categoryId": "data",
     "icon": "chart",
-    "title": "Healthcare & Enterprise Analytics",
+    "title": "Enterprise & Healthcare Analytics",
     "description": "Interactive dashboards and reports that transform clinical, financial and operational data into actionable insights.",
     "order": 1
   },

@@ -1,6 +1,6 @@
 {
   "perks": [
-    { "id": "meaningful-work", "icon": "heart", "title": "Meaningful Work", "description": "Every line of code contributes to better patient outcomes across Nepal." },
+    { "id": "meaningful-work", "icon": "heart", "title": "Meaningful Work", "description": "Every line of code contributes to better patient outcomes — and stronger organisations across every industry in Nepal." },
     { "id": "continuous-learning", "icon": "book", "title": "Continuous Learning", "description": "Regular training, knowledge-sharing sessions, and career development opportunities." },
     { "id": "great-team", "icon": "users", "title": "Great Team", "description": "Collaborative environment where your ideas are heard and celebrated." },
     { "id": "work-life-balance", "icon": "balance", "title": "Work-Life Balance", "description": "Flexible schedules, generous leave, and a culture that respects your time." }

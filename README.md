@@ -56,6 +56,7 @@ site immediately.
 | -------- | ------- |
 | `ADMIN_SECRET` | Signs admin sessions (REQUIRED — the app refuses to boot without it in production) and encrypts per-admin SMTP passwords |
 | `CRON_SECRET` | Protects `/api/admin/overdue/auto` (Bearer token) for the daily overdue cron |
+| `TRUST_PROXY` | Set to `1` only when behind a trusted reverse proxy that rewrites `X-Forwarded-For`. Otherwise client-supplied IP headers are ignored to prevent rate-limit spoofing |
 | `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` | Sends public order/quote/support notifications |
 | `SUPPORT_TO` / `QUOTES_TO` | Fallback recipients for tickets and order/quote requests |
 

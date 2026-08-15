@@ -20,11 +20,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "TechBucket | IT Services & Software Solutions in Nepal",
+    default: "TechBucket | Full-Stack IT Services & Software in Nepal",
     template: "%s — TechBucket",
   },
   description:
-    "TechBucket is a Nepal-based software and IT company delivering custom software development, cybersecurity, networking, cloud & data centre, managed IT and IT consulting solutions to healthcare, education, finance and enterprises across Nepal since 2019.",
+    "TechBucket is a Nepal-based full-stack IT company delivering custom software, cybersecurity, networking, cloud & data centre, analytics, IT consulting, managed IT and infrastructure products — with healthcare as our flagship vertical — across Nepal since 2019.",
   keywords: [
     "IT services Nepal",
     "software development Nepal",
@@ -35,6 +35,7 @@ export const metadata: Metadata = {
     "managed IT services Nepal",
     "TechBucket",
     "health software Nepal",
+    "full-stack IT company Nepal",
     "IT company Kathmandu",
   ],
   alternates: {
@@ -45,9 +46,9 @@ export const metadata: Metadata = {
     follow: true,
   },
   openGraph: {
-    title: "TechBucket | IT Services & Software Solutions in Nepal",
+    title: "TechBucket | Full-Stack IT Services & Software in Nepal",
     description:
-      "Custom software, cybersecurity, networking, cloud and managed IT services for healthcare, education, finance and enterprises in Nepal since 2019.",
+      "Custom software, cybersecurity, networking, cloud and managed IT services — with healthcare as our flagship vertical — for every industry in Nepal since 2019.",
     url: siteUrl,
     siteName,
     locale: "en_US",
@@ -55,9 +56,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "TechBucket | IT Services & Software Solutions in Nepal",
+    title: "TechBucket | Full-Stack IT Services & Software in Nepal",
     description:
-      "Custom software, cybersecurity, networking, cloud and managed IT services in Nepal.",
+      "Custom software, cybersecurity, networking, cloud and managed IT services in Nepal, with healthcare at the core.",
   },
 };
 

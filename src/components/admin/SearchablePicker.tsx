@@ -75,7 +75,7 @@ export default function SearchablePicker({
       {open && (
         <ul
           role="listbox"
-          className="absolute z-50 mt-1 max-h-64 w-64 overflow-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg"
+          className="absolute left-0 z-50 mt-1 max-h-64 w-full min-w-52 overflow-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg"
         >
           {filtered.length === 0 ? (
             <li className="px-3 py-2 text-sm text-slate-400">No matches</li>

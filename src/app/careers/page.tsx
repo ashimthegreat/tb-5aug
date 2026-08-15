@@ -8,7 +8,7 @@ import { Icon } from "@/components/icons";
 export const metadata: Metadata = {
   title: "Careers",
   description:
-    "Join TechBucket and help build the future of healthcare IT in Nepal. We're looking for passionate people who want to use technology to improve healthcare.",
+    "Join TechBucket and help build the future of technology in Nepal — with healthcare as our flagship mission. We're looking for passionate people who want to use technology to make a difference.",
 };
 
 export default async function CareersPage() {
@@ -18,8 +18,8 @@ export default async function CareersPage() {
     <>
       <PageHeader
         eyebrow="Join Our Team"
-        title="Build the Future of Healthcare IT"
-        description="We're looking for passionate people who want to use technology to improve healthcare in Nepal. Come work on problems that matter."
+        title="Build the Future of Technology — Healthcare at the Core"
+        description="We're looking for passionate people who want to use technology to improve healthcare and strengthen organisations across Nepal. Come work on problems that matter."
         breadcrumb="Careers"
       />
       <section className="bg-white py-16 sm:py-20">
@@ -28,17 +28,23 @@ export default async function CareersPage() {
             {careers.perks.map((perk) => (
               <div
                 key={perk.id}
-                className="flex h-full flex-col rounded-2xl border border-slate-100 bg-white p-6 shadow-sm"
+                className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white p-6 shadow-sm transition-shadow duration-300 hover:border-brand-200 hover:shadow-xl hover:shadow-brand-200/50"
               >
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
-                  <Icon name={perk.icon} className="h-6 w-6" />
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(240,96,32,0.18),transparent_60%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                />
+                <div className="relative">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
+                    <Icon name={perk.icon} className="h-6 w-6" />
+                  </div>
+                  <h3 className="mt-5 text-lg font-semibold text-ink">
+                    {perk.title}
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                    {perk.description}
+                  </p>
                 </div>
-                <h3 className="mt-5 text-lg font-semibold text-ink">
-                  {perk.title}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                  {perk.description}
-                </p>
               </div>
             ))}
           </div>

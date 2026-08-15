@@ -17,6 +17,7 @@ import {
 } from "@/lib/validation";
 import { clientIp, isRateLimited } from "@/lib/rateLimit";
 import { findCustomer, listCustomers } from "@/lib/customers";
+import { resolveCatalogPrice } from "@/lib/pricing";
 
 function esc(text: string): string {
   return text
@@ -104,10 +105,12 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+    const clientPrice = clampNumber(row.price, 0, 0, MAX_PRICE);
+    const price = await resolveCatalogPrice(itemName, clientPrice);
     items.push({
       name: itemName.slice(0, MAX_DESCRIPTION),
       qty: clampInt(row.qty, 1, 1, MAX_QTY),
-      price: clampNumber(row.price, 0, 0, MAX_PRICE),
+      price,
       total: 0,
     });
   }

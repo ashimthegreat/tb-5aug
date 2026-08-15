@@ -7,7 +7,7 @@ import CTABanner from "@/components/CTABanner";
 export const metadata: Metadata = {
   title: "Our Partners",
   description:
-    "We collaborate with leading organisations to deliver the best technology and services for healthcare in Nepal — hospitals, medical colleges and government institutions.",
+    "We collaborate with leading organisations to deliver the best technology and services in Nepal — hospitals, medical colleges, government institutions, businesses and NGOs.",
 };
 
 export default async function PartnersPage() {
@@ -18,7 +18,7 @@ export default async function PartnersPage() {
       <PageHeader
         eyebrow="Our Partners"
         title="Built on Trusted Partnerships"
-        description="We collaborate with leading organisations to deliver the best technology and services for healthcare in Nepal."
+        description="We collaborate with leading organisations to deliver the best technology and services in Nepal — with healthcare at the heart of our partnerships."
         breadcrumb="Partners"
       />
       <section className="bg-white py-16 sm:py-20">
@@ -32,7 +32,7 @@ export default async function PartnersPage() {
       </section>
       <CTABanner
         title="Become a Partner"
-        description="Let's work together to bring better healthcare technology to Nepal. We welcome partnerships with hospitals, clinics, tech companies, and NGOs."
+        description="Let's work together to bring better technology to Nepal — in healthcare and beyond. We welcome hospitals, clinics, businesses, tech companies and NGOs."
         cta="Let's Talk"
       />
     </>

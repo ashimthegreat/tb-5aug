@@ -72,6 +72,7 @@ export async function PUT(req: NextRequest) {
     next.passwordHash = hash;
     next.salt = salt;
     next.passwordChangedAt = new Date().toISOString();
+    next.mustChangePassword = false;
   }
 
   users[idx] = next;

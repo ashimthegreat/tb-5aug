@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
-import { isAuthed } from "@/lib/admin";
+import { hasRole } from "@/lib/admin";
 
 const ALLOWED_EXT = new Set([".png", ".jpg", ".jpeg", ".gif", ".webp"]);
 const MAX_BYTES = 2 * 1024 * 1024;
@@ -23,7 +23,7 @@ function sniffImage(buf: Buffer, ext: string): boolean {
 }
 
 export async function POST(req: NextRequest) {
-  if (!(await isAuthed())) {
+  if (!(await hasRole("superadmin", "content", "saleshead", "sales"))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const form = await req.formData();

@@ -29,10 +29,20 @@ export function isRateLimited(key: string, max: number, windowMs: number): boole
 }
 
 export function clientIp(req: Request): string {
+  // Only trust X-Forwarded-For / X-Real-IP when the app runs behind a trusted
+  // reverse proxy (cPanel Apache/nginx). Otherwise these headers are
+  // client-controlled and can be spoofed to bypass rate limits.
+  if (process.env.TRUST_PROXY !== "1") {
+    return "unknown";
+  }
   const fwd = req.headers.get("x-forwarded-for");
   if (fwd) {
-    const first = fwd.split(",")[0]?.trim();
-    if (first) return first;
+    const parts = fwd
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const last = parts[parts.length - 1];
+    if (last) return last;
   }
   return req.headers.get("x-real-ip")?.trim() || "unknown";
 }

@@ -12,7 +12,7 @@
     "name": "Aruba",
     "logo": "/images/brands/aruba.jpg",
     "url": "https://www.hpe.com/emea_europe/en/networking/hpe-aruba-networking.html",
-    "blurb": "Secure, AI-powered networking infrastructure for modern hospitals.",
+    "blurb": "Secure, AI-powered networking infrastructure for hospitals and modern enterprises.",
     "order": 2
   },
   {
@@ -44,14 +44,14 @@
     "name": "Accops",
     "logo": "/images/brands/accops.png",
     "url": "https://www.accops.com/",
-    "blurb": "Virtual desktops and secure remote access for healthcare teams.",
+    "blurb": "Virtual desktops and secure remote access for healthcare teams and enterprises.",
     "order": 6
   },
   {
     "id": "synology",
     "name": "Synology",
     "url": "https://www.synology.com/",
-    "blurb": "Network-attached storage and backup for businesses and clinics.",
+    "blurb": "Network-attached storage and backup for businesses, clinics and enterprises.",
     "order": 7
   },
   {

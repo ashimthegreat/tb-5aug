@@ -1,0 +1,42 @@
+# TechBucket — Apache (cPanel) security rules for the Node.js app.
+# Place at the web root (where the cPanel docroot points) so these paths are
+# never served statically. Sensitive runtime data lives in /content and must
+# only be reachable through the authenticated API, never via direct URLs.
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Block direct access to content/ (password hashes, encrypted SMTP secrets,
+  # customer/order/ticket PII) — the app serves it via authed API only.
+  RewriteRule ^content(/|$) - [F,L]
+
+  # Block dotfiles and secrets.
+  RewriteRule (^|/)\.(?!well-known).* - [F,L]
+  RewriteRule ^\.env(\.local|\.production)?$ - [F,L]
+  RewriteRule ^\.env\.example$ - [F,L]
+
+  # Block private server / source files.
+  RewriteRule ^server\.js$ - [F,L]
+  RewriteRule ^next\.config\.(js|ts)$ - [F,L]
+  RewriteRule ^package-lock\.json$ - [F,L]
+  RewriteRule ^(tsconfig|next-env|postcss|eslint|next)\.(json|mjs|ts|d\.ts)$ - [F,L]
+  RewriteRule ^process-flow\.mmd$ - [F,L]
+
+  # Never serve .next build internals or source maps.
+  RewriteRule ^\.next/.*\.map$ - [F,L]
+</IfModule>
+
+# Deny directory listings everywhere.
+<IfModule mod_autoindex.c>
+  Options -Indexes
+</IfModule>
+
+# Uploaded files are images only; never execute scripts that could be uploaded.
+<FilesMatch "\.(php|phar|phtml|pl|py|cgi|sh|asp|jsp|htaccess)$">
+  Require all denied
+</FilesMatch>
+
+# Never expose backup/editor files.
+<FilesMatch "\.(map|bak|old|orig|swp|~)$">
+  Require all denied
+</FilesMatch>

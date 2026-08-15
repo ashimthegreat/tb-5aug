@@ -11,7 +11,7 @@ export default function CartView() {
 
   if (items.length === 0) {
     return (
-      <div className="rounded-3xl border border-dashed border-slate-200 bg-white p-16 text-center">
+      <div className="rounded-3xl border border-dashed border-slate-200 bg-white p-8 text-center sm:p-16">
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-50 text-brand-700">
           <Icon name="cart" className="h-8 w-8" />
         </div>

@@ -17,14 +17,14 @@ import Image from "next/image";
 import Link from "next/link";
 
 export const metadata = {
-  title: "TechBucket | Hospital Software & IT Infrastructure Products in Nepal",
+  title: "TechBucket | Full-Stack IT Services & Software in Nepal",
   description:
-    "TechBucket delivers hospital management software for healthcare providers and genuine IT infrastructure products — servers, networking, storage, VDI and power — to every industry across Nepal since 2019.",
+    "TechBucket is a Nepal-based full-stack IT company delivering custom software, cybersecurity, networking, cloud, data, managed IT and genuine infrastructure products — with healthcare as our flagship vertical — across Nepal since 2019.",
   alternates: { canonical: "/" },
   openGraph: {
-    title: "TechBucket | Hospital Software & IT Infrastructure Products in Nepal",
+    title: "TechBucket | Full-Stack IT Services & Software in Nepal",
     description:
-      "Hospital software for healthcare and IT infrastructure products for every industry in Nepal since 2019.",
+      "Full-stack IT services for every industry — with healthcare at the core — plus genuine infrastructure products in Nepal since 2019.",
   },
 };
 
@@ -245,23 +245,35 @@ function About({ site }: { site: Awaited<ReturnType<typeof getSite>> }) {
         </div>
 
         <div className="reveal grid gap-5 sm:grid-cols-2" style={{ animationDelay: "0.1s" }}>
-          <div className="rounded-3xl bg-gradient-to-br from-brand-700 to-slate-900 p-7 text-white shadow-xl">
-            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15">
-              <Icon name="spark" className="h-6 w-6" />
-            </span>
-            <h3 className="mt-5 text-lg font-bold">{site.mission.title}</h3>
-            <p className="mt-3 text-sm leading-relaxed text-brand-100">
-              {site.mission.body}
-            </p>
+          <div className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-700 to-slate-900 p-7 text-white shadow-xl transition-shadow duration-300 hover:shadow-2xl hover:shadow-brand-700/40">
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(255,179,138,0.5),transparent_60%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+            />
+            <div className="relative">
+              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15">
+                <Icon name="spark" className="h-6 w-6" />
+              </span>
+              <h3 className="mt-5 text-lg font-bold">{site.mission.title}</h3>
+              <p className="mt-3 text-sm leading-relaxed text-brand-100">
+                {site.mission.body}
+              </p>
+            </div>
           </div>
-          <div className="rounded-3xl border border-slate-100 bg-gradient-to-br from-brand-50 to-white p-7 shadow-sm">
-            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-brand-700 shadow-sm">
-              <Icon name="globe" className="h-6 w-6" />
-            </span>
-            <h3 className="mt-5 text-lg font-bold text-ink">{site.vision.title}</h3>
-            <p className="mt-3 text-sm leading-relaxed text-slate-600">
-              {site.vision.body}
-            </p>
+          <div className="group relative overflow-hidden rounded-3xl border border-slate-100 bg-gradient-to-br from-brand-50 to-white p-7 shadow-sm transition-shadow duration-300 hover:border-brand-200 hover:shadow-xl hover:shadow-brand-200/50">
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(240,96,32,0.18),transparent_60%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+            />
+            <div className="relative">
+              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-brand-700 shadow-sm">
+                <Icon name="globe" className="h-6 w-6" />
+              </span>
+              <h3 className="mt-5 text-lg font-bold text-ink">{site.vision.title}</h3>
+              <p className="mt-3 text-sm leading-relaxed text-slate-600">
+                {site.vision.body}
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -289,7 +301,7 @@ function Stats({
               <p className="animate-gradient bg-gradient-to-r from-brand-400 via-brand-300 to-brand-400 bg-clip-text text-5xl font-bold text-transparent sm:text-6xl">
                 {stat.value}
               </p>
-              <p className="mt-3 text-sm font-medium uppercase tracking-widest text-slate-400">
+              <p className="mt-3 text-sm font-medium uppercase tracking-wide text-slate-400 sm:tracking-widest">
                 {stat.label}
               </p>
             </div>
@@ -402,7 +414,7 @@ function Industries({
         <SectionHeading
           eyebrow="Industries"
           title="Built for Your Industry"
-          description="Hospital software for healthcare and genuine IT infrastructure products for every industry — serviced end-to-end by TechBucket."
+          description="Full-stack IT services for every industry — with healthcare as our flagship vertical — serviced end-to-end by TechBucket."
         />
         <div className="mt-14 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {industries.map((industry) => {

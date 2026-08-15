@@ -18,7 +18,23 @@ export async function GET() {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
   const users = await getUsers();
-  return NextResponse.json({ data: users });
+  const redacted = users.map((u) => ({
+    id: u.id,
+    name: u.name,
+    username: u.username,
+    role: u.role,
+    active: u.active,
+    createdAt: u.createdAt,
+    email: u.email,
+    smtpHost: u.smtpHost,
+    smtpPort: u.smtpPort,
+    passwordChangedAt: u.passwordChangedAt,
+    mustChangePassword: u.mustChangePassword,
+    signatory: u.signatory,
+    designation: u.designation,
+    signature: u.signature,
+  }));
+  return NextResponse.json({ data: redacted });
 }
 
 export async function PUT(req: NextRequest) {

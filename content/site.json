@@ -2,17 +2,17 @@
   "name": "TechBucket",
   "signatory": "रञ्जन दाहाल",
   "url": "https://techbucket.com.np",
-  "tagline": "A Nepal-based company delivering hospital software and IT infrastructure products since 2019.",
+  "tagline": "A Nepal-based full-stack IT company delivering software, cybersecurity, networking, cloud, data and managed services — with healthcare as our flagship vertical — since 2019.",
   "hero": {
     "eyebrow": "Trusted technology partner since 2019",
     "title": "Technology That Moves Your Business Forward",
-    "subtitle": "We build hospital management software for healthcare providers, and supply genuine IT infrastructure products to every industry across Nepal — from education, finance and hospitality to manufacturing and retail. Trusted by organisations across the Kathmandu Valley and beyond."
+    "subtitle": "We are a full-stack IT company: custom software, cybersecurity, networking, cloud and data, consulting, managed IT and genuine infrastructure products — delivered end-to-end for every industry across Nepal. Healthcare is our flagship vertical, where we build purpose-built hospital software and clinical solutions trusted by providers across the Kathmandu Valley and beyond."
   },
   "about": {
-    "title": "Hospital Software, Infrastructure for Everyone",
+    "title": "Full-Stack IT Services, Healthcare at the Core",
     "paragraphs": [
-      "TechBucket Pvt. Ltd. is a Nepal-based software and IT company. We design, build, and maintain hospital management software that improves patient outcomes and streamlines clinical workflows — and we supply genuine IT hardware products to organisations in every industry.",
-      "Founded in 2019, we started in healthcare IT and grew into infrastructure — providing hospitals with purpose-built software and supplying servers, networking, storage and power protection across Nepal."
+      "TechBucket Pvt. Ltd. is a Nepal-based full-stack IT company. We design, build, and maintain software, secure networks, cloud and data platforms, and managed services that move organisations forward — with healthcare at the heart of what we do, from hospital management software that improves patient outcomes to clinical workflows that keep providers focused on care.",
+      "Founded in 2019, we started in healthcare IT and grew into a complete technology partner — delivering purpose-built software for hospitals while supplying servers, networking, storage and power protection, and serving education, finance, hospitality, manufacturing and retail across Nepal."
     ]
   },
   "stats": [
@@ -23,24 +23,24 @@
   ],
   "mission": {
     "title": "Our Mission",
-    "body": "To democratise healthcare technology in Nepal by delivering affordable, scalable and reliable digital solutions that empower healthcare providers to focus on what matters most — patient care. We believe every clinic, from Kathmandu to the remote hills, deserves world-class software."
+    "body": "To democratise technology for every organisation in Nepal — starting with healthcare — by delivering affordable, scalable and reliable digital solutions that let our clients focus on what matters most. From the hospital ward to the factory floor, we believe every organisation, from Kathmandu to the remote hills, deserves world-class technology."
   },
   "vision": {
     "title": "Our Vision",
-    "body": "To be the most trusted healthcare technology partner in South Asia — building a future where every healthcare worker has access to digital tools that are as powerful as they are intuitive, enabling Nepal's healthcare system to reach its full potential."
+    "body": "To be the most trusted full-stack technology partner in South Asia — building a future where every healthcare worker, business and public institution has access to digital tools that are as powerful as they are intuitive, helping Nepal's healthcare system and economy reach their full potential."
   },
   "values": [
     {
       "title": "Innovation",
-      "body": "We push the boundaries of healthcare technology with creative solutions that solve real-world clinical challenges."
+      "body": "We push the boundaries of technology with creative solutions that solve real-world challenges — beginning with the hardest problems in healthcare."
     },
     {
       "title": "Reliability",
-      "body": "Healthcare never sleeps. Our systems are built for 99.9% uptime with rock-solid infrastructure and redundancy."
+      "body": "Critical systems never sleep. From hospital operations to enterprise infrastructure, our systems are built for 99.9% uptime with rock-solid infrastructure and redundancy."
     },
     {
       "title": "Compassion",
-      "body": "Every line of code we write is in service of better patient outcomes and a healthier Nepal."
+      "body": "Every line of code we write is in service of the people and organisations we support — starting with better patient outcomes and a healthier Nepal."
     }
   ],
   "contact": {
@@ -52,7 +52,7 @@
     "address": "Kathmandu, Balaju-16, Bagmati Province, Nepal",
     "vatNo": "609605497",
     "heading": "Let's Build Something Great Together",
-    "subheading": "Looking to build better software for your healthcare organisation or need IT infrastructure products? Write to us and our team will respond within 24 hours."
+    "subheading": "Looking to build better software, secure your network, move to the cloud or supply IT infrastructure — with a special focus on healthcare? Write to us and our team will respond within 24 hours."
   },
   "bank": {
     "accountName": "Tech Bucket PVT. LTD",
@@ -61,6 +61,6 @@
     "branch": "Gyaneshwor"
   },
   "footer": {
-    "blurb": "Hospital software and IT infrastructure products for Nepal since 2019."
+    "blurb": "Full-stack IT services and infrastructure products for Nepal since 2019 — with healthcare at the core."
   }
 }

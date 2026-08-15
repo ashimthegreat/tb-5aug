@@ -3,7 +3,7 @@
     "id": "healthcare",
     "name": "Healthcare",
     "icon": "hospital",
-    "description": "Purpose-built software for hospitals, clinics, labs and health startups — from clinical workflows to patient-facing apps.",
+    "description": "Our flagship vertical. Purpose-built software for hospitals, clinics, labs and health startups — from clinical workflows and patient-facing apps to secure networks, cloud and managed IT for healthcare providers.",
     "services": ["hms", "lis", "mobile-health", "custom-software"],
     "order": 1
   },

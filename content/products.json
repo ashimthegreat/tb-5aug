@@ -62,7 +62,7 @@
     "stock": "on-order",
     "purchaseType": "quote",
     "summary": "2U flagship rack server for critical, high-scale workloads.",
-    "description": "The Dell PowerEdge R750 is our flagship 2U rack server, built for the most demanding enterprise applications. With support for up to 32 drives and the latest PCIe Gen4 connectivity, it delivers exceptional performance for mission-critical hospital information systems and large-scale virtualisation.",
+    "description": "The Dell PowerEdge R750 is our flagship 2U rack server, built for the most demanding enterprise applications. With support for up to 32 drives and the latest PCIe Gen4 connectivity, it delivers exceptional performance for mission-critical applications — from hospital information systems to large-scale virtualisation.",
     "specs": [
       {
         "label": "Form factor",
@@ -110,7 +110,7 @@
     "stock": "in-stock",
     "purchaseType": "purchase",
     "summary": "Tower server for small hospitals, clinics and branch offices.",
-    "description": "The Dell PowerEdge T350 is a quiet, compact tower server ideal for small hospitals, clinics and branch offices. It delivers dependable performance for file services, backups, ERP and clinic management systems without needing a dedicated server room.",
+    "description": "The Dell PowerEdge T350 is a quiet, compact tower server ideal for small hospitals, clinics and branch offices. It delivers dependable performance for file services, backups, ERP and clinic management systems — no dedicated server room required.",
     "specs": [
       {
         "label": "Form factor",
@@ -157,8 +157,8 @@
     "currency": "NPR",
     "stock": "in-stock",
     "purchaseType": "purchase",
-    "summary": "Wi-Fi 6 access point for fast, reliable hospital connectivity.",
-    "description": "The Aruba Instant On AP22 delivers fast, secure Wi-Fi 6 connectivity for hospitals and clinics. Managed through the simple Aruba Instant On mobile app, it provides seamless roaming for clinicians, patients and guests across your facility.",
+    "summary": "Wi-Fi 6 access point for fast, reliable enterprise connectivity.",
+    "description": "The Aruba Instant On AP22 delivers fast, secure Wi-Fi 6 connectivity for hospitals, clinics and enterprises. Managed through the simple Aruba Instant On mobile app, it provides seamless roaming for staff, patients and guests across your facility.",
     "specs": [
       {
         "label": "Type",
@@ -201,7 +201,7 @@
     "currency": "NPR",
     "stock": "in-stock",
     "purchaseType": "purchase",
-    "summary": "48-port Gigabit switch for campus and hospital networks.",
+    "summary": "48-port Gigabit switch for campus and enterprise networks.",
     "description": "The Aruba 2930F switch series provides reliable Gigabit connectivity for hospital floors, campuses and enterprise networks. With advanced security features and simple cloud management, it keeps your entire network fast and secure.",
     "specs": [
       {
@@ -245,7 +245,7 @@
     "currency": "NPR",
     "stock": "in-stock",
     "purchaseType": "purchase",
-    "summary": "Wall-plate Wi-Fi access point for clinics and small offices.",
+    "summary": "Wall-plate Wi-Fi access point for clinics, offices and branches.",
     "description": "The Aruba Instant On AP11D is a wall-plate access point that turns any wall outlet into a high-speed Wi-Fi hotspot. Perfect for clinics, reception areas and small offices where space is at a premium.",
     "specs": [
       {
@@ -377,8 +377,8 @@
     "currency": "NPR",
     "stock": "in-stock",
     "purchaseType": "purchase",
-    "summary": "6-bay NAS for backups, file shares and small clinic storage.",
-    "description": "The Synology DiskStation DS1621+ is a powerful 6-bay NAS that centralises file storage, backups and surveillance for clinics and small-to-medium businesses. Its compact design and Synology DSM software make enterprise features easy to manage.",
+    "summary": "6-bay NAS for backups, file shares and small office storage.",
+    "description": "The Synology DiskStation DS1621+ is a powerful 6-bay NAS that centralises file storage, backups and surveillance for clinics, small offices and growing businesses. Its compact design and Synology DSM software make enterprise features easy to manage.",
     "specs": [
       {
         "label": "Bays",
@@ -422,7 +422,7 @@
     "stock": "in-stock",
     "purchaseType": "quote",
     "summary": "Complete virtual desktop infrastructure (VDI) platform.",
-    "description": "Accops HyWorks is a turnkey VDI solution that delivers virtual desktops and applications to any device. Ideal for hospitals where clinicians need secure access to patient records from anywhere — with centralised management and BYOD support.",
+    "description": "Accops HyWorks is a turnkey VDI solution that delivers virtual desktops and applications to any device. Ideal for hospitals where clinicians need secure access to patient records from anywhere, and for enterprises enabling secure remote work — with centralised management and BYOD support.",
     "specs": [
       {
         "label": "Deployment",
@@ -466,7 +466,7 @@
     "stock": "in-stock",
     "purchaseType": "both",
     "summary": "Secure remote access gateway for telemedicine and remote work.",
-    "description": "Accops HySecure is a secure access gateway that provides encrypted remote access to hospital and enterprise applications. Enables secure telemedicine, remote clinicians and work-from-home without VPN complexity.",
+    "description": "Accops HySecure is a secure access gateway that provides encrypted remote access to hospital and enterprise applications — enabling secure telemedicine, remote work and branch access without VPN complexity.",
     "specs": [
       {
         "label": "Access",
@@ -510,7 +510,7 @@
     "stock": "in-stock",
     "purchaseType": "purchase",
     "summary": "Powerful thin client for VDI and virtual desktop deployments.",
-    "description": "The HP Thin Client t640 provides a secure, low-power endpoint for VDI environments. With support for multiple monitors and a fanless design, it is perfect for hospital workstations where reliability and quiet operation matter.",
+    "description": "The HP Thin Client t640 provides a secure, low-power endpoint for VDI environments. With support for multiple monitors and a fanless design, it is perfect for hospital workstations and office deployments where reliability and quiet operation matter.",
     "specs": [
       {
         "label": "CPU",
@@ -553,7 +553,7 @@
     "currency": "NPR",
     "stock": "in-stock",
     "purchaseType": "purchase",
-    "summary": "Rack/tower online UPS for critical hospital IT.",
+    "summary": "Rack/tower online UPS for critical IT and hospital environments.",
     "description": "The APC Smart-UPS SRT2200 is an online, double-conversion UPS that protects critical IT equipment from power disturbances. With pure sine wave output and hot-swappable batteries, it keeps servers and network gear running through outages.",
     "specs": [
       {
@@ -729,8 +729,8 @@
     "currency": "NPR",
     "stock": "in-stock",
     "purchaseType": "purchase",
-    "summary": "Durable USB keyboard for everyday hospital and office use.",
-    "description": "The Dell KB216 is a full-size, spill-resistant USB keyboard built for everyday use. Quiet keys and a durable design make it a dependable choice for hospitals, reception desks and offices.",
+    "summary": "Durable USB keyboard for everyday office and hospital use.",
+    "description": "The Dell KB216 is a full-size, spill-resistant USB keyboard built for everyday use. Quiet keys and a durable design make it a dependable choice for reception desks, hospitals and offices.",
     "specs": [
       {
         "label": "Layout",

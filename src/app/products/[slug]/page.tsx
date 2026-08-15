@@ -196,7 +196,7 @@ export default async function ProductDetailPage({
           {product.specs.length > 0 && (
             <div className="mt-14">
               <h2 className="text-2xl font-bold text-ink">Specifications</h2>
-              <div className="mt-6 overflow-hidden rounded-2xl border border-slate-100">
+              <div className="mt-6 overflow-x-auto rounded-2xl border border-slate-100">
                 <table className="w-full text-left text-sm">
                   <tbody>
                     {product.specs.map((spec, i) => (

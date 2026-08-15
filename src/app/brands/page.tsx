@@ -7,7 +7,7 @@ import CTABanner from "@/components/CTABanner";
 export const metadata: Metadata = {
   title: "Technology Partners",
   description:
-    "TechBucket partners with leading technology brands — Oracle Health, Aruba, Imprivata, Medisha, Dell and Accops — to deliver the best solutions for healthcare in Nepal.",
+    "TechBucket partners with leading technology brands — Oracle Health, Aruba, Imprivata, Medisha, Dell and Accops — to deliver the best solutions for every industry in Nepal, with healthcare at the core.",
 };
 
 export default async function BrandsPage() {
@@ -18,7 +18,7 @@ export default async function BrandsPage() {
       <PageHeader
         eyebrow="Technology Partners"
         title="Backed by the Best in the Industry"
-        description="We partner with leading technology brands to deliver world-class solutions — from enterprise health records to secure networking infrastructure."
+        description="We partner with leading technology brands to deliver world-class solutions — from enterprise health records and clinical software to secure networking, cloud and infrastructure."
         breadcrumb="Technology Partners"
       />
       <section className="bg-white py-16 sm:py-20">
@@ -32,7 +32,7 @@ export default async function BrandsPage() {
       </section>
       <CTABanner
         title="Interested in partnering with us?"
-        description="We're always open to new collaborations that advance healthcare technology."
+        description="We're always open to collaborations that advance technology — in healthcare and every industry we serve."
         cta="Get in Touch"
       />
     </>

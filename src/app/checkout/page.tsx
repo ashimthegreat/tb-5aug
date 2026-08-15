@@ -133,7 +133,7 @@ export default function CheckoutPage() {
         />
         <section className="bg-white py-16 sm:py-20">
           <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8">
-            <div className="rounded-3xl border border-emerald-200 bg-emerald-50 p-16 text-center">
+            <div className="rounded-3xl border border-emerald-200 bg-emerald-50 p-8 text-center sm:p-16">
               <p className="text-lg font-semibold text-emerald-800">
                 Your order request was submitted successfully.
               </p>
@@ -165,7 +165,7 @@ export default function CheckoutPage() {
         />
         <section className="bg-white py-16 sm:py-20">
           <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8">
-            <div className="rounded-3xl border border-dashed border-slate-200 p-16 text-center">
+            <div className="rounded-3xl border border-dashed border-slate-200 p-8 text-center sm:p-16">
               <p className="text-lg font-semibold text-ink">Your cart is empty</p>
               <Link
                 href="/products"

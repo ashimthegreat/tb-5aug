@@ -9,7 +9,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Industries",
   description:
-    "Hospital software for healthcare and genuine IT infrastructure products for every industry — education, finance, hospitality, manufacturing, retail and more. Built by TechBucket in Nepal.",
+    "Full-stack IT services for every industry — healthcare, education, finance, hospitality, manufacturing, retail and more — with healthcare as our flagship vertical. Built by TechBucket in Nepal.",
 };
 
 export default async function IndustriesPage() {
@@ -26,7 +26,7 @@ export default async function IndustriesPage() {
       <PageHeader
         eyebrow="Industries"
         title="Solutions by Industry"
-        description="Hospital management software for healthcare providers, and genuine IT infrastructure products for every other industry — delivered end-to-end by TechBucket."
+        description="Full-stack IT services for every industry — with healthcare as our flagship vertical — plus genuine IT infrastructure products, delivered end-to-end by TechBucket."
         breadcrumb="Industries"
       />
       <section className="bg-white py-16 sm:py-20">
@@ -76,7 +76,7 @@ export default async function IndustriesPage() {
       </section>
       <CTABanner
         title="Not sure what you need?"
-        description="Tell us your goals — our team will recommend the right hospital software or IT infrastructure products for your organisation."
+        description="Tell us your goals — our team will recommend the right software, IT services or infrastructure products for your organisation, with healthcare expertise at the ready."
         cta="Get in Touch"
       />
     </>

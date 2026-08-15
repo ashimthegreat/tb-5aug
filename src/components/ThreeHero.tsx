@@ -404,9 +404,9 @@ function Orbit({
 
 function GlowRing() {
   return (
-    <group position={[0, -1.35, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+    <group position={[0, -1.0, 0]} rotation={[-Math.PI / 2, 0, 0]}>
       <mesh>
-        <ringGeometry args={[1.35, 1.75, 48]} />
+        <ringGeometry args={[1.1, 1.5, 48]} />
         <meshBasicMaterial
           color={BRAND}
           transparent
@@ -415,11 +415,11 @@ function GlowRing() {
         />
       </mesh>
       <mesh>
-        <ringGeometry args={[1.75, 1.95, 48]} />
+        <ringGeometry args={[1.5, 1.68, 48]} />
         <meshBasicMaterial color={BRAND_SOFT} transparent opacity={0.12} side={2} />
       </mesh>
       <mesh position={[0, -0.02, 0]}>
-        <circleGeometry args={[1.2, 48]} />
+        <circleGeometry args={[1.05, 48]} />
         <meshBasicMaterial color={BRAND} transparent opacity={0.08} side={2} />
       </mesh>
     </group>
@@ -430,10 +430,13 @@ function Scene({ compact, reduced }: { compact: boolean; reduced: boolean }) {
   const group = useRef<Group>(null);
   const size = useThree((s) => s.size);
 
-  const orbitA = compact ? 1.28 : 1.7;
-  const orbitB = compact ? 1.72 : 2.15;
+  const orbitA = compact ? 1.1 : 1.4;
+  const orbitB = compact ? 1.45 : 1.7;
   const rackScale = compact ? 0.8 : 1;
   const sparkles = compact ? 12 : 36;
+  const halfW =
+    Math.tan(THREE.MathUtils.degToRad(40 / 2)) * (size.width / size.height) * 6.2;
+  const scale = Math.min(1, (halfW * 0.95) / (orbitB + 0.2));
 
   useFrame((state, delta) => {
     if (!group.current || reduced) return;
@@ -445,7 +448,7 @@ function Scene({ compact, reduced }: { compact: boolean; reduced: boolean }) {
   });
 
   return (
-    <group ref={group} scale={size.width < 360 ? 0.85 : 1}>
+    <group ref={group} scale={scale}>
       <Float speed={0.9} rotationIntensity={0.03} floatIntensity={0.25}>
         <Center scale={rackScale}>
           <ServerRack reduced={reduced} />
@@ -488,10 +491,10 @@ function Rig({ reduced }: { reduced: boolean }) {
     if (reduced) return;
     const target = state.pointer;
     state.camera.position.lerp(
-      { x: target.x * 0.35, y: 2.5 - target.y * 0.2, z: 6 - target.y * 0.05 },
+      { x: target.x * 0.35, y: 0.6 - target.y * 0.2, z: 6.2 - target.y * 0.05 },
       Math.min(1, delta * 2.5)
     );
-    state.camera.lookAt(0, 0.1, 0);
+    state.camera.lookAt(0, 0.2, 0);
   });
   return null;
 }
@@ -594,7 +597,7 @@ export default function ThreeHero() {
       <CanvasBoundary fallback={<FallbackArt />}>
         <Canvas
           dpr={small ? [1, 1] : [1, 1.5]}
-          camera={{ position: [0, 2.5, 6], fov: 38 }}
+          camera={{ position: [0, 0.6, 6.2], fov: 40 }}
           gl={{
             antialias: !small,
             alpha: true,

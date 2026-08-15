@@ -16,6 +16,7 @@ import {
 } from "@/lib/validation";
 import { clientIp, isRateLimited } from "@/lib/rateLimit";
 import { findCustomer, listCustomers } from "@/lib/customers";
+import { resolveCatalogPrice } from "@/lib/pricing";
 
 function esc(text: string): string {
   return text
@@ -86,7 +87,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Product is required." }, { status: 400 });
   }
 
-  const unitPrice = Number.isFinite(price) && price > 0 ? price : 0;
+  const unitPrice =
+    Number.isFinite(price) && price > 0
+      ? await resolveCatalogPrice(productName, price)
+      : 0;
   const item: OrderItem = {
     name: productName,
     qty,

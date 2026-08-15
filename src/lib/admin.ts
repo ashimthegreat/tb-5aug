@@ -3,6 +3,7 @@ import {
   createCipheriv,
   createDecipheriv,
   createHash,
+  createHmac,
   randomBytes,
   scryptSync,
   timingSafeEqual,
@@ -34,6 +35,7 @@ export interface AdminUser {
   smtpPort: number | null;
   smtpPassEnc: string;
   passwordChangedAt?: string;
+  mustChangePassword?: boolean;
   signatory?: string;
   designation?: string;
   signature?: string;
@@ -117,7 +119,12 @@ export async function verifyCredentials(
   password: string
 ): Promise<AdminUser | null> {
   const user = await findUser(username);
-  if (!user) return null;
+  if (!user) {
+    // Run a dummy hash so nonexistent users take the same time as real ones,
+    // preventing username enumeration via response timing.
+    hashPassword(password);
+    return null;
+  }
   if (!verifyPassword(password, user.salt, user.passwordHash)) return null;
   return user;
 }
@@ -126,8 +133,8 @@ const SESSION_TTL_MS = 60 * 60 * 24 * 7 * 1000;
 
 function sessionToken(username: string, passwordChangedAt: string): string {
   const issuedAt = Date.now().toString();
-  const sig = createHash("sha256")
-    .update(`${adminSecret()}:${username}:${issuedAt}:${passwordChangedAt}`)
+  const sig = createHmac("sha256", adminSecret())
+    .update(`${username}:${issuedAt}:${passwordChangedAt}`)
     .digest("hex");
   return `${username}:${issuedAt}:${sig}`;
 }
@@ -166,10 +173,8 @@ export async function getCurrentUser(): Promise<AdminUser | null> {
   if (Number.isNaN(age) || age < 0 || age > SESSION_TTL_MS) return null;
   const user = await findUser(username);
   if (!user) return null;
-  const expected = createHash("sha256")
-    .update(
-      `${adminSecret()}:${username}:${issuedAt}:${user.passwordChangedAt ?? ""}`
-    )
+  const expected = createHmac("sha256", adminSecret())
+    .update(`${username}:${issuedAt}:${user.passwordChangedAt ?? ""}`)
     .digest("hex");
   const a = Buffer.from(sig, "hex");
   const b = Buffer.from(expected, "hex");

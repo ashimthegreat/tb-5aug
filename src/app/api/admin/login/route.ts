@@ -28,15 +28,18 @@ export async function POST(req: NextRequest) {
       );
     }
     const user = await verifyCredentials(username, body.password ?? "");
+    await delay(300);
     if (!user) {
-      await delay(300);
       return NextResponse.json(
         { error: "Invalid username or password" },
         { status: 401 }
       );
     }
     await setAuthed(user.username);
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({
+      ok: true,
+      mustChangePassword: user.mustChangePassword === true,
+    });
   } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
